@@ -1,4 +1,3 @@
-```react
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
@@ -8,7 +7,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
-// 1. AS SUAS CHAVES DO FIREBASE (Injetadas com sucesso)
 const firebaseConfig = {
   apiKey: "AIzaSyDm80NbEwqVyF5WratOIi-ENe35ykzJ-_Q",
   authDomain: "albumcopa2026-59c00.firebaseapp.com",
@@ -18,12 +16,10 @@ const firebaseConfig = {
   appId: "1:839897438384:web:b70a235d7f777c34080375"
 };
 
-// Inicializa o Firebase garantindo que não duplique instâncias
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 2. ESTRUTURA DO ÁLBUM
 const SECTIONS = [
   { id: 'FWC_INI', title: 'Página Inicial', prefix: 'FWC', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'MEX', title: 'México', prefix: 'MEX', count: 20 },
@@ -31,9 +27,7 @@ const SECTIONS = [
   { id: 'BRA', title: 'Brasil', prefix: 'BRA', count: 20 },
   { id: 'ARG', title: 'Argentina', prefix: 'ARG', count: 20 },
   { id: 'FRA', title: 'França', prefix: 'FRA', count: 20 },
-  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', items: ['1', '2', '3', '4', '5', '6', '7', '8'] },
-  // Nota: Reduzi a lista visualmente aqui no código para focar na lógica de login, 
-  // mas na versão publicada colocamos as 48 seleções.
+  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', items: ['1', '2', '3', '4', '5', '6', '7', '8'] }
 ];
 
 const generateKey = (prefix, num) => `${prefix}-${num}`;
@@ -61,12 +55,10 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Monitora o estado de Login do usuário
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Ao logar, por padrão, o usuário acessa o seu próprio cofre (UID)
         setActiveFamilyId(currentUser.uid);
       } else {
         setActiveFamilyId('');
@@ -76,7 +68,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sincronização em Tempo Real com o Firestore
   useEffect(() => {
     if (!user || !activeFamilyId) return;
     setIsSyncing(true);
@@ -87,7 +78,6 @@ export default function App() {
       if (docSnap.exists()) {
         setStickers(prev => ({ ...prev, ...(docSnap.data().stickers || {}) }));
       } else {
-        // Se o banco não existe (primeiro acesso), cria ele
         if (activeFamilyId === user.uid) {
           setDoc(albumRef, { 
             adminEmail: user.email,
@@ -128,14 +118,13 @@ export default function App() {
     if (!user || !activeFamilyId) return;
     
     const newStatus = (stickers[key] + 1) % 3;
-    setStickers(prev => ({ ...prev, [key]: newStatus })); // Otimista (Muda na tela antes)
+    setStickers(prev => ({ ...prev, [key]: newStatus })); 
 
     const albumRef = doc(db, 'family_albums', activeFamilyId);
     try {
       await updateDoc(albumRef, { [`stickers.${key}`]: newStatus });
     } catch (error) {
       console.error(error);
-      // Fallback em caso de erro no documento
       await setDoc(albumRef, { stickers: { [key]: newStatus } }, { merge: true });
     }
   };
@@ -151,7 +140,6 @@ export default function App() {
       .catch(() => showToast("Erro ao copiar."));
   };
 
-  // Cálculos Estatísticos
   const stats = useMemo(() => {
     let missing = 0, collected = 0, repeated = 0;
     Object.values(stickers).forEach(s => {
@@ -178,12 +166,10 @@ export default function App() {
     }).filter(sec => sec.visibleKeys.length > 0);
   }, [stickers, filter, searchQuery]);
 
-  // TELA DE CARREGAMENTO INICIAL
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-emerald-600"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div></div>;
   }
 
-  // TELA DE LOGIN (O que o usuário vê antes de pagar/acessar)
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
@@ -199,16 +185,11 @@ export default function App() {
             <LogIn size={20} />
             Entrar com conta Google
           </button>
-
-          <p className="mt-6 text-xs text-slate-400">
-            Acesso exclusivo Pro. Ao continuar, você concorda com os termos de uso.
-          </p>
         </div>
       </div>
     );
   }
 
-  // TELA PRINCIPAL (O Álbum Sincronizado)
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-10">
       
@@ -219,10 +200,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Header Fixo e Colorido */}
       <header className="bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 text-white p-6 shadow-lg rounded-b-3xl mb-6 relative z-10">
         <div className="max-w-5xl mx-auto">
-          {/* Top Bar (Usuário e Compartilhamento) */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-white/20 pb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-lg backdrop-blur-sm">
@@ -283,7 +262,6 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto px-4 lg:px-8">
         
-        {/* Entrar em Outra Família (Para Esposa e Filho) */}
         {activeFamilyId === user.uid && (
           <form onSubmit={handleJoinFamily} className="mb-8 flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
@@ -303,7 +281,6 @@ export default function App() {
           </form>
         )}
 
-        {/* Dashboard Stats */}
         <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
           <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center">
             <CheckCircle2 size={28} className="text-emerald-500 mb-1" />
@@ -322,7 +299,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Filtros e Busca */}
         <div className="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
             <div className="flex space-x-2 p-1">
@@ -356,7 +332,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Grid de Figurinhas */}
         <div className="space-y-6">
           {filteredSections.map((sec) => (
             <div key={sec.id} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
@@ -401,6 +376,3 @@ export default function App() {
     </div>
   );
 }
-
-
-```
