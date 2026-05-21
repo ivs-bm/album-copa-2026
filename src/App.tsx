@@ -20,14 +20,59 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Matriz Completa e Oficial - Copa 2026
 const SECTIONS = [
   { id: 'FWC_INI', title: 'Página Inicial', prefix: 'FWC', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'MEX', title: 'México', prefix: 'MEX', count: 20 },
   { id: 'RSA', title: 'África do Sul', prefix: 'RSA', count: 20 },
+  { id: 'KOR', title: 'Coreia do Sul', prefix: 'KOR', count: 20 },
+  { id: 'CZE', title: 'Rep. Tcheca', prefix: 'CZE', count: 20 },
+  { id: 'CAN', title: 'Canadá', prefix: 'CAN', count: 20 },
+  { id: 'BIH', title: 'Bósnia', prefix: 'BIH', count: 20 },
+  { id: 'QAT', title: 'Catar', prefix: 'QAT', count: 20 },
+  { id: 'SUI', title: 'Suíça', prefix: 'SUI', count: 20 },
   { id: 'BRA', title: 'Brasil', prefix: 'BRA', count: 20 },
-  { id: 'ARG', title: 'Argentina', prefix: 'ARG', count: 20 },
+  { id: 'MAR', title: 'Marrocos', prefix: 'MAR', count: 20 },
+  { id: 'HAI', title: 'Haiti', prefix: 'HAI', count: 20 },
+  { id: 'SCO', title: 'Escócia', prefix: 'SCO', count: 20 },
+  { id: 'USA', title: 'Estados Unidos', prefix: 'USA', count: 20 },
+  { id: 'PAR', title: 'Paraguai', prefix: 'PAR', count: 20 },
+  { id: 'AUS', title: 'Austrália', prefix: 'AUS', count: 20 },
+  { id: 'TUR', title: 'Turquia', prefix: 'TUR', count: 20 },
+  { id: 'GER', title: 'Alemanha', prefix: 'GER', count: 20 },
+  { id: 'CUW', title: 'Curaçao', prefix: 'CUW', count: 20 },
+  { id: 'CIV', title: 'Costa do Marfim', prefix: 'CIV', count: 20 },
+  { id: 'ECU', title: 'Equador', prefix: 'ECU', count: 20 },
+  { id: 'NED', title: 'Holanda', prefix: 'NED', count: 20 },
+  { id: 'JPN', title: 'Japão', prefix: 'JPN', count: 20 },
+  { id: 'SWE', title: 'Suécia', prefix: 'SWE', count: 20 },
+  { id: 'TUN', title: 'Tunísia', prefix: 'TUN', count: 20 },
+  { id: 'BEL', title: 'Bélgica', prefix: 'BEL', count: 20 },
+  { id: 'EGY', title: 'Egito', prefix: 'EGY', count: 20 },
+  { id: 'IRN', title: 'Irã', prefix: 'IRN', count: 20 },
+  { id: 'NZL', title: 'Nova Zelândia', prefix: 'NZL', count: 20 },
+  { id: 'ESP', title: 'Espanha', prefix: 'ESP', count: 20 },
+  { id: 'CPV', title: 'Cabo Verde', prefix: 'CPV', count: 20 },
+  { id: 'KSA', title: 'Arábia Saudita', prefix: 'KSA', count: 20 },
+  { id: 'URU', title: 'Uruguai', prefix: 'URU', count: 20 },
   { id: 'FRA', title: 'França', prefix: 'FRA', count: 20 },
-  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', items: ['1', '2', '3', '4', '5', '6', '7', '8'] }
+  { id: 'SEN', title: 'Senegal', prefix: 'SEN', count: 20 },
+  { id: 'IRQ', title: 'Iraque', prefix: 'IRQ', count: 20 },
+  { id: 'NOR', title: 'Noruega', prefix: 'NOR', count: 20 },
+  { id: 'ARG', title: 'Argentina', prefix: 'ARG', count: 20 },
+  { id: 'ALG', title: 'Argélia', prefix: 'ALG', count: 20 },
+  { id: 'AUT', title: 'Áustria', prefix: 'AUT', count: 20 },
+  { id: 'JOR', title: 'Jordânia', prefix: 'JOR', count: 20 },
+  { id: 'POR', title: 'Portugal', prefix: 'POR', count: 20 },
+  { id: 'COD', title: 'Congo', prefix: 'COD', count: 20 },
+  { id: 'UZB', title: 'Uzbequistão', prefix: 'UZB', count: 20 },
+  { id: 'COL', title: 'Colômbia', prefix: 'COL', count: 20 },
+  { id: 'ENG', title: 'Inglaterra', prefix: 'ENG', count: 20 },
+  { id: 'CRO', title: 'Croácia', prefix: 'CRO', count: 20 },
+  { id: 'GHA', title: 'Gana', prefix: 'GHA', count: 20 },
+  { id: 'PAN', title: 'Panamá', prefix: 'PAN', count: 20 },
+  { id: 'FWC_HST', title: 'História das Copas', prefix: 'FWC', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
+  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', count: 14 }
 ];
 
 const generateKey = (prefix, num) => `${prefix}-${num}`;
@@ -89,7 +134,7 @@ export default function App() {
       setIsSyncing(false);
     }, (error) => {
       console.error("Erro de sincronização:", error);
-      showToast("Erro ao conectar ao banco. Verifique as regras do Firebase.");
+      showToast("Erro ao conectar ao banco. Verifique se autorizou o domínio.");
     });
 
     return () => unsubscribe();
@@ -101,7 +146,7 @@ export default function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error(error);
-      showToast("Erro ao fazer login. Tente novamente.");
+      showToast("Erro de autorização. O domínio foi adicionado no Firebase?");
     }
   };
 
@@ -110,7 +155,7 @@ export default function App() {
     if (joinCode.trim().length > 5) {
       setActiveFamilyId(joinCode.trim());
       setJoinCode('');
-      showToast("Conectado ao novo cofre familiar!");
+      showToast("Conectado ao cofre da família!");
     }
   };
 
@@ -360,19 +405,4 @@ export default function App() {
                     >
                       {numStr}
                       {status === 2 && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">+1</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-      `}} />
-    </div>
-  );
-}
+                  
