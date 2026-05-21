@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
@@ -28,7 +29,7 @@ const SECTIONS = [
   { id: 'KOR', title: 'Coreia do Sul', prefix: 'KOR', count: 20 },
   { id: 'CZE', title: 'Rep. Tcheca', prefix: 'CZE', count: 20 },
   { id: 'CAN', title: 'Canadá', prefix: 'CAN', count: 20 },
-  { id: 'BIH', title: 'Bósnia', prefix: 'BIH', count: 20 },
+  { id: 'BIH', title: 'Bósnia e Herzegovina', prefix: 'BIH', count: 20 },
   { id: 'QAT', title: 'Catar', prefix: 'QAT', count: 20 },
   { id: 'SUI', title: 'Suíça', prefix: 'SUI', count: 20 },
   { id: 'BRA', title: 'Brasil', prefix: 'BRA', count: 20 },
@@ -405,4 +406,19 @@ export default function App() {
                     >
                       {numStr}
                       {status === 2 && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">+1</span>}
-                  
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      `}} />
+    </div>
+  );
+}
