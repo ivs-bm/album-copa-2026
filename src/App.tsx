@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
@@ -169,11 +168,13 @@ export default function App() {
         body: JSON.stringify({ userId: user.uid, email: user.email })
       });
       const data = await res.json();
+      
       if (data.qr_code) {
         setPixCode(data.qr_code);
         showToast('Código Pix gerado!');
       } else {
-        showToast('Erro ao gerar Pix no servidor.');
+        // AGORA EXIBIMOS O ERRO REAL DO BANCO
+        showToast(`MP Recusou: ${data.error}`);
       }
     } catch(e) {
       showToast('Erro de conexão ao gerar o Pix.');
@@ -196,7 +197,7 @@ export default function App() {
 
   const showToast = (message) => {
     setToast(message);
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 4000); // Aumentei o tempo na tela para lermos o erro
   };
 
   const copyToClipboard = (text, message) => {
