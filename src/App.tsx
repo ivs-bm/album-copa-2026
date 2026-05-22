@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
-  Globe2, Copy, Check, Cloud, LogIn, Users, LogOut, KeyRound
+  Globe2, Check, Cloud, LogIn, Users, LogOut, KeyRound, Lock, Copy
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -21,7 +20,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Matriz Completa e Oficial - Copa 2026
 const SECTIONS = [
   { id: 'FWC_INI', title: 'Página Inicial', prefix: 'FWC', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'MEX', title: 'México', prefix: 'MEX', count: 20 },
@@ -100,6 +98,10 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  
+  const [isPro, setIsPro] = useState(false);
+  const [pixCode, setPixCode] = useState('');
+  const [loadingPix, setLoadingPix] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -122,20 +124,22 @@ export default function App() {
     
     const unsubscribe = onSnapshot(albumRef, (docSnap) => {
       if (docSnap.exists()) {
-        setStickers(prev => ({ ...prev, ...(docSnap.data().stickers || {}) }));
+        const data = docSnap.data();
+        setStickers(prev => ({ ...prev, ...(data.stickers || {}) }));
+        setIsPro(!!data.isPro); 
       } else {
         if (activeFamilyId === user.uid) {
           setDoc(albumRef, { 
             adminEmail: user.email,
             createdAt: new Date(),
+            isPro: false,
             stickers: getInitialState() 
           });
         }
       }
       setIsSyncing(false);
     }, (error) => {
-      console.error("Erro de sincronização:", error);
-      showToast("Erro ao conectar ao banco. Verifique se autorizou o domínio.");
+      console.error(error);
     });
 
     return () => unsubscribe();
@@ -143,12 +147,7 @@ export default function App() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error(error);
-      showToast("Erro de autorização. O domínio foi adicionado no Firebase?");
-    }
+    await signInWithPopup(auth, provider).catch(e => console.error(e));
   };
 
   const handleJoinFamily = (e) => {
@@ -160,9 +159,29 @@ export default function App() {
     }
   };
 
+  const handleBuyPro = async () => {
+    setLoadingPix(true);
+    try {
+      const res = await fetch('/api/pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid, email: user.email })
+      });
+      const data = await res.json();
+      if (data.qr_code) {
+        setPixCode(data.qr_code);
+        showToast('Código Pix gerado!');
+      } else {
+        showToast('Erro ao gerar Pix no servidor.');
+      }
+    } catch(e) {
+      showToast('Erro de conexão ao gerar o Pix.');
+    }
+    setLoadingPix(false);
+  };
+
   const toggleSticker = async (key) => {
     if (!user || !activeFamilyId) return;
-    
     const newStatus = (stickers[key] + 1) % 3;
     setStickers(prev => ({ ...prev, [key]: newStatus })); 
 
@@ -170,7 +189,6 @@ export default function App() {
     try {
       await updateDoc(albumRef, { [`stickers.${key}`]: newStatus });
     } catch (error) {
-      console.error(error);
       await setDoc(albumRef, { stickers: { [key]: newStatus } }, { merge: true });
     }
   };
@@ -212,9 +230,7 @@ export default function App() {
     }).filter(sec => sec.visibleKeys.length > 0);
   }, [stickers, filter, searchQuery]);
 
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-emerald-600"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div></div>;
-  }
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div></div>;
 
   if (!user) {
     return (
@@ -223,13 +239,8 @@ export default function App() {
           <Globe2 size={64} className="text-emerald-500 mx-auto mb-6" />
           <h1 className="text-3xl font-black text-slate-800 mb-2">Álbum Copa 2026</h1>
           <p className="text-slate-500 mb-8 font-medium">Controle suas figurinhas e sincronize em tempo real com toda a sua família.</p>
-          
-          <button 
-            onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition-all shadow-md active:scale-95"
-          >
-            <LogIn size={20} />
-            Entrar com conta Google
+          <button onClick={handleLogin} className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition-all shadow-md active:scale-95">
+            <LogIn size={20} /> Entrar com conta Google
           </button>
         </div>
       </div>
@@ -238,7 +249,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-10">
-      
       {toast && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-fade-in">
           <Check size={18} className="text-emerald-400"/>
@@ -254,22 +264,24 @@ export default function App() {
                 {user.email.charAt(0).toUpperCase()}
               </div>
               <div className="text-sm">
-                <p className="font-semibold">{user.displayName || 'Colecionador'}</p>
+                <p className="font-semibold flex items-center gap-1">
+                  {user.displayName || 'Colecionador'} {isPro && <span className="bg-yellow-400 text-yellow-900 text-[9px] px-1.5 py-0.5 rounded font-black uppercase">PRO</span>}
+                </p>
                 <p className="text-emerald-100/80 text-xs">{user.email}</p>
               </div>
             </div>
             
             <div className="flex gap-2">
-              <button 
-                onClick={() => copyToClipboard(activeFamilyId, "Código da família copiado!")}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm border border-white/10"
-              >
-                <KeyRound size={16} /> Copiar Meu Código
-              </button>
-              <button 
-                onClick={() => signOut(auth)}
-                className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
-              >
+              {isPro ? (
+                <button onClick={() => copyToClipboard(activeFamilyId, "Código da família copiado!")} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm border border-white/10">
+                  <KeyRound size={16} /> Copiar Meu Código
+                </button>
+              ) : (
+                <div className="flex items-center gap-1 bg-white/5 px-3 py-2 rounded-lg text-sm font-medium text-white/50 border border-white/5">
+                  <Lock size={14} /> Código Bloqueado
+                </div>
+              )}
+              <button onClick={() => signOut(auth)} className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm">
                 <LogOut size={16} /> Sair
               </button>
             </div>
@@ -309,22 +321,38 @@ export default function App() {
       <main className="max-w-5xl mx-auto px-4 lg:px-8">
         
         {activeFamilyId === user.uid && (
-          <form onSubmit={handleJoinFamily} className="mb-8 flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-            <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
-              <Users size={20} className="text-emerald-600" />
-              <span className="text-sm font-bold">Unir-se a um Cofre:</span>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Cole o código (ID) recebido aqui..." 
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value)}
-              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
-            <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800">
-              Conectar
-            </button>
-          </form>
+          <>
+            {isPro ? (
+              <form onSubmit={handleJoinFamily} className="mb-8 flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
+                  <Users size={20} className="text-emerald-600" />
+                  <span className="text-sm font-bold">Unir-se a um Cofre:</span>
+                </div>
+                <input type="text" placeholder="Cole o código (ID) recebido aqui..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"/>
+                <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800">Conectar</button>
+              </form>
+            ) : (
+              <div className="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Trophy className="text-yellow-400"/> Desbloqueie o Cofre Família</h3>
+                  <p className="text-sm text-slate-300 max-w-md">Sincronize o álbum com sua esposa e filho. Custa menos que 2 pacotinhos (R$ 14,90) e evita que vocês comprem figurinhas repetidas!</p>
+                </div>
+                
+                {!pixCode ? (
+                  <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap">
+                    {loadingPix ? 'Gerando Pix...' : 'Liberar por R$ 14,90'}
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
+                    <span className="text-xs font-bold text-slate-500">Copie o código abaixo e pague no seu banco:</span>
+                    <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
+                    <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
+                    <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso será liberado sozinho!</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
@@ -348,77 +376,11 @@ export default function App() {
         <div className="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
             <div className="flex space-x-2 p-1">
-              {[
-                { id: 'all', label: 'Todas', icon: BarChart3 },
-                { id: 'missing', label: 'Faltantes', icon: CircleDashed },
-                { id: 'collected', label: 'Obtidas', icon: CheckCircle2 },
-                { id: 'repeated', label: 'Repetidas', icon: Layers },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setFilter(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                    filter === tab.id ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'
-                  }`}
-                >
+              {[{ id: 'all', label: 'Todas', icon: BarChart3 }, { id: 'missing', label: 'Faltantes', icon: CircleDashed }, { id: 'collected', label: 'Obtidas', icon: CheckCircle2 }, { id: 'repeated', label: 'Repetidas', icon: Layers }].map(tab => (
+                <button key={tab.id} onClick={() => setFilter(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filter === tab.id ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
                   <tab.icon size={16} /> {tab.label}
                 </button>
               ))}
             </div>
           </div>
-          <div className="relative w-full lg:w-64">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar (ex: BRA 10)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          {filteredSections.map((sec) => (
-            <div key={sec.id} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-              <div className="flex items-baseline justify-between border-b border-slate-100 pb-3 mb-4">
-                <h2 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
-                  {sec.title} <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{sec.prefix}</span>
-                </h2>
-                <span className="text-sm font-semibold text-slate-400">
-                  {sec.visibleKeys.filter(k => stickers[k] !== 0).length} / {sec.visibleKeys.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-20 gap-2">
-                {sec.visibleKeys.map((key) => {
-                  const status = stickers[key];
-                  const numStr = key.split('-')[1];
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => toggleSticker(key)}
-                      className={`
-                        relative aspect-square rounded-xl flex items-center justify-center text-sm font-black transition-all transform active:scale-90 select-none
-                        ${status === 0 ? 'bg-slate-50 border-2 border-dashed border-slate-300 text-slate-400 hover:border-emerald-400' : ''}
-                        ${status === 1 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md border-2 border-emerald-500' : ''}
-                        ${status === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-md border-2 border-purple-600' : ''}
-                      `}
-                    >
-                      {numStr}
-                      {status === 2 && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">+1</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-      `}} />
-    </div>
-  );
-}
+          <div class
