@@ -424,47 +424,52 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto px-4 lg:px-8">
         
-        {activeFamilyId === user.uid && (
-          <>
-            {isPro ? (
-              <div className="mb-8 space-y-4">
-                <form onSubmit={handleJoinFamily} className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                  <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
-                    <Users size={20} className="text-emerald-600" />
-                    <span className="text-sm font-bold">Unir-se a um Grupo/Cofre:</span>
-                  </div>
-                  <input type="text" placeholder="Cole o código (ID) do cofre da família aqui..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"/>
-                  <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800">Conectar</button>
-                </form>
-                
-                <button onClick={handleShareList} className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20b858] text-white px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-md active:scale-95">
-                  <Share2 size={20}/> Copiar Lista de Trocas (WhatsApp)
+        {/* ÁREA DE CONTROLE (SÓ APARECE SE FOR O DONO DO COFRE OU SE FOR PRO) */}
+        <div className="mb-8 space-y-4">
+          
+          {/* 1. FORMULÁRIO DE UNIR-SE (Aparece apenas na própria conta, para poder entrar em outra) */}
+          {activeFamilyId === user.uid && (
+            <form onSubmit={handleJoinFamily} className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+              <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
+                <Users size={20} className="text-emerald-600" />
+                <span className="text-sm font-bold">Unir-se a um Grupo/Cofre:</span>
+              </div>
+              <input type="text" placeholder="Cole o código (ID) do cofre da família aqui..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"/>
+              <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800">Conectar</button>
+            </form>
+          )}
+
+          {/* 2. BOTÃO DE WHATSAPP (Aparece para todos que estão num cofre PRO) */}
+          {isPro && (
+            <button onClick={handleShareList} className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20b858] text-white px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-md active:scale-95">
+              <Share2 size={20}/> Copiar Lista de Trocas (WhatsApp)
+            </button>
+          )}
+
+          {/* 3. PAYWALL (Aparece apenas na própria conta se NÃO for PRO) */}
+          {activeFamilyId === user.uid && !isPro && (
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Trophy className="text-yellow-400"/> Ativar o Cofre Família PRO</h3>
+                <p className="text-sm text-slate-300 max-w-md">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
+              </div>
+              
+              {!pixCode ? (
+                <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap active:scale-95 disabled:opacity-60">
+                  {loadingPix ? 'Gerando Pix...' : 'Liberar PRO por R$ 14,90'}
                 </button>
-              </div>
-            ) : (
-              <div className="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
-                  <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Trophy className="text-yellow-400"/> Ativar o Cofre Família PRO</h3>
-                  <p className="text-sm text-slate-300 max-w-md">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
+              ) : (
+                <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
+                  <span className="text-xs font-bold text-slate-500">Pague este Pix Copia e Cola no seu banco:</span>
+                  <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
+                  <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
+                  <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso PRO será liberado sozinho!</span>
                 </div>
-                
-                {!pixCode ? (
-                  <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap active:scale-95 disabled:opacity-60">
-                    {loadingPix ? 'Gerando Pix...' : 'Liberar PRO por R$ 14,90'}
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
-                    <span className="text-xs font-bold text-slate-500">Pague este Pix Copia e Cola no seu banco:</span>
-                    <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
-                    <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
-                    <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso PRO será liberado sozinho!</span>
-                  </div>
-                )}
-                 {payError && <p className="text-xs text-red-400 mt-2 bg-red-950 p-2 rounded-lg border border-red-700">{payError}</p>}
-              </div>
-            )}
-          </>
-        )}
+              )}
+               {payError && <p className="text-xs text-red-400 mt-2 bg-red-950 p-2 rounded-lg border border-red-700">{payError}</p>}
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
           <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center">
