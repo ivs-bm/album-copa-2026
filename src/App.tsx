@@ -107,6 +107,9 @@ export default function App() {
   const [showTutorial, setShowTutorial] = useState(false);
   const sectionsRef = useRef({});
 
+  // ESTADO DO CONTADOR DE CLIQUES DO EASTER EGG
+  const [trophyClicks, setTrophyClicks] = useState(0);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -185,6 +188,35 @@ export default function App() {
       showToast('Erro de conexão ao gerar o Pix.');
     }
     setLoadingPix(false);
+  };
+
+  // FUNÇÃO SECRETA: ATIVAR CORTESIA
+  const handleSecretUnlock = async () => {
+    const code = window.prompt("🔑 Acesso VIP: Digite o código de cortesia");
+    if (code && code.trim().toUpperCase() === 'VIP2026') {
+      try {
+        const albumRef = doc(db, 'family_albums', activeFamilyId);
+        await updateDoc(albumRef, { isPro: true });
+        showToast("🎉 Cortesia ativada! Bem-vindo ao PRO.");
+      } catch (error) {
+        showToast("Erro ao ativar cortesia.");
+      }
+    } else if (code) {
+      showToast("Código de cortesia inválido.");
+    }
+    setTrophyClicks(0);
+  };
+
+  // DETECTOR DE CLIQUES NA TAÇA
+  const handleTrophyClick = () => {
+    const newClicks = trophyClicks + 1;
+    setTrophyClicks(newClicks);
+    if (newClicks >= 3) {
+      handleSecretUnlock();
+    } else {
+      // Zera o contador se não houver um clique em até 2 segundos
+      setTimeout(() => setTrophyClicks(0), 2000);
+    }
   };
 
   const toggleSticker = async (key) => {
@@ -424,10 +456,8 @@ export default function App() {
 
       <main className="max-w-5xl mx-auto px-4 lg:px-8">
         
-        {/* ÁREA DE CONTROLE (SÓ APARECE SE FOR O DONO DO COFRE OU SE FOR PRO) */}
         <div className="mb-8 space-y-4">
           
-          {/* 1. FORMULÁRIO DE UNIR-SE (Aparece apenas na própria conta, para poder entrar em outra) */}
           {activeFamilyId === user.uid && (
             <form onSubmit={handleJoinFamily} className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
@@ -439,18 +469,20 @@ export default function App() {
             </form>
           )}
 
-          {/* 2. BOTÃO DE WHATSAPP (Aparece para todos que estão num cofre PRO) */}
           {isPro && (
             <button onClick={handleShareList} className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20b858] text-white px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-md active:scale-95">
               <Share2 size={20}/> Copiar Lista de Trocas (WhatsApp)
             </button>
           )}
 
-          {/* 3. PAYWALL (Aparece apenas na própria conta se NÃO for PRO) */}
+          {/* O SEGREDO ESTÁ AQUI: TROPHY RECEBEU O ONCLICK PARA DETETAR CLIQUES */}
           {activeFamilyId === user.uid && !isPro && (
             <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
-                <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Trophy className="text-yellow-400"/> Ativar o Cofre Família PRO</h3>
+                <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                  <Trophy className="text-yellow-400 cursor-pointer" onClick={handleTrophyClick} /> 
+                  Ativar o Cofre Família PRO
+                </h3>
                 <p className="text-sm text-slate-300 max-w-md">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
               </div>
               
