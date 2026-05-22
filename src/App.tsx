@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
@@ -383,4 +384,42 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div class
+          <div className="relative w-full lg:w-64">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+            <input type="text" placeholder="Buscar (ex: BRA 10)" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500"/>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {filteredSections.map((sec) => (
+            <div key={sec.id} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="flex items-baseline justify-between border-b border-slate-100 pb-3 mb-4">
+                <h2 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
+                  {sec.title} <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{sec.prefix}</span>
+                </h2>
+                <span className="text-sm font-semibold text-slate-400">{sec.visibleKeys.filter(k => stickers[k] !== 0).length} / {sec.visibleKeys.length}</span>
+              </div>
+              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-20 gap-2">
+                {sec.visibleKeys.map((key) => {
+                  const status = stickers[key];
+                  const numStr = key.split('-')[1];
+                  return (
+                    <button key={key} onClick={() => toggleSticker(key)} className={`relative aspect-square rounded-xl flex items-center justify-center text-sm font-black transition-all transform active:scale-90 select-none ${status === 0 ? 'bg-slate-50 border-2 border-dashed border-slate-300 text-slate-400 hover:border-emerald-400' : ''} ${status === 1 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md border-2 border-emerald-500' : ''} ${status === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-md border-2 border-purple-600' : ''}`}>
+                      {numStr}
+                      {status === 2 && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">+1</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      `}} />
+    </div>
+  );
+}
