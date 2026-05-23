@@ -156,11 +156,15 @@ export default function App() {
                 </div>
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">👆 Navegação Rápida:</p>
+                <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">👆 Navegação:</p>
                 <p className="ml-2">Deslize a barra de bandeiras no topo e toque em uma seleção para pular direto para ela.</p>
               </div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">✨ Usuários Pro:</p>
+                <p className="ml-2">Use o ícone <KeyRound size={12} className="inline"/> para copiar seu ID e o ícone <Share2 size={12} className="inline"/> para gerar a lista de figurinhas faltantes.</p>
+              </div>
             </div>
-            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi!</button>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi, fechar!</button>
           </div>
         </div>
       )}
