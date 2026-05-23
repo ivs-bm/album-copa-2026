@@ -626,6 +626,7 @@ export default function App() {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
+    // forçando atualizacao da vercel
   );
 }
 
