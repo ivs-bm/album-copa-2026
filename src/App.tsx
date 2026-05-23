@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
-  Globe2, Check, Cloud, LogIn, LogOut, Info, X, Share2, MessageCircle, KeyRound
+  Globe2, Check, Cloud, LogIn, Users, LogOut, KeyRound, Lock, Copy, MapPin, Info, X, Share2, Smartphone, ShoppingCart, PlayCircle, MessageCircle
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -20,7 +20,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ... (SECTIONS array mantido igual para garantir a integridade dos dados)
 const SECTIONS = [
   { id: 'FWC_INI', group: 'Especiais', title: 'Página Inicial', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'FWC_HST', group: 'Especiais', title: 'História das Copas', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
@@ -78,30 +77,27 @@ const SECTIONS = [
 const generateKey = (prefix, num) => `${prefix}-${num}`;
 const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_, i) => generateKey(sec.prefix, i + 1)) : sec.items.map(item => generateKey(sec.prefix, item));
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
+const getInitialState = () => { const state = {}; SECTIONS.forEach(sec => getSectionKeys(sec).forEach(k => state[k] = 0)); return state; };
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [activeFamilyId, setActiveFamilyId] = useState('');
-  const [stickers, setStickers] = useState({});
+  const [joinCode, setJoinCode] = useState('');
+  const [stickers, setStickers] = useState(getInitialState());
   const [isPro, setIsPro] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [trophyClicks, setTrophyClicks] = useState(0);
   const sectionsRef = useRef({});
 
-  // Auth & Data
   useEffect(() => {
-    onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (u) setActiveFamilyId(u.uid);
-    });
+    onAuthStateChanged(auth, (u) => { setUser(u); if (u) setActiveFamilyId(u.uid); });
   }, []);
 
   useEffect(() => {
     if (!activeFamilyId) return;
     const unsub = onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
-      if (d.exists()) {
-        setStickers(d.data().stickers || {});
-        setIsPro(!!d.data().isPro);
-      }
+      if (d.exists()) { setStickers(d.data().stickers || {}); setIsPro(!!d.data().isPro); }
     });
     return unsub;
   }, [activeFamilyId]);
@@ -120,8 +116,16 @@ export default function App() {
         if (missingNums.length > 0) missingTextArray.push(`${sec.flag} *${sec.prefix}*: ${missingNums.join(', ')}`);
     });
     const text = `🏆 *Minhas Faltantes:*\n${missingTextArray.join('\n')}`;
-    navigator.clipboard.writeText(text).then(() => alert("Lista copiada!"));
+    navigator.clipboard.writeText(text).then(() => setToast("Lista copiada!"));
+    setTimeout(() => setToast(null), 3000);
   };
+
+  const handleJoinFamily = (e) => {
+    e.preventDefault();
+    if (joinCode) setActiveFamilyId(joinCode);
+  };
+
+  const scrollToSection = (id) => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' });
 
   const stats = useMemo(() => {
     let collected = 0;
@@ -130,62 +134,61 @@ export default function App() {
   }, [stickers]);
 
   if (!user) return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
-      <div>
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-white text-3xl font-black mb-6">Álbum Copa 2026</h1>
         <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold">Entrar com Google</button>
-      </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* HEADER OTIMIZADO */}
-      <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white p-4 shadow-lg sticky top-0 z-50">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl">
+      {toast && <div className="fixed top-4 z-50 bg-slate-900 text-white px-4 py-2 rounded-full text-xs">{toast}</div>}
+      
+      <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white p-4 sticky top-0 z-40">
         <div className="flex justify-between items-center mb-3">
-           <h1 className="font-black text-lg">Copa 2026 <span className="text-[10px] font-normal opacity-60">ID: {activeFamilyId.slice(0,5)}</span></h1>
+           <h1 className="font-black text-lg">Copa 2026 <span className="text-[10px] font-normal opacity-60">ID: {activeFamilyId.slice(0,6)}</span></h1>
            <div className="flex gap-2">
               <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-lg"><Info size={18} /></button>
               <button onClick={() => signOut(auth)} className="p-2 bg-white/10 rounded-lg"><LogOut size={18} /></button>
            </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-2 bg-black/30 rounded-full overflow-hidden">
-             <div className="h-full bg-yellow-400 transition-all" style={{ width: `${stats.percentage}%` }}></div>
-          </div>
-          <span className="text-xs font-bold">{stats.percentage}%</span>
+           <div className="flex-1 h-2 bg-black/20 rounded-full"><div className="h-full bg-yellow-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div>
+           <span className="text-xs font-bold">{stats.percentage}%</span>
         </div>
       </header>
 
-      {/* AÇÕES E FILTROS */}
-      <div className="p-4 flex gap-2">
-        {isPro && (
-          <button onClick={handleShareList} className="bg-[#25D366] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform">
-            <Share2 size={24} />
+      <div className="bg-white p-3 border-b border-slate-100 flex gap-3 overflow-x-auto hide-scrollbar sticky top-[80px] z-30">
+        {SECTIONS.map(s => (
+          <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[50px]">
+            <span className="text-xl">{s.flag}</span>
+            <span className="text-[9px] font-bold text-slate-500">{s.prefix}</span>
           </button>
-        )}
+        ))}
       </div>
 
-      {/* GRID DE FIGURINHAS (COMPACTO) */}
-      <main className="p-4 space-y-6">
+      <main className="p-4 space-y-4">
+        {isPro ? (
+          <button onClick={handleShareList} className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-xl font-bold shadow-md">
+            <MessageCircle size={20}/> Compartilhar Lista
+          </button>
+        ) : (
+          <div className="bg-white p-3 rounded-2xl border border-slate-100 flex gap-2">
+             <input type="text" placeholder="Código do cofre..." onChange={(e) => setJoinCode(e.target.value)} className="w-full bg-slate-50 rounded-lg px-3 py-2 text-xs"/>
+             <button onClick={handleJoinFamily} className="bg-slate-900 text-white px-4 rounded-lg font-bold text-xs">OK</button>
+          </div>
+        )}
+
         {SECTIONS.map(sec => (
-          <div key={sec.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-             <div className="flex items-center gap-2 mb-3 border-b border-slate-50 pb-2">
-               <span className="text-xl">{sec.flag}</span>
-               <h2 className="font-bold text-slate-700 text-sm">{sec.title}</h2>
-             </div>
-             <div className="grid grid-cols-6 gap-1">
-               {getSectionKeys(sec).map(key => {
+          <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+             <h2 className="font-black text-slate-700 mb-3 flex items-center gap-2 text-sm">{sec.flag} {sec.title}</h2>
+             <div className="grid grid-cols-5 gap-2">
+               {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
+                 const key = `${sec.prefix}-${item}`;
                  const status = stickers[key] || 0;
                  return (
-                   <button 
-                     key={key} 
-                     onClick={() => toggleSticker(key)}
-                     className={`aspect-square flex items-center justify-center text-[10px] font-bold rounded-lg transition-colors
-                     ${status === 0 ? 'bg-slate-100 text-slate-400' : 
-                       status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}
-                   >
-                     {key.split('-')[1]}
+                   <button key={key} onClick={() => toggleSticker(key)} className={`h-12 flex items-center justify-center font-bold rounded-lg ${status === 0 ? 'bg-slate-100' : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>
+                     {item}
                    </button>
                  );
                })}
@@ -193,6 +196,7 @@ export default function App() {
           </div>
         ))}
       </main>
+      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 }
