@@ -68,6 +68,7 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // <-- Novo estado de carregamento
   const [activeFamilyId, setActiveFamilyId] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [stickers, setStickers] = useState({});
@@ -78,18 +79,19 @@ export default function App() {
   const sectionsRef = useRef({});
 
   useEffect(() => { 
-    onAuthStateChanged(auth, (u) => { 
+    const unsubscribe = onAuthStateChanged(auth, (u) => { 
       setUser(u); 
       if (u) {
-        // Verifica se há um código de família salvo no armazenamento do celular
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
       } else {
-        // Se deslogar, limpa a memória temporária
         localStorage.removeItem('@AlbumCopa_FamilyId');
         setActiveFamilyId('');
       }
+      setIsAuthLoading(false); // <-- Firebase terminou de verificar, tira a tela de loading
     }); 
+    
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -114,6 +116,17 @@ export default function App() {
     return { percentage: TOTAL_STICKERS > 0 ? ((collected / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
   }, [stickers]);
 
+  // <-- 1. Tela de Carregamento (Enquanto o Firebase pensa)
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500 border-opacity-50"></div>
+        <p className="text-white mt-4 font-bold text-sm opacity-80">Carregando...</p>
+      </div>
+    );
+  }
+
+  // <-- 2. Tela de Login (Se o Firebase confirmar que não há usuário)
   if (!user) return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
       <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold">Entrar com Google</button>
@@ -149,7 +162,7 @@ export default function App() {
               <button onClick={() => setShowTutorial(true)} className="p-1.5 bg-white/10 rounded-lg"><Info size={18} /></button>
               <button onClick={() => { 
                 signOut(auth); 
-                localStorage.removeItem('@AlbumCopa_FamilyId'); // Limpa o ID ao sair
+                localStorage.removeItem('@AlbumCopa_FamilyId');
               }} className="p-1.5 bg-white/10 rounded-lg"><LogOut size={18} /></button>
            </div>
         </div>
@@ -208,7 +221,7 @@ export default function App() {
                  <button onClick={() => {
                    if (joinCode.trim()) {
                      setActiveFamilyId(joinCode.trim());
-                     localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); // Salva o ID no celular
+                     localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim());
                    }
                  }} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs shrink-0">Entrar</button>
                </div>
