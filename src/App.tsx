@@ -77,7 +77,21 @@ export default function App() {
   const [toast, setToast] = useState('');
   const sectionsRef = useRef({});
 
-  useEffect(() => { onAuthStateChanged(auth, (u) => { setUser(u); if (u) setActiveFamilyId(u.uid); }); }, []);
+  useEffect(() => { 
+    onAuthStateChanged(auth, (u) => { 
+      setUser(u); 
+      if (u) {
+        // Verifica se há um código de família salvo no armazenamento do celular
+        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
+        setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
+      } else {
+        // Se deslogar, limpa a memória temporária
+        localStorage.removeItem('@AlbumCopa_FamilyId');
+        setActiveFamilyId('');
+      }
+    }); 
+  }, []);
+
   useEffect(() => {
     if (!activeFamilyId) return;
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
@@ -133,7 +147,10 @@ export default function App() {
               {isPro && <button onClick={() => copyToClipboard(activeFamilyId, "ID copiado!")} className="p-1.5 bg-white/10 rounded-lg"><KeyRound size={18} /></button>}
               
               <button onClick={() => setShowTutorial(true)} className="p-1.5 bg-white/10 rounded-lg"><Info size={18} /></button>
-              <button onClick={() => signOut(auth)} className="p-1.5 bg-white/10 rounded-lg"><LogOut size={18} /></button>
+              <button onClick={() => { 
+                signOut(auth); 
+                localStorage.removeItem('@AlbumCopa_FamilyId'); // Limpa o ID ao sair
+              }} className="p-1.5 bg-white/10 rounded-lg"><LogOut size={18} /></button>
            </div>
         </div>
         <div className="flex items-center gap-3">
@@ -188,7 +205,12 @@ export default function App() {
              ) : (
                <div className="flex gap-2">
                  <input type="text" placeholder="Código de membro..." onChange={(e) => setJoinCode(e.target.value)} className="flex-1 w-full bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-900 border outline-none"/>
-                 <button onClick={() => setActiveFamilyId(joinCode)} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs shrink-0">Entrar</button>
+                 <button onClick={() => {
+                   if (joinCode.trim()) {
+                     setActiveFamilyId(joinCode.trim());
+                     localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); // Salva o ID no celular
+                   }
+                 }} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs shrink-0">Entrar</button>
                </div>
              )}
              
