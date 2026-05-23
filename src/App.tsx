@@ -162,7 +162,10 @@ export default function App() {
              {activeFamilyId !== user.uid ? (
                 <div className="text-center font-bold text-xs p-2 bg-emerald-50 text-emerald-800 rounded-lg">Você faz parte de uma família!</div>
              ) : (
-               <input type="text" placeholder="Código de membro da família..." onChange={(e) => setJoinCode(e.target.value)} className="w-full bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-900"/>
+               <div className="flex gap-2">
+                 <input type="text" placeholder="Código de membro..." onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-900 border"/>
+                 <button onClick={() => setActiveFamilyId(joinCode)} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs">Entrar</button>
+               </div>
              )}
              
              {pixCode ? (
@@ -173,11 +176,7 @@ export default function App() {
              ) : (
                <div className="grid grid-cols-2 gap-2">
                   <a href="https://youtube.com/seu-link-aqui" target="_blank" className="text-center bg-red-600 text-white py-2 rounded-lg font-bold text-xs">Assistir Vídeo</a>
-                  {activeFamilyId !== user.uid ? (
-                    <button className="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs" onClick={() => setActiveFamilyId(joinCode)}>Entrar na Família</button>
-                  ) : (
-                    <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Tornar-se Pro</button>
-                  )}
+                  <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Tornar-se Pro</button>
                </div>
              )}
           </div>
