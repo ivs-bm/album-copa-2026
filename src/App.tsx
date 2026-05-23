@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Trophy, Search, Layers, CheckCircle2, CircleDashed, BarChart3, 
-  Globe2, Check, Cloud, LogIn, Users, LogOut, KeyRound, Lock, Copy, MapPin, Info, X, Share2, Smartphone
+  Globe2, Check, Cloud, LogIn, Users, LogOut, KeyRound, Lock, Copy, MapPin, Info, X, Share2, Smartphone, ShoppingCart, PlayCircle
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -20,58 +20,59 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// LISTA DE SEÇÕES ATUALIZADA COM AS BANDEIRAS EM EMOJI!
 const SECTIONS = [
-  { id: 'FWC_INI', group: 'Especiais', title: 'Página Inicial', prefix: 'FWC', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
-  { id: 'FWC_HST', group: 'Especiais', title: 'História das Copas', prefix: 'FWC', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
-  { id: 'CC', group: 'Patrocinadores', title: 'Coca-Cola', prefix: 'CC', count: 14 },
-  { id: 'MEX', group: 'Grupo A', title: 'México', prefix: 'MEX', count: 20 },
-  { id: 'RSA', group: 'Grupo A', title: 'África do Sul', prefix: 'RSA', count: 20 },
-  { id: 'KOR', group: 'Grupo A', title: 'Coreia do Sul', prefix: 'KOR', count: 20 },
-  { id: 'CZE', group: 'Grupo A', title: 'República Tcheca', prefix: 'CZE', count: 20 },
-  { id: 'CAN', group: 'Grupo B', title: 'Canadá', prefix: 'CAN', count: 20 },
-  { id: 'BIH', group: 'Grupo B', title: 'Bósnia e Herzegovina', prefix: 'BIH', count: 20 },
-  { id: 'QAT', group: 'Grupo B', title: 'Catar', prefix: 'QAT', count: 20 },
-  { id: 'SUI', group: 'Grupo B', title: 'Suíça', prefix: 'SUI', count: 20 },
-  { id: 'BRA', group: 'Grupo C', title: 'Brasil', prefix: 'BRA', count: 20 },
-  { id: 'MAR', group: 'Grupo C', title: 'Marrocos', prefix: 'MAR', count: 20 },
-  { id: 'HAI', group: 'Grupo C', title: 'Haiti', prefix: 'HAI', count: 20 },
-  { id: 'SCO', group: 'Grupo C', title: 'Escócia', prefix: 'SCO', count: 20 },
-  { id: 'USA', group: 'Grupo D', title: 'Estados Unidos', prefix: 'USA', count: 20 },
-  { id: 'PAR', group: 'Grupo D', title: 'Paraguai', prefix: 'PAR', count: 20 },
-  { id: 'AUS', group: 'Grupo D', title: 'Austrália', prefix: 'AUS', count: 20 },
-  { id: 'TUR', group: 'Grupo D', title: 'Turquia', prefix: 'TUR', count: 20 },
-  { id: 'GER', group: 'Grupo E', title: 'Alemanha', prefix: 'GER', count: 20 },
-  { id: 'CUW', group: 'Grupo E', title: 'Curaçao', prefix: 'CUW', count: 20 },
-  { id: 'CIV', group: 'Grupo E', title: 'Costa do Marfim', prefix: 'CIV', count: 20 },
-  { id: 'ECU', group: 'Grupo E', title: 'Equador', prefix: 'ECU', count: 20 },
-  { id: 'NED', group: 'Grupo F', title: 'Holanda', prefix: 'NED', count: 20 },
-  { id: 'JPN', group: 'Grupo F', title: 'Japão', prefix: 'JPN', count: 20 },
-  { id: 'SWE', group: 'Grupo F', title: 'Suécia', prefix: 'SWE', count: 20 },
-  { id: 'TUN', group: 'Grupo F', title: 'Tunísia', prefix: 'TUN', count: 20 },
-  { id: 'BEL', group: 'Grupo G', title: 'Bélgica', prefix: 'BEL', count: 20 },
-  { id: 'EGY', group: 'Grupo G', title: 'Egito', prefix: 'EGY', count: 20 },
-  { id: 'IRN', group: 'Grupo G', title: 'Irã', prefix: 'IRN', count: 20 },
-  { id: 'NZL', group: 'Grupo G', title: 'Nova Zelândia', prefix: 'NZL', count: 20 },
-  { id: 'ESP', group: 'Grupo H', title: 'Espanha', prefix: 'ESP', count: 20 },
-  { id: 'CPV', group: 'Grupo H', title: 'Cabo Verde', prefix: 'CPV', count: 20 },
-  { id: 'KSA', group: 'Grupo H', title: 'Arábia Saudita', prefix: 'KSA', count: 20 },
-  { id: 'URU', group: 'Grupo H', title: 'Uruguai', prefix: 'URU', count: 20 },
-  { id: 'FRA', group: 'Grupo I', title: 'França', prefix: 'FRA', count: 20 },
-  { id: 'SEN', group: 'Grupo I', title: 'Senegal', prefix: 'SEN', count: 20 },
-  { id: 'IRQ', group: 'Grupo I', title: 'Iraque', prefix: 'IRQ', count: 20 },
-  { id: 'NOR', group: 'Grupo I', title: 'Noruega', prefix: 'NOR', count: 20 },
-  { id: 'ARG', group: 'Grupo J', title: 'Argentina', prefix: 'ARG', count: 20 },
-  { id: 'ALG', group: 'Grupo J', title: 'Argélia', prefix: 'ALG', count: 20 },
-  { id: 'AUT', group: 'Grupo J', title: 'Áustria', prefix: 'AUT', count: 20 },
-  { id: 'JOR', group: 'Grupo J', title: 'Jordânia', prefix: 'JOR', count: 20 },
-  { id: 'POR', group: 'Grupo K', title: 'Portugal', prefix: 'POR', count: 20 },
-  { id: 'COD', group: 'Grupo K', title: 'Congo', prefix: 'COD', count: 20 },
-  { id: 'UZB', group: 'Grupo K', title: 'Uzbequistão', prefix: 'UZB', count: 20 },
-  { id: 'COL', group: 'Grupo K', title: 'Colômbia', prefix: 'COL', count: 20 },
-  { id: 'ENG', group: 'Grupo L', title: 'Inglaterra', prefix: 'ENG', count: 20 },
-  { id: 'CRO', group: 'Grupo L', title: 'Croácia', prefix: 'CRO', count: 20 },
-  { id: 'GHA', group: 'Grupo L', title: 'Gana', prefix: 'Gana', count: 20 },
-  { id: 'PAN', group: 'Grupo L', title: 'Panamá', prefix: 'PAN', count: 20 },
+  { id: 'FWC_INI', group: 'Especiais', title: 'Página Inicial', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
+  { id: 'FWC_HST', group: 'Especiais', title: 'História das Copas', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
+  { id: 'CC', group: 'Patrocinadores', title: 'Coca-Cola', prefix: 'CC', flag: '🥤', count: 14 },
+  { id: 'MEX', group: 'Grupo A', title: 'México', prefix: 'MEX', flag: '🇲🇽', count: 20 },
+  { id: 'RSA', group: 'Grupo A', title: 'África do Sul', prefix: 'RSA', flag: '🇿🇦', count: 20 },
+  { id: 'KOR', group: 'Grupo A', title: 'Coreia do Sul', prefix: 'KOR', flag: '🇰🇷', count: 20 },
+  { id: 'CZE', group: 'Grupo A', title: 'República Tcheca', prefix: 'CZE', flag: '🇨🇿', count: 20 },
+  { id: 'CAN', group: 'Grupo B', title: 'Canadá', prefix: 'CAN', flag: '🇨🇦', count: 20 },
+  { id: 'BIH', group: 'Grupo B', title: 'Bósnia', prefix: 'BIH', flag: '🇧🇦', count: 20 },
+  { id: 'QAT', group: 'Grupo B', title: 'Catar', prefix: 'QAT', flag: '🇶🇦', count: 20 },
+  { id: 'SUI', group: 'Grupo B', title: 'Suíça', prefix: 'SUI', flag: '🇨🇭', count: 20 },
+  { id: 'BRA', group: 'Grupo C', title: 'Brasil', prefix: 'BRA', flag: '🇧🇷', count: 20 },
+  { id: 'MAR', group: 'Grupo C', title: 'Marrocos', prefix: 'MAR', flag: '🇲🇦', count: 20 },
+  { id: 'HAI', group: 'Grupo C', title: 'Haiti', prefix: 'HAI', flag: '🇭🇹', count: 20 },
+  { id: 'SCO', group: 'Grupo C', title: 'Escócia', prefix: 'SCO', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', count: 20 },
+  { id: 'USA', group: 'Grupo D', title: 'Estados Unidos', prefix: 'USA', flag: '🇺🇸', count: 20 },
+  { id: 'PAR', group: 'Grupo D', title: 'Paraguai', prefix: 'PAR', flag: '🇵🇾', count: 20 },
+  { id: 'AUS', group: 'Grupo D', title: 'Austrália', prefix: 'AUS', flag: '🇦🇺', count: 20 },
+  { id: 'TUR', group: 'Grupo D', title: 'Turquia', prefix: 'TUR', flag: '🇹🇷', count: 20 },
+  { id: 'GER', group: 'Grupo E', title: 'Alemanha', prefix: 'GER', flag: '🇩🇪', count: 20 },
+  { id: 'CUW', group: 'Grupo E', title: 'Curaçao', prefix: 'CUW', flag: '🇨🇼', count: 20 },
+  { id: 'CIV', group: 'Grupo E', title: 'Costa do Marfim', prefix: 'CIV', flag: '🇨🇮', count: 20 },
+  { id: 'ECU', group: 'Grupo E', title: 'Equador', prefix: 'ECU', flag: '🇪🇨', count: 20 },
+  { id: 'NED', group: 'Grupo F', title: 'Holanda', prefix: 'NED', flag: '🇳🇱', count: 20 },
+  { id: 'JPN', group: 'Grupo F', title: 'Japão', prefix: 'JPN', flag: '🇯🇵', count: 20 },
+  { id: 'SWE', group: 'Grupo F', title: 'Suécia', prefix: 'SWE', flag: '🇸🇪', count: 20 },
+  { id: 'TUN', group: 'Grupo F', title: 'Tunísia', prefix: 'TUN', flag: '🇹🇳', count: 20 },
+  { id: 'BEL', group: 'Grupo G', title: 'Bélgica', prefix: 'BEL', flag: '🇧🇪', count: 20 },
+  { id: 'EGY', group: 'Grupo G', title: 'Egito', prefix: 'EGY', flag: '🇪🇬', count: 20 },
+  { id: 'IRN', group: 'Grupo G', title: 'Irã', prefix: 'IRN', flag: '🇮🇷', count: 20 },
+  { id: 'NZL', group: 'Grupo G', title: 'Nova Zelândia', prefix: 'NZL', flag: '🇳🇿', count: 20 },
+  { id: 'ESP', group: 'Grupo H', title: 'Espanha', prefix: 'ESP', flag: '🇪🇸', count: 20 },
+  { id: 'CPV', group: 'Grupo H', title: 'Cabo Verde', prefix: 'CPV', flag: '🇨🇻', count: 20 },
+  { id: 'KSA', group: 'Grupo H', title: 'Arábia Saudita', prefix: 'KSA', flag: '🇸🇦', count: 20 },
+  { id: 'URU', group: 'Grupo H', title: 'Uruguai', prefix: 'URU', flag: '🇺🇾', count: 20 },
+  { id: 'FRA', group: 'Grupo I', title: 'França', prefix: 'FRA', flag: '🇫🇷', count: 20 },
+  { id: 'SEN', group: 'Grupo I', title: 'Senegal', prefix: 'SEN', flag: '🇸🇳', count: 20 },
+  { id: 'IRQ', group: 'Grupo I', title: 'Iraque', prefix: 'IRQ', flag: '🇮🇶', count: 20 },
+  { id: 'NOR', group: 'Grupo I', title: 'Noruega', prefix: 'NOR', flag: '🇳🇴', count: 20 },
+  { id: 'ARG', group: 'Grupo J', title: 'Argentina', prefix: 'ARG', flag: '🇦🇷', count: 20 },
+  { id: 'ALG', group: 'Grupo J', title: 'Argélia', prefix: 'ALG', flag: '🇩🇿', count: 20 },
+  { id: 'AUT', group: 'Grupo J', title: 'Áustria', prefix: 'AUT', flag: '🇦🇹', count: 20 },
+  { id: 'JOR', group: 'Grupo J', title: 'Jordânia', prefix: 'JOR', flag: '🇯🇴', count: 20 },
+  { id: 'POR', group: 'Grupo K', title: 'Portugal', prefix: 'POR', flag: '🇵🇹', count: 20 },
+  { id: 'COD', group: 'Grupo K', title: 'Congo', prefix: 'COD', flag: '🇨🇩', count: 20 },
+  { id: 'UZB', group: 'Grupo K', title: 'Uzbequistão', prefix: 'UZB', flag: '🇺🇿', count: 20 },
+  { id: 'COL', group: 'Grupo K', title: 'Colômbia', prefix: 'COL', flag: '🇨🇴', count: 20 },
+  { id: 'ENG', group: 'Grupo L', title: 'Inglaterra', prefix: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', count: 20 },
+  { id: 'CRO', group: 'Grupo L', title: 'Croácia', prefix: 'CRO', flag: '🇭🇷', count: 20 },
+  { id: 'GHA', group: 'Grupo L', title: 'Gana', prefix: 'GHA', flag: '🇬🇭', count: 20 },
+  { id: 'PAN', group: 'Grupo L', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20 },
 ];
 
 const generateKey = (prefix, num) => `${prefix}-${num}`;
@@ -106,8 +107,6 @@ export default function App() {
   
   const [showTutorial, setShowTutorial] = useState(false);
   const sectionsRef = useRef({});
-
-  // ESTADO DO CONTADOR DE CLIQUES DO EASTER EGG
   const [trophyClicks, setTrophyClicks] = useState(0);
 
   useEffect(() => {
@@ -190,7 +189,6 @@ export default function App() {
     setLoadingPix(false);
   };
 
-  // FUNÇÃO SECRETA: ATIVAR CORTESIA
   const handleSecretUnlock = async () => {
     const code = window.prompt("🔑 Acesso VIP: Digite o código de cortesia");
     if (code && code.trim().toUpperCase() === 'VIP2026') {
@@ -207,14 +205,12 @@ export default function App() {
     setTrophyClicks(0);
   };
 
-  // DETECTOR DE CLIQUES NA TAÇA
   const handleTrophyClick = () => {
     const newClicks = trophyClicks + 1;
     setTrophyClicks(newClicks);
     if (newClicks >= 3) {
       handleSecretUnlock();
     } else {
-      // Zera o contador se não houver um clique em até 2 segundos
       setTimeout(() => setTrophyClicks(0), 2000);
     }
   };
@@ -266,7 +262,11 @@ export default function App() {
 
   const scrollToSection = (sectionId) => {
     if (sectionId && sectionsRef.current[sectionId]) {
-      sectionsRef.current[sectionId].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Ajuste de margem superior para a rolagem não ficar escondida atrás do cabeçalho
+      const yOffset = -20; 
+      const element = sectionsRef.current[sectionId];
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
 
@@ -475,30 +475,55 @@ export default function App() {
             </button>
           )}
 
-          {/* O SEGREDO ESTÁ AQUI: TROPHY RECEBEU O ONCLICK PARA DETETAR CLIQUES */}
+          {!isPro && (
+            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-3 text-slate-700">
+                <ShoppingCart size={18} className="text-emerald-600"/>
+                <span className="text-xs font-black uppercase tracking-wider">🛒 Mercado da Copa (Descontos)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <a href="https://amzn.to/seu-link-afiliado-figurinhas" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center text-center bg-orange-50 hover:bg-orange-100 border border-orange-200 p-3 rounded-2xl transition-colors">
+                  <span className="text-xs font-bold text-orange-800">Pacotes de Figurinhas</span>
+                  <span className="text-[10px] text-orange-600 mt-0.5 font-medium">Comprar na Amazon ↗</span>
+                </a>
+                <a href="https://shopee.com.br/seu-link-afiliado-album" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center text-center bg-red-50 hover:bg-red-100 border border-red-200 p-3 rounded-2xl transition-colors">
+                  <span className="text-xs font-bold text-red-800">Álbum Capa Dura</span>
+                  <span className="text-[10px] text-red-600 mt-0.5 font-medium">Comprar na Shopee ↗</span>
+                </a>
+              </div>
+            </div>
+          )}
+
           {activeFamilyId === user.uid && !isPro && (
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="relative z-10 w-full">
                 <h3 className="text-xl font-black mb-2 flex items-center gap-2">
                   <Trophy className="text-yellow-400 cursor-pointer" onClick={handleTrophyClick} /> 
                   Ativar o Cofre Família PRO
                 </h3>
-                <p className="text-sm text-slate-300 max-w-md">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
+                <p className="text-sm text-slate-300 max-w-md mb-4">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
+                
+                {/* BOTÃO DO VÍDEO (Abre link em nova aba) */}
+                <a href="https://www.youtube.com/shorts/seu_link_aqui" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-bold text-emerald-300 hover:text-emerald-200 bg-white/10 px-3 py-1.5 rounded-lg transition-colors mb-4 md:mb-0">
+                  <PlayCircle size={16} /> Ver a mágica na prática
+                </a>
               </div>
               
-              {!pixCode ? (
-                <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap active:scale-95 disabled:opacity-60">
-                  {loadingPix ? 'Gerando Pix...' : 'Liberar PRO por R$ 14,90'}
-                </button>
-              ) : (
-                <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
-                  <span className="text-xs font-bold text-slate-500">Pague este Pix Copia e Cola no seu banco:</span>
-                  <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
-                  <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
-                  <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso PRO será liberado sozinho!</span>
-                </div>
-              )}
-               {payError && <p className="text-xs text-red-400 mt-2 bg-red-950 p-2 rounded-lg border border-red-700">{payError}</p>}
+              <div className="w-full md:w-auto relative z-10 flex flex-col items-center md:items-end">
+                {!pixCode ? (
+                  <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap active:scale-95 disabled:opacity-60">
+                    {loadingPix ? 'Gerando Pix...' : 'Liberar PRO por R$ 14,90'}
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
+                    <span className="text-xs font-bold text-slate-500">Pague este Pix Copia e Cola no seu banco:</span>
+                    <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
+                    <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
+                    <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso PRO será liberado sozinho!</span>
+                  </div>
+                )}
+                 {payError && <p className="text-xs text-red-400 mt-2 bg-red-950 p-2 rounded-lg border border-red-700 w-full text-center">{payError}</p>}
+              </div>
             </div>
           )}
         </div>
@@ -521,21 +546,25 @@ export default function App() {
           </div>
         </div>
 
-        <div className="mb-6 bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="flex items-center gap-2">
-            <MapPin className="text-teal-600" size={20}/>
-            <label htmlFor="section-select" className="text-sm font-bold text-slate-700 whitespace-nowrap">Ir para Seleção:</label>
+        {/* O NOVO CARROSSEL DE BANDEIRAS HORIZONTAL (Disponível para todos) */}
+        <div className="mb-6 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin className="text-teal-600" size={18}/>
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700">Pular para Seleção</span>
           </div>
-          <select 
-            id="section-select"
-            onChange={(e) => scrollToSection(e.target.value)}
-            className="w-full sm:flex-1 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none appearance-none"
-          >
-            <option value="">-- Escolha uma Seleção --</option>
+          
+          <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar snap-x">
             {SECTIONS.map(sec => (
-              <option key={sec.id} value={sec.id}>{sec.title} ({sec.group})</option>
+              <button 
+                key={sec.id} 
+                onClick={() => scrollToSection(sec.id)}
+                className="snap-start flex flex-col items-center justify-center min-w-[70px] bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 p-2 rounded-2xl transition-all active:scale-95"
+              >
+                <span className="text-2xl mb-1">{sec.flag}</span>
+                <span className="text-[10px] font-bold text-slate-600">{sec.prefix}</span>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
@@ -562,10 +591,10 @@ export default function App() {
               </h2>
               
               {sections.map((sec) => (
-                <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 scroll-mt-24">
                   <div className="flex items-baseline justify-between border-b border-slate-100 pb-3 mb-4">
                     <h3 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
-                      {sec.title} <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{sec.prefix}</span>
+                      <span className="text-2xl">{sec.flag}</span> {sec.title} <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{sec.prefix}</span>
                     </h3>
                     <span className="text-sm font-semibold text-slate-400">{sec.visibleKeys.filter(k => stickers[k] !== 0).length} / {sec.visibleKeys.length}</span>
                   </div>
@@ -591,6 +620,10 @@ export default function App() {
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        
+        /* Oculta a barra de rolagem mas mantém funcionando */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
   );
