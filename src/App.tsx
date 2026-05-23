@@ -159,8 +159,21 @@ export default function App() {
                 <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">👆 Navegação Rápida:</p>
                 <p className="ml-2">Deslize a barra de bandeiras no topo e toque em uma seleção para pular direto para ela.</p>
               </div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <p className="font-bold text-slate-800 mb-2 flex items-center gap-1">⚙️ Botões do Menu:</p>
+                <div className="space-y-2 ml-2">
+                  <p className="flex items-start gap-2">
+                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><KeyRound size={12}/></span>
+                    <span>Copia o seu <b>Código de Família</b> para convidar familiares (Usuários Pro).</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><Share2 size={12}/></span>
+                    <span>Gera e copia automaticamente a <b>lista em texto das figurinhas que faltam</b> (Usuários Pro).</span>
+                  </p>
+                </div>
+              </div>
             </div>
-            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi!</button>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi, fechar!</button>
           </div>
         </div>
       )}
@@ -187,6 +200,7 @@ export default function App() {
                  <button onClick={() => setActiveFamilyId(joinCode)} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs shrink-0">Entrar</button>
                </div>
              )}
+             
              {pixCode ? (
                 <div className="space-y-2">
                    <input readOnly value={pixCode} className="w-full bg-slate-50 text-[10px] p-2 rounded-lg border outline-none"/>
