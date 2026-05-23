@@ -107,7 +107,7 @@ export default function App() {
   );
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl relative overflow-x-hidden">
+    <div className="w-full max-w-[100vw] min-h-screen bg-slate-50 shadow-2xl relative overflow-x-hidden">
       <style>{`
         * { box-sizing: border-box !important; }
         html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden !important; overscroll-behavior-x: none; }
@@ -115,7 +115,7 @@ export default function App() {
       `}</style>
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center">{toast}</div>}
       
-      <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40 shadow-sm">
+      <header className="w-full bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40 shadow-sm">
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-2">
              <img src={user.photoURL} className="w-8 h-8 rounded-full border-2 border-white/20" alt="User" />
@@ -159,26 +159,13 @@ export default function App() {
                 <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">👆 Navegação Rápida:</p>
                 <p className="ml-2">Deslize a barra de bandeiras no topo e toque em uma seleção para pular direto para ela.</p>
               </div>
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <p className="font-bold text-slate-800 mb-2 flex items-center gap-1">⚙️ Botões do Menu:</p>
-                <div className="space-y-2 ml-2">
-                  <p className="flex items-start gap-2">
-                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><KeyRound size={12}/></span>
-                    <span>Copia o seu <b>Código de Família</b> para convidar familiares (Usuários Pro).</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><Share2 size={12}/></span>
-                    <span>Gera e copia automaticamente a <b>lista em texto das figurinhas que faltam</b> (Usuários Pro).</span>
-                  </p>
-                </div>
-              </div>
             </div>
-            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi, fechar!</button>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi!</button>
           </div>
         </div>
       )}
 
-      <div className="sticky top-[68px] z-30 bg-slate-50 pt-3 pb-2 px-3">
+      <div className="sticky top-[68px] z-30 bg-slate-50 pt-3 pb-2 px-3 w-full">
         <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-100 flex gap-4 overflow-x-auto hide-scrollbar">
           {SECTIONS.map(s => (
             <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
@@ -189,7 +176,7 @@ export default function App() {
         </div>
       </div>
 
-      <main className="px-3 pb-4 space-y-4">
+      <main className="w-full px-3 pb-4 space-y-4">
         {!isPro && (
           <div className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm space-y-3 mt-2">
              {activeFamilyId !== user.uid ? (
