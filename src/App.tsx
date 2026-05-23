@@ -199,7 +199,7 @@ export default function App() {
                 </div>
              ) : (
                <div className="grid grid-cols-2 gap-2">
-                  <a href="https://youtube.com/seu-link-aqui" target="_blank" className="text-center bg-red-600 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center">Assistir Vídeo</a>
+                  <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" className="text-center bg-red-600 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center">Assistir Vídeo</a>
                   {activeFamilyId !== user.uid ? (
                     <button className="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs opacity-50 cursor-not-allowed">Pro Ativado</button>
                   ) : (
