@@ -110,7 +110,7 @@ export default function App() {
     <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl relative overflow-x-hidden">
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center">{toast}</div>}
       
-      <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40">
+      <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40 shadow-sm">
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-2">
              <img src={user.photoURL} className="w-8 h-8 rounded-full border-2 border-white/20" alt="User" />
@@ -137,7 +137,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* MODAL DE TUTORIAL EXPANDIDO */}
+      {/* MODAL DE TUTORIAL */}
       {showTutorial && (
         <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center" onClick={() => setShowTutorial(false)}>
           <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -178,18 +178,21 @@ export default function App() {
         </div>
       )}
 
-      <div className="bg-white px-3 py-3 border-b border-slate-100 flex gap-4 overflow-x-auto hide-scrollbar sticky top-[68px] z-30">
-        {SECTIONS.map(s => (
-          <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
-            <span className="text-xl">{s.flag}</span>
-            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
-          </button>
-        ))}
+      {/* BARRA DE BANDEIRAS TRANSFORMADA EM CARTÃO */}
+      <div className="sticky top-[68px] z-30 bg-slate-50 pt-3 pb-2 px-3">
+        <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-100 flex gap-4 overflow-x-auto hide-scrollbar">
+          {SECTIONS.map(s => (
+            <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
+              <span className="text-xl">{s.flag}</span>
+              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <main className="px-3 py-4 space-y-4">
+      <main className="px-3 pb-4 space-y-4">
         {!isPro && (
-          <div className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm space-y-3">
+          <div className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm space-y-3 mt-2">
              {activeFamilyId !== user.uid ? (
                 <div className="text-center font-bold text-xs p-2 bg-emerald-50 text-emerald-800 rounded-lg">Você faz parte de uma família!</div>
              ) : (
@@ -217,22 +220,24 @@ export default function App() {
           </div>
         )}
 
-        {SECTIONS.map(sec => (
-          <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-100">
-             <h2 className="font-black text-slate-700 mb-3 flex items-center gap-2 text-sm">{sec.flag} {sec.title}</h2>
-             <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-               {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
-                 const key = `${sec.prefix}-${item}`;
-                 const status = stickers[key] || 0;
-                 return (
-                   <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full flex items-center justify-center font-bold text-xs rounded-lg transition-all ${status === 0 ? 'bg-slate-100 text-slate-400' : status === 1 ? 'bg-emerald-500 text-white shadow-md' : 'bg-purple-600 text-white shadow-md'}`}>
-                     {item}
-                   </button>
-                 );
-               })}
-             </div>
-          </div>
-        ))}
+        <div className={isPro ? "mt-2" : ""}>
+          {SECTIONS.map((sec, index) => (
+            <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-100 ${index > 0 ? 'mt-4' : ''}`}>
+               <h2 className="font-black text-slate-700 mb-3 flex items-center gap-2 text-sm">{sec.flag} {sec.title}</h2>
+               <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                 {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
+                   const key = `${sec.prefix}-${item}`;
+                   const status = stickers[key] || 0;
+                   return (
+                     <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full flex items-center justify-center font-bold text-xs rounded-lg transition-all ${status === 0 ? 'bg-slate-100 text-slate-400' : status === 1 ? 'bg-emerald-500 text-white shadow-md' : 'bg-purple-600 text-white shadow-md'}`}>
+                       {item}
+                     </button>
+                   );
+                 })}
+               </div>
+            </div>
+          ))}
+        </div>
       </main>
       <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
