@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Trophy, LogOut, Info, Share2, KeyRound, MessageCircle, PlayCircle, Star, Copy } from 'lucide-react';
+import { LogOut, Info, Share2, KeyRound, MessageCircle, PlayCircle, Copy } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -91,7 +91,7 @@ export default function App() {
     await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
 
-  const handleBuyPro = () => setPixCode("00020126460014br.gov.bcb.pix0124... (Aqui vai o código Pix)");
+  const handleBuyPro = () => setPixCode("00020126460014br.gov.bcb.pix0124... (Código PIX)");
   const copyToClipboard = (text, msg) => { navigator.clipboard.writeText(text).then(() => { setToast(msg); setTimeout(() => setToast(''), 2000); }); };
   const scrollToSection = (id) => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' });
 
@@ -107,7 +107,7 @@ export default function App() {
   );
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl">
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl">{toast}</div>}
       
       <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white p-4 sticky top-0 z-40">
@@ -124,7 +124,9 @@ export default function App() {
                 }).filter(s => s !== null).join('\n');
                 copyToClipboard(`🏆 *Faltam:*\n${m}`, "Lista copiada!");
               }} className="p-1.5 bg-white/20 rounded-lg"><Share2 size={18} /></button>}
+              
               {isPro && <button onClick={() => copyToClipboard(activeFamilyId, "ID copiado!")} className="p-1.5 bg-white/10 rounded-lg"><KeyRound size={18} /></button>}
+              
               <button onClick={() => setShowTutorial(true)} className="p-1.5 bg-white/10 rounded-lg"><Info size={18} /></button>
               <button onClick={() => signOut(auth)} className="p-1.5 bg-white/10 rounded-lg"><LogOut size={18} /></button>
            </div>
@@ -158,10 +160,11 @@ export default function App() {
         {!isPro && (
           <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-3">
              {activeFamilyId !== user.uid ? (
-                <div className="text-center font-bold text-xs p-2 bg-emerald-50 text-emerald-800 rounded-lg">Você já faz parte de uma família!</div>
+                <div className="text-center font-bold text-xs p-2 bg-emerald-50 text-emerald-800 rounded-lg">Você faz parte de uma família!</div>
              ) : (
-               <input type="text" placeholder="Código de membro..." onChange={(e) => setJoinCode(e.target.value)} className="w-full bg-slate-50 rounded-lg px-3 py-2 text-xs"/>
+               <input type="text" placeholder="Código de membro da família..." onChange={(e) => setJoinCode(e.target.value)} className="w-full bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-900"/>
              )}
+             
              {pixCode ? (
                 <div className="space-y-2">
                    <input readOnly value={pixCode} className="w-full bg-slate-50 text-[10px] p-2 rounded-lg border"/>
@@ -170,7 +173,11 @@ export default function App() {
              ) : (
                <div className="grid grid-cols-2 gap-2">
                   <a href="https://youtube.com/seu-link-aqui" target="_blank" className="text-center bg-red-600 text-white py-2 rounded-lg font-bold text-xs">Assistir Vídeo</a>
-                  <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Tornar-se Pro</button>
+                  {activeFamilyId !== user.uid ? (
+                    <button className="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs" onClick={() => setActiveFamilyId(joinCode)}>Entrar na Família</button>
+                  ) : (
+                    <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Tornar-se Pro</button>
+                  )}
                </div>
              )}
           </div>
