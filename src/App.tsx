@@ -107,7 +107,7 @@ export default function App() {
   );
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl overflow-x-hidden">
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl">{toast}</div>}
       
       <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white p-4 sticky top-0 z-40">
