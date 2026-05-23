@@ -108,6 +108,11 @@ export default function App() {
 
   return (
     <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl relative overflow-x-hidden">
+      <style>{`
+        * { box-sizing: border-box !important; }
+        html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden !important; overscroll-behavior-x: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center">{toast}</div>}
       
       <header className="bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40 shadow-sm">
@@ -137,12 +142,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* MODAL DE TUTORIAL */}
       {showTutorial && (
         <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center" onClick={() => setShowTutorial(false)}>
           <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
             <h2 className="font-black text-slate-800 mb-4 text-lg border-b pb-2">Guia Rápido</h2>
-            
             <div className="space-y-3 text-xs text-slate-600 mb-4">
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <p className="font-bold text-slate-800 mb-2 flex items-center gap-1">🏷️ Status das Figurinhas:</p>
@@ -152,33 +155,16 @@ export default function App() {
                   <p className="flex items-center gap-2">Toque 3x: <span className="bg-slate-200 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">Faltante</span></p>
                 </div>
               </div>
-              
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <p className="font-bold text-slate-800 mb-1 flex items-center gap-1">👆 Navegação Rápida:</p>
-                <p className="ml-2">Deslize a barra de bandeiras no topo horizontalmente e toque em uma seleção para pular direto para ela.</p>
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <p className="font-bold text-slate-800 mb-2 flex items-center gap-1">⚙️ Botões do Menu:</p>
-                <div className="space-y-2 ml-2">
-                  <p className="flex items-start gap-2">
-                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><KeyRound size={12}/></span>
-                    <span>Copia o seu <b>Código de Família</b> para convidar familiares (Usuários Pro).</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="bg-emerald-800 text-white p-1 rounded-md shrink-0"><Share2 size={12}/></span>
-                    <span>Gera e copia automaticamente a <b>lista em texto das figurinhas que faltam</b> (Usuários Pro).</span>
-                  </p>
-                </div>
+                <p className="ml-2">Deslize a barra de bandeiras no topo e toque em uma seleção para pular direto para ela.</p>
               </div>
             </div>
-
-            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 hover:bg-slate-800 transition-colors text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi, fechar!</button>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl mt-2 text-sm font-bold shadow-md">Entendi!</button>
           </div>
         </div>
       )}
 
-      {/* BARRA DE BANDEIRAS TRANSFORMADA EM CARTÃO */}
       <div className="sticky top-[68px] z-30 bg-slate-50 pt-3 pb-2 px-3">
         <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-100 flex gap-4 overflow-x-auto hide-scrollbar">
           {SECTIONS.map(s => (
@@ -201,7 +187,6 @@ export default function App() {
                  <button onClick={() => setActiveFamilyId(joinCode)} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs shrink-0">Entrar</button>
                </div>
              )}
-             
              {pixCode ? (
                 <div className="space-y-2">
                    <input readOnly value={pixCode} className="w-full bg-slate-50 text-[10px] p-2 rounded-lg border outline-none"/>
@@ -239,7 +224,6 @@ export default function App() {
           ))}
         </div>
       </main>
-      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 }
