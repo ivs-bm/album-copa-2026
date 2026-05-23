@@ -20,7 +20,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// LISTA DE SEÇÕES ATUALIZADA COM AS BANDEIRAS EM EMOJI!
+// LISTA DE SEÇÕES COM AS BANDEIRAS CORRIGIDAS (SEM CÓDIGOS INVISÍVEIS)
 const SECTIONS = [
   { id: 'FWC_INI', group: 'Especiais', title: 'Página Inicial', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'FWC_HST', group: 'Especiais', title: 'História das Copas', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
@@ -36,7 +36,7 @@ const SECTIONS = [
   { id: 'BRA', group: 'Grupo C', title: 'Brasil', prefix: 'BRA', flag: '🇧🇷', count: 20 },
   { id: 'MAR', group: 'Grupo C', title: 'Marrocos', prefix: 'MAR', flag: '🇲🇦', count: 20 },
   { id: 'HAI', group: 'Grupo C', title: 'Haiti', prefix: 'HAI', flag: '🇭🇹', count: 20 },
-  { id: 'SCO', group: 'Grupo C', title: 'Escócia', prefix: 'SCO', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', count: 20 },
+  { id: 'SCO', group: 'Grupo C', title: 'Escócia', prefix: 'SCO', flag: '🇬🇧', count: 20 }, // Corrigido
   { id: 'USA', group: 'Grupo D', title: 'Estados Unidos', prefix: 'USA', flag: '🇺🇸', count: 20 },
   { id: 'PAR', group: 'Grupo D', title: 'Paraguai', prefix: 'PAR', flag: '🇵🇾', count: 20 },
   { id: 'AUS', group: 'Grupo D', title: 'Austrália', prefix: 'AUS', flag: '🇦🇺', count: 20 },
@@ -69,7 +69,7 @@ const SECTIONS = [
   { id: 'COD', group: 'Grupo K', title: 'Congo', prefix: 'COD', flag: '🇨🇩', count: 20 },
   { id: 'UZB', group: 'Grupo K', title: 'Uzbequistão', prefix: 'UZB', flag: '🇺🇿', count: 20 },
   { id: 'COL', group: 'Grupo K', title: 'Colômbia', prefix: 'COL', flag: '🇨🇴', count: 20 },
-  { id: 'ENG', group: 'Grupo L', title: 'Inglaterra', prefix: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', count: 20 },
+  { id: 'ENG', group: 'Grupo L', title: 'Inglaterra', prefix: 'ENG', flag: '🇬🇧', count: 20 }, // Corrigido
   { id: 'CRO', group: 'Grupo L', title: 'Croácia', prefix: 'CRO', flag: '🇭🇷', count: 20 },
   { id: 'GHA', group: 'Grupo L', title: 'Gana', prefix: 'GHA', flag: '🇬🇭', count: 20 },
   { id: 'PAN', group: 'Grupo L', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20 },
@@ -262,7 +262,6 @@ export default function App() {
 
   const scrollToSection = (sectionId) => {
     if (sectionId && sectionsRef.current[sectionId]) {
-      // Ajuste de margem superior para a rolagem não ficar escondida atrás do cabeçalho
       const yOffset = -20; 
       const element = sectionsRef.current[sectionId];
       const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -397,237 +396,4 @@ export default function App() {
               </div>
               <div className="text-sm">
                 <p className="font-semibold flex items-center gap-1">
-                  {user.displayName || 'Colecionador'} {isPro && <span className="bg-yellow-400 text-yellow-900 text-[9px] px-1.5 py-0.5 rounded font-black uppercase">PRO</span>}
-                </p>
-                <p className="text-emerald-100/80 text-xs">{user.email}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <button onClick={() => setShowTutorial(true)} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm border border-white/10" title="Como Funciona">
-                <Info size={16} /> Ajuda
-              </button>
-
-              {isPro ? (
-                <button onClick={() => copyToClipboard(activeFamilyId, "Código da família copiado!")} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm border border-white/10">
-                  <KeyRound size={16} /> Copiar Meu Código
-                </button>
-              ) : (
-                <div className="flex items-center gap-1 bg-white/5 px-3 py-2 rounded-lg text-sm font-medium text-white/50 border border-white/5">
-                  <Lock size={14} /> Código Bloqueado
-                </div>
-              )}
-              <button onClick={() => signOut(auth)} className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm">
-                <LogOut size={16} /> Sair
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-black tracking-tight">Copa 2026</h1>
-                  {!isSyncing ? <Cloud size={20} className="text-emerald-300" title="Sincronizado" /> : <div className="w-4 h-4 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin"></div>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-emerald-800/50 px-2 py-0.5 rounded text-xs font-bold font-mono tracking-widest border border-emerald-500/30">
-                    ID do Cofre: {activeFamilyId.substring(0,8).toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center bg-black/20 rounded-2xl p-4 w-full md:w-auto backdrop-blur-md border border-white/10 shadow-inner">
-              <Trophy size={28} className="text-yellow-400 mr-4" />
-              <div className="flex flex-col flex-1 min-w-[180px]">
-                <div className="flex justify-between text-sm font-bold mb-1.5">
-                  <span>Álbum Completado</span>
-                  <span>{stats.percentage}%</span>
-                </div>
-                <div className="w-full bg-black/40 rounded-full h-3">
-                  <div className="bg-gradient-to-r from-yellow-400 to-yellow-200 h-3 rounded-full transition-all duration-500" style={{ width: `${stats.percentage}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 lg:px-8">
-        
-        <div className="mb-8 space-y-4">
-          
-          {activeFamilyId === user.uid && (
-            <form onSubmit={handleJoinFamily} className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-              <div className="flex items-center gap-3 text-slate-600 sm:w-1/3">
-                <Users size={20} className="text-emerald-600" />
-                <span className="text-sm font-bold">Unir-se a um Grupo/Cofre:</span>
-              </div>
-              <input type="text" placeholder="Cole o código (ID) do cofre da família aqui..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"/>
-              <button type="submit" className="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-slate-800">Conectar</button>
-            </form>
-          )}
-
-          {isPro && (
-            <button onClick={handleShareList} className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20b858] text-white px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-md active:scale-95">
-              <Share2 size={20}/> Copiar Lista de Trocas (WhatsApp)
-            </button>
-          )}
-
-          {!isPro && (
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex items-center gap-2 mb-3 text-slate-700">
-                <ShoppingCart size={18} className="text-emerald-600"/>
-                <span className="text-xs font-black uppercase tracking-wider">🛒 Mercado da Copa (Descontos)</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <a href="https://amzn.to/seu-link-afiliado-figurinhas" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center text-center bg-orange-50 hover:bg-orange-100 border border-orange-200 p-3 rounded-2xl transition-colors">
-                  <span className="text-xs font-bold text-orange-800">Pacotes de Figurinhas</span>
-                  <span className="text-[10px] text-orange-600 mt-0.5 font-medium">Comprar na Amazon ↗</span>
-                </a>
-                <a href="https://shopee.com.br/seu-link-afiliado-album" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center text-center bg-red-50 hover:bg-red-100 border border-red-200 p-3 rounded-2xl transition-colors">
-                  <span className="text-xs font-bold text-red-800">Álbum Capa Dura</span>
-                  <span className="text-[10px] text-red-600 mt-0.5 font-medium">Comprar na Shopee ↗</span>
-                </a>
-              </div>
-            </div>
-          )}
-
-          {activeFamilyId === user.uid && !isPro && (
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-              <div className="relative z-10 w-full">
-                <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                  <Trophy className="text-yellow-400 cursor-pointer" onClick={handleTrophyClick} /> 
-                  Ativar o Cofre Família PRO
-                </h3>
-                <p className="text-sm text-slate-300 max-w-md mb-4">Sincronize o álbum em tempo real com sua família. Custa menos que 2 pacotinhos (R$ 14,90) e evita comprar figurinhas repetidas à toa!</p>
-                
-                {/* BOTÃO DO VÍDEO (Abre link em nova aba) */}
-                <a href="https://www.youtube.com/shorts/seu_link_aqui" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-bold text-emerald-300 hover:text-emerald-200 bg-white/10 px-3 py-1.5 rounded-lg transition-colors mb-4 md:mb-0">
-                  <PlayCircle size={16} /> Ver a mágica na prática
-                </a>
-              </div>
-              
-              <div className="w-full md:w-auto relative z-10 flex flex-col items-center md:items-end">
-                {!pixCode ? (
-                  <button onClick={handleBuyPro} disabled={loadingPix} className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 py-3 rounded-xl text-sm font-black transition-all shadow-md w-full md:w-auto whitespace-nowrap active:scale-95 disabled:opacity-60">
-                    {loadingPix ? 'Gerando Pix...' : 'Liberar PRO por R$ 14,90'}
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl w-full md:w-auto text-slate-800 shadow-inner">
-                    <span className="text-xs font-bold text-slate-500">Pague este Pix Copia e Cola no seu banco:</span>
-                    <input type="text" readOnly value={pixCode} className="w-full text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 outline-none text-center" />
-                    <button onClick={() => copyToClipboard(pixCode, "Pix Copiado! Cole no seu banco.")} className="text-sm bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold w-full transition-all flex items-center justify-center gap-2 active:scale-95"><Copy size={16}/> Copiar Código Pix</button>
-                    <span className="text-[10px] text-emerald-600 animate-pulse font-bold mt-1 text-center">Aguardando pagamento... O acesso PRO será liberado sozinho!</span>
-                  </div>
-                )}
-                 {payError && <p className="text-xs text-red-400 mt-2 bg-red-950 p-2 rounded-lg border border-red-700 w-full text-center">{payError}</p>}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center">
-            <CheckCircle2 size={28} className="text-emerald-500 mb-1" />
-            <span className="text-2xl md:text-3xl font-black text-slate-800">{stats.collected}</span>
-            <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Coladas</span>
-          </div>
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center">
-            <CircleDashed size={28} className="text-slate-300 mb-1" />
-            <span className="text-2xl md:text-3xl font-black text-slate-800">{stats.missing}</span>
-            <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Faltam</span>
-          </div>
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center">
-            <Layers size={28} className="text-purple-500 mb-1" />
-            <span className="text-2xl md:text-3xl font-black text-slate-800">{stats.repeated}</span>
-            <span className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Repetidas</span>
-          </div>
-        </div>
-
-        {/* O NOVO CARROSSEL DE BANDEIRAS HORIZONTAL (Disponível para todos) */}
-        <div className="mb-6 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="text-teal-600" size={18}/>
-            <span className="text-xs font-black uppercase tracking-wider text-slate-700">Pular para Seleção</span>
-          </div>
-          
-          <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar snap-x">
-            {SECTIONS.map(sec => (
-              <button 
-                key={sec.id} 
-                onClick={() => scrollToSection(sec.id)}
-                className="snap-start flex flex-col items-center justify-center min-w-[70px] bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 p-2 rounded-2xl transition-all active:scale-95"
-              >
-                <span className="text-2xl mb-1">{sec.flag}</span>
-                <span className="text-[10px] font-bold text-slate-600">{sec.prefix}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
-            <div className="flex space-x-2 p-1">
-              {[{ id: 'all', label: 'Todas', icon: BarChart3 }, { id: 'missing', label: 'Faltantes', icon: CircleDashed }, { id: 'collected', label: 'Obtidas', icon: CheckCircle2 }, { id: 'repeated', label: 'Repetidas', icon: Layers }].map(tab => (
-                <button key={tab.id} onClick={() => setFilter(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${filter === tab.id ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                  <tab.icon size={16} /> {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="relative w-full lg:w-64">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-            <input type="text" placeholder="Buscar (ex: BRA 10 ou Grupo C)" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500"/>
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          {Object.entries(groupedSections).map(([groupName, sections]) => (
-            <div key={groupName} className="space-y-6">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tighter border-b-4 border-teal-500 pb-2 inline-block">
-                {groupName}
-              </h2>
-              
-              {sections.map((sec) => (
-                <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 scroll-mt-24">
-                  <div className="flex items-baseline justify-between border-b border-slate-100 pb-3 mb-4">
-                    <h3 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
-                      <span className="text-2xl">{sec.flag}</span> {sec.title} <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-md">{sec.prefix}</span>
-                    </h3>
-                    <span className="text-sm font-semibold text-slate-400">{sec.visibleKeys.filter(k => stickers[k] !== 0).length} / {sec.visibleKeys.length}</span>
-                  </div>
-                  <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-20 gap-2">
-                    {sec.visibleKeys.map((key) => {
-                      const status = stickers[key];
-                      const numStr = key.split('-')[1];
-                      return (
-                        <button key={key} onClick={() => toggleSticker(key)} className={`relative aspect-square rounded-xl flex items-center justify-center text-sm font-black transition-all transform active:scale-90 select-none ${status === 0 ? 'bg-slate-50 border-2 border-dashed border-slate-300 text-slate-400 hover:border-emerald-400' : ''} ${status === 1 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md border-2 border-emerald-500' : ''} ${status === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-md border-2 border-purple-600' : ''}`}>
-                          {numStr}
-                          {status === 2 && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">+1</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </main>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-        
-        /* Oculta a barra de rolagem mas mantém funcionando */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}} />
-    </div>
-    // forçando atualizacao da vercel
-  );
-}
-
-
+                  {user.displayName || 
