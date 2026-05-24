@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, Check } from 'lucide-react';
+import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Download, Star, PlayCircle } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -76,26 +76,21 @@ export default function App() {
   const [pixCode, setPixCode] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
   const [toast, setToast] = useState('');
-  const [activeTab, setActiveTab] = useState('album'); 
-  const [isDarkMode, setIsDarkMode] = useState(true); 
-  const [deferredPrompt, setDeferredPrompt] = useState(null); 
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [trophyClicks, setTrophyClicks] = useState(0);
-  const [showProCode, setShowProCode] = useState(false);
   const [proInput, setProInput] = useState('');
-  
+  const [showProCode, setShowProCode] = useState(false);
   const sectionsRef = useRef({});
 
   useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) setIsStandalone(true);
     const handleBeforeInstallPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') { setDeferredPrompt(null); setIsStandalone(true); } }
-    else { setToast("Abra o menu do navegador e toque em 'Adicionar à Tela Inicial'."); setTimeout(() => setToast(''), 4500); }
+    if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') setDeferredPrompt(null); }
+    else { setToast("Use o menu do navegador para 'Adicionar à Tela Inicial'."); setTimeout(() => setToast(''), 3000); }
   };
 
   useEffect(() => { 
@@ -125,90 +120,74 @@ export default function App() {
 
   const handleBuyPro = () => setPixCode("00020126460014br.gov.bcb.pix0124... (Código PIX)");
   const copyToClipboard = (text, msg) => { navigator.clipboard.writeText(text).then(() => { setToast(msg); setTimeout(() => setToast(''), 2000); }); };
-  const scrollToSection = (id) => { setActiveTab('album'); setTimeout(() => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' }), 100); };
 
   const stats = useMemo(() => {
-    let coladas = 0; let repetidas = 0;
-    Object.values(stickers).forEach(s => { if (s === 1) coladas++; if (s === 2) repetidas++; });
-    const faltantes = TOTAL_STICKERS - (coladas + repetidas);
-    return { coladas, repetidas, faltantes, percColadas: ((coladas / TOTAL_STICKERS) * 100).toFixed(1), percRepetidas: ((repetidas / TOTAL_STICKERS) * 100).toFixed(1), percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
+    let collected = 0; Object.values(stickers).forEach(s => { if (s > 0) collected++; });
+    return { percentage: TOTAL_STICKERS > 0 ? ((collected / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
   }, [stickers]);
 
-  if (isAuthLoading) return <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500 border-opacity-50"></div><p className="text-white mt-4 font-bold text-sm opacity-80">Carregando...</p></div>;
+  if (isAuthLoading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500"></div></div>;
   if (!user) return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center"><button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-xl">Entrar com Google</button></div>;
 
-  const themeBg = isDarkMode ? "bg-slate-900" : "bg-slate-50";
-  const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
-  const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
-  const titleColor = isDarkMode ? "text-white" : "text-slate-800";
-
   return (
-    <div className={`w-full min-h-screen flex flex-col ${themeBg} relative pb-20 transition-colors duration-300`}>
-      <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
+    <div className="w-full max-w-[100vw] min-h-screen bg-slate-50 relative overflow-x-hidden">
+      <style>{`* { box-sizing: border-box !important; } html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden !important; }`}</style>
+      {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-xl">{toast}</div>}
+      
+      <header className="w-full bg-gradient-to-br from-emerald-800 to-teal-700 text-white px-3 py-3 sticky top-0 z-40 shadow-sm">
         <div className="flex justify-between items-center mb-2">
-           <div className="flex items-center gap-3"><img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" /><div><h1 className="font-black text-sm leading-tight">Família Copa</h1><p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p></div></div>
-           <div className="flex gap-2 shrink-0"><button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"><Info size={18} /></button><button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">{isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}</button></div>
+           <div className="flex items-center gap-2"><img src={user.photoURL} className="w-8 h-8 rounded-full border-2 border-white/20" alt="User" /><h1 className="font-black text-sm">Copa 2026</h1></div>
+           <div className="flex gap-2">
+             <button onClick={() => setShowTutorial(true)} className="p-1.5 bg-white/10 rounded-lg"><Info size={18} /></button>
+             <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="p-1.5 bg-white/10 rounded-lg"><LogOut size={18} /></button>
+           </div>
         </div>
-        <div className="flex items-center gap-3 mt-1"><div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div></div>
+        <div className="flex items-center gap-3"><div className="flex-1 h-1.5 bg-black/20 rounded-full overflow-hidden"><div className="h-full bg-yellow-400" style={{ width: `${stats.percentage}%` }}></div></div><span className="text-[10px] font-bold w-6 text-right">{stats.percentage}%</span></div>
       </header>
 
       {showTutorial && (
-        <div className="fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowTutorial(false)}>
-          <div className={`${cardBg} p-5 rounded-3xl w-full max-w-sm shadow-2xl`} onClick={e => e.stopPropagation()}>
-            <h2 className={`font-black ${titleColor} mb-4 text-lg border-b ${isDarkMode ? 'border-slate-700' : 'border-slate-200'} pb-2`}>Guia Rápido</h2>
-            <div className="space-y-3 text-xs mb-4"><div className={`${isDarkMode ? 'bg-slate-700/50' : 'bg-slate-50'} p-3 rounded-xl`}><p className={`font-bold ${titleColor} mb-2 flex items-center gap-1`}> 🏷️ Status:</p><div className="space-y-1.5 ml-2"><p className={`flex items-center gap-2 ${textColor}`}>Toque 1x: <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">Colada</span></p><p className={`flex items-center gap-2 ${textColor}`}>Toque 2x: <span className="bg-purple-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">Repetida</span></p></div></div><div className={`${isDarkMode ? 'bg-slate-700/50' : 'bg-slate-50'} p-3 rounded-xl`}><p className={`font-bold ${titleColor} mb-1 flex items-center gap-1`}> 👆 Navegação:</p><p className={`ml-2 ${textColor}`}>Deslize as bandeiras e toque para pular.</p></div></div>
-            <button onClick={() => setShowTutorial(false)} className={`w-full ${isDarkMode ? 'bg-emerald-500' : 'bg-slate-900'} text-white py-3 rounded-xl font-bold`}>Entendi!</button>
+        <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center" onClick={() => setShowTutorial(false)}>
+          <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="font-black text-slate-800 mb-4 border-b pb-2">Guia Rápido</h2>
+            <div className="space-y-3 text-xs text-slate-600 mb-4"><p>Toque 1x: <span className="bg-emerald-500 text-white px-2 py-0.5 rounded">Colada</span></p><p>Toque 2x: <span className="bg-purple-600 text-white px-2 py-0.5 rounded">Repetida</span></p><p>Toque 3x: <span className="bg-slate-200 text-slate-500 px-2 py-0.5 rounded">Faltante</span></p></div>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Entendi!</button>
           </div>
         </div>
       )}
 
-      <main className="w-full flex-1 flex flex-col px-3 py-4 space-y-4">
-        {activeTab === 'album' && (
-            <div className="flex-1">
-              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}><div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span></button>)}</div></div>
-              <div className="space-y-4">{SECTIONS.map((sec) => (<div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}><h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2><div className="grid grid-cols-5 gap-1.5 sm:gap-2">{(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { const key = `${sec.prefix}-${item}`; const status = stickers[key] || 0; return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full flex items-center justify-center font-bold text-xs rounded-lg transition-all ${status === 0 ? (isDarkMode ? 'bg-slate-700' : 'bg-slate-100') : status === 1 ? 'bg-emerald-500' : 'bg-purple-600'} text-white shadow-md`}>{item}</button>; })}</div></div>))}</div>
-            </div>
-        )}
-
-        {activeTab === 'stats' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col justify-center items-center`}>
-                <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
-                <div className="relative w-48 h-48 mb-8 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}><div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}><span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span><span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span></div></div>
-                <div className="space-y-3 w-full max-w-sm"><div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span><span className={`font-black ${titleColor}`}>{stats.coladas}</span></div><div className="flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20"><span className="flex items-center gap-2 font-bold text-purple-500"><div className="w-3 h-3 rounded-full bg-purple-500"></div> Repetidas</span><span className={`font-black ${titleColor}`}>{stats.repetidas}</span></div></div>
-            </div>
-        )}
-
-        {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center`}>
-                <Trophy size={48} className="text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
-                <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-                <p className={`text-sm ${textColor} mb-6 max-w-xs`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
-                {showProCode && (<div className="flex gap-2 mb-4 w-full max-w-xs"><input className="flex-1 bg-slate-900 text-white p-2 rounded-lg text-xs" onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'IVSON2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-4 rounded-lg text-xs font-bold">OK</button></div>)}
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200'} opacity-70 w-full max-w-sm`}><p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p></div>
-            </div>
-        )}
-
-        {activeTab === 'perfil' && (
-            <div className="space-y-4 flex flex-1 flex-col">
-                {!isStandalone && (<button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1"><span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> Instalar Aplicação</span></button>)}
-                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col`}>
-                     <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
-                     {activeFamilyId !== user.uid ? <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div> : (<div className="flex gap-2"><input type="text" placeholder="Código de convite..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none`}/><button onClick={() => { if (joinCode.trim()) { setActiveFamilyId(joinCode.trim()); localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); } }} className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shadow-md">Entrar</button></div>)}
-                     <div className="grid grid-cols-2 gap-2 mt-auto pt-4"><a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>{activeFamilyId !== user.uid ? <button className="bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed flex flex-col items-center justify-center"><Star size={18} className="mb-1"/> Pro</button> : <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center"><KeyRound size={18} className="mb-1"/> Tornar-se Pro</button>}</div>
-                </div>
-                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}><button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm">Sair da Conta</button></div>
-            </div>
-        )}
-      </main>
-
-      <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
-          <div className="flex justify-between items-center pb-2 max-w-md mx-auto">
-              <button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400'}`}><Book size={22}/><span className="text-[9px] font-bold">Álbum</span></button>
-              <button onClick={() => setActiveTab('stats')} className={`flex flex-col items-center gap-1 ${activeTab === 'stats' ? 'text-emerald-500' : 'text-slate-400'}`}><PieChart size={22}/><span className="text-[9px] font-bold">Resumo</span></button>
-              <button onClick={() => setActiveTab('jogos')} className={`flex flex-col items-center gap-1 ${activeTab === 'jogos' ? 'text-emerald-500' : 'text-slate-400'}`}><Trophy size={22}/><span className="text-[9px] font-bold">Bolão</span></button>
-              <button onClick={() => setActiveTab('perfil')} className={`flex flex-col items-center gap-1 ${activeTab === 'perfil' ? 'text-emerald-500' : 'text-slate-400'}`}><User size={22}/><span className="text-[9px] font-bold">Perfil</span></button>
+      <main className="w-full px-3 pb-4 space-y-4 pt-4">
+        {deferredPrompt && <button onClick={handleInstallClick} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs"><Download size={16}/> Instalar App</button>}
+        
+        {!isPro && (
+          <div className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-sm space-y-3">
+             {activeFamilyId !== user.uid ? <div className="text-center font-bold text-xs p-2 bg-emerald-50 text-emerald-800 rounded-lg">Você faz parte de uma família!</div> : (
+               <div className="flex gap-2"><input type="text" placeholder="Código..." onChange={(e) => setJoinCode(e.target.value)} className="flex-1 bg-slate-50 rounded-lg px-3 py-2 text-xs border"/><button onClick={() => { if (joinCode.trim()) { setActiveFamilyId(joinCode.trim()); localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); } }} className="bg-emerald-600 text-white px-4 rounded-lg font-bold text-xs">Entrar</button></div>
+             )}
+             <div className="grid grid-cols-2 gap-2">
+                <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center"><PlayCircle size={14} className="mr-1"/> Vídeo</a>
+                <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs">Tornar-se Pro</button>
+             </div>
           </div>
-      </nav>
+        )}
+
+        <div className="text-center">
+            <Trophy size={40} className="mx-auto text-yellow-500 mb-2 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
+            {showProCode && <div className="flex gap-2"><input className="flex-1 bg-slate-200 p-2 rounded" onChange={(e) => setProInput(e.target.value)}/><button onClick={() => { if(proInput === 'IVSON2026') { setIsPro(true); setShowProCode(false); } }} className="bg-emerald-600 text-white px-4 rounded">OK</button></div>}
+        </div>
+
+        {SECTIONS.map((sec) => (
+          <div key={sec.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+             <h2 className="font-black text-slate-700 mb-3 text-sm">{sec.flag} {sec.title}</h2>
+             <div className="grid grid-cols-5 gap-2">
+               {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
+                 const key = `${sec.prefix}-${item}`;
+                 const status = stickers[key] || 0;
+                 return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? 'bg-slate-100 text-slate-400' : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>{item}</button>;
+               })}
+             </div>
+          </div>
+        ))}
+      </main>
     </div>
   );
 }
