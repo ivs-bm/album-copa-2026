@@ -95,7 +95,7 @@ export default function App() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') setDeferredPrompt(null); }
+    if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') { setDeferredPrompt(null); setIsStandalone(true); } }
     else { setToast("Use o menu do navegador para 'Adicionar à Tela Inicial'."); setTimeout(() => setToast(''), 3000); }
   };
 
@@ -135,38 +135,35 @@ export default function App() {
     return { coladas, repetidas, faltantes, percColadas: ((coladas / TOTAL_STICKERS) * 100).toFixed(1), percRepetidas: ((repetidas / TOTAL_STICKERS) * 100).toFixed(1), percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
   }, [stickers]);
 
-  if (isAuthLoading) return <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500 border-opacity-50"></div><p className="text-white mt-4 font-bold text-sm opacity-80">Carregando...</p></div>;
+  if (isAuthLoading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500"></div></div>;
   if (!user) return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center"><button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-xl">Entrar com Google</button></div>;
 
   const themeBg = isDarkMode ? "bg-slate-900" : "bg-slate-50";
-  const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
-  const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
+  const cardBg = isDarkMode ? "bg-slate-800 text-white" : "bg-white text-slate-800";
+  const textColor = isDarkMode ? "text-slate-300" : "text-slate-600";
   const titleColor = isDarkMode ? "text-white" : "text-slate-800";
 
   return (
-    <div className={`w-full min-h-screen flex flex-col ${themeBg} relative pb-20 transition-colors duration-300`}>
-      <style>{`* { box-sizing: border-box !important; } html, body { width: 100%; margin: 0; padding: 0; }`}</style>
-      {toast && <div className="fixed top-20 z-[100] left-1/2 -translate-x-1/2 w-max bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl font-bold">{toast}</div>}
-      
-      <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
+    <div className={`w-full min-h-screen flex flex-col ${themeBg} transition-colors duration-300`}>
+      <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-emerald-800'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-3"><img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" /><div><h1 className="font-black text-sm">Família Copa</h1><p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p></div></div>
-           <div className="flex gap-2 shrink-0"><button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20"><Info size={18} /></button><button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20">{isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}</button></div>
+           <div className="flex gap-2"><button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full"><Info size={18} /></button><button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full">{isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}</button></div>
         </div>
-        <div className="flex items-center gap-3"><div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400" style={{ width: `${stats.percentage}%` }}></div></div></div>
+        <div className="h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div>
       </header>
 
       {showTutorial && (
-        <div className="fixed inset-0 z-[100] bg-black/60 p-4 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowTutorial(false)}>
-          <div className={`${cardBg} p-6 rounded-3xl w-full max-w-sm shadow-2xl`} onClick={e => e.stopPropagation()}>
-            <h2 className={`font-black ${titleColor} mb-4 text-lg border-b ${isDarkMode ? 'border-slate-700' : 'border-slate-200'} pb-2`}>Guia Rápido</h2>
-            <div className="space-y-4 text-xs text-slate-400">
-              <p>🏷️ <strong>Status:</strong> Toque 1x: Colada | 2x: Repetida | 3x: Faltante</p>
-              <p>👆 <strong>Navegação:</strong> Deslize a barra de bandeiras no topo para pular entre seleções.</p>
-              <p>☀️🌙 <strong>Temas:</strong> Use o Sol/Lua para alternar entre o modo Claro e Escuro.</p>
-              <p>📊 <strong>Resumo:</strong> Confira a Visão Geral da Coleção com gráficos e totais.</p>
-              <p>🏆 <strong>Bolão:</strong> Área de acompanhamento dos jogos da Copa 2026.</p>
-              <p>👤 <strong>Perfil:</strong> Gerencie família, links de afiliado e instale o app.</p>
+        <div className="fixed inset-0 z-[100] bg-black/70 p-4 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowTutorial(false)}>
+          <div className={`${cardBg} p-6 rounded-3xl w-full shadow-2xl`} onClick={e => e.stopPropagation()}>
+            <h2 className={`font-black ${titleColor} mb-4 text-lg border-b pb-2`}>Guia Rápido</h2>
+            <div className="text-sm space-y-3">
+              <p>🏷️ <strong>Status:</strong> Toque 1x: Colada | 2x: Repetida | 3x: Faltante.</p>
+              <p>👆 <strong>Navegação:</strong> Deslize as bandeiras no topo para pular.</p>
+              <p>☀️🌙 <strong>Temas:</strong> Use o botão de Sol/Lua para alternar.</p>
+              <p>📊 <strong>Resumo:</strong> Visão Geral da sua coleção.</p>
+              <p>🏆 <strong>Bolão:</strong> Acompanhe os jogos da Copa.</p>
+              <p>👤 <strong>Perfil:</strong> Gerencie família e instale o app.</p>
             </div>
             <button onClick={() => setShowTutorial(false)} className={`w-full ${isDarkMode ? 'bg-emerald-500' : 'bg-slate-900'} text-white py-3 rounded-xl mt-6 font-bold`}>Entendi!</button>
           </div>
@@ -175,45 +172,45 @@ export default function App() {
 
       <main className="w-full flex-1 flex flex-col p-3 space-y-4">
         {activeTab === 'album' && (
-            <div className="flex-1">
-              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}><div className={`${cardBg} px-3 py-2 rounded-2xl border flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span></button>)}</div></div>
-              <div className="space-y-4">{SECTIONS.map((sec) => (<div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-4 rounded-2xl border`}><h2 className={`font-black ${titleColor} mb-3 text-sm`}>{sec.flag} {sec.title}</h2><div className="grid grid-cols-5 gap-2">{(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { const key = `${sec.prefix}-${item}`; const status = stickers[key] || 0; return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? (isDarkMode ? 'bg-slate-700' : 'bg-slate-100') : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>{item}</button>; })}</div></div>))}</div>
+            <div className="flex-1 w-full">
+              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}><div className={`${cardBg} px-3 py-2 rounded-2xl flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold text-slate-400 uppercase">{s.prefix}</span></button>)}</div></div>
+              <div className="space-y-4">{SECTIONS.map((sec) => (<div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-4 rounded-2xl`}><h2 className={`font-black ${titleColor} mb-3 text-sm`}>{sec.flag} {sec.title}</h2><div className="grid grid-cols-5 gap-2">{(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { const key = `${sec.prefix}-${item}`; const status = stickers[key] || 0; return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? (isDarkMode ? 'bg-slate-700' : 'bg-slate-100') : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>{item}</button>; })}</div></div>))}</div>
             </div>
         )}
 
         {activeTab === 'stats' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 flex flex-col justify-center items-center`}>
+            <div className={`${cardBg} p-6 rounded-3xl text-center flex-1 w-full flex flex-col justify-center items-center`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-8`}>Visão Geral da Coleção</h2>
-                <div className="relative w-56 h-56 mb-8 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}><div className={`w-40 h-40 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center`}><span className={`text-3xl font-black ${titleColor}`}>{stats.percentage}%</span><span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span></div></div>
-                <div className="space-y-3 w-full max-w-sm"><div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><span className="flex items-center gap-2 font-bold text-emerald-500">Coladas</span><span className={`font-black ${titleColor}`}>{stats.coladas}</span></div><div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20"><span className="flex items-center gap-2 font-bold text-purple-500">Repetidas</span><span className={`font-black ${titleColor}`}>{stats.repetidas}</span></div></div>
+                <div className="relative w-48 h-48 mb-8 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}><div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center`}><span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span><span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span></div></div>
+                <div className="space-y-3 w-full"><div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10"><span className="flex items-center gap-2 font-bold text-emerald-500">Coladas</span><span className={`font-black ${titleColor}`}>{stats.coladas}</span></div><div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10"><span className="flex items-center gap-2 font-bold text-purple-500">Repetidas</span><span className={`font-black ${titleColor}`}>{stats.repetidas}</span></div></div>
             </div>
         )}
 
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 flex flex-col items-center justify-center`}>
+            <div className={`${cardBg} p-6 rounded-3xl text-center flex-1 w-full flex flex-col items-center justify-center`}>
                 <Trophy size={60} className="text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-                <p className={`text-sm ${textColor} mb-8`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
-                {showProCode && (<div className="flex gap-2 mb-6 w-full max-w-xs"><input className={`flex-1 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'} text-white p-3 rounded-xl text-xs`} onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'IVSON2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button></div>)}
-                <div className={`p-6 rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200'} w-full max-w-sm`}><p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p></div>
+                <p className={`text-sm ${textColor} mb-8`}>Acompanhe os jogos da Copa!</p>
+                {showProCode && (<div className="flex gap-2 mb-6 w-full"><input className={`flex-1 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'} text-white p-3 rounded-xl text-xs`} onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'IVSON2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button></div>)}
+                <div className={`p-6 rounded-2xl ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'} w-full`}><p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p></div>
             </div>
         )}
 
         {activeTab === 'perfil' && (
-            <div className="space-y-4 flex flex-1 flex-col">
-                {!isStandalone && (<button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl shadow-lg font-black uppercase text-sm tracking-wide">Instalar Aplicação</button>)}
-                <div className={`${cardBg} p-6 rounded-3xl border space-y-4 flex-1 flex flex-col`}>
+            <div className="space-y-4 flex flex-1 w-full flex-col">
+                {!isStandalone && (<button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl font-black uppercase text-sm">Instalar Aplicação</button>)}
+                <div className={`${cardBg} p-6 rounded-3xl space-y-4 flex-1 flex flex-col`}>
                      <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
-                     {activeFamilyId !== user.uid ? <div className="text-center font-bold text-xs p-4 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div> : (<div className="flex gap-2"><input type="text" placeholder="Código..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} rounded-xl px-4 py-3 text-xs border`}/><button onClick={() => { if (joinCode.trim()) { setActiveFamilyId(joinCode.trim()); localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); } }} className="bg-emerald-600 text-white px-6 rounded-xl font-bold text-xs">Entrar</button></div>)}
+                     {activeFamilyId !== user.uid ? <div className="text-center font-bold text-xs p-4 bg-emerald-500/10 text-emerald-500 rounded-xl">Você faz parte de uma família ativada!</div> : (<div className="flex gap-2"><input type="text" placeholder="Código..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} rounded-xl px-4 py-3 text-xs border`}/><button onClick={() => { if (joinCode.trim()) { setActiveFamilyId(joinCode.trim()); localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); } }} className="bg-emerald-600 text-white px-6 rounded-xl font-bold text-xs">Entrar</button></div>)}
                      <div className="grid grid-cols-2 gap-3 mt-auto pt-4"><a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 text-white py-4 rounded-xl font-bold text-xs">Ver Vídeo</a>{activeFamilyId !== user.uid ? <button className="bg-emerald-600 text-white py-4 rounded-xl font-bold text-xs opacity-50">Pro Ativado</button> : <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-4 rounded-xl font-bold text-xs">Tornar-se Pro</button>}</div>
                 </div>
-                <div className={`${cardBg} p-4 rounded-2xl border`}><button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-4 rounded-xl font-bold text-sm">Sair da Conta</button></div>
+                <div className={`${cardBg} p-4 rounded-2xl`}><button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-4 rounded-xl font-bold text-sm">Sair da Conta</button></div>
             </div>
         )}
       </main>
 
       <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pt-2 px-6 z-50`}>
-          <div className="flex justify-between items-center pb-2 max-w-md mx-auto"><button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400'}`}><Book size={24}/><span className="text-[10px] font-bold">Álbum</span></button><button onClick={() => setActiveTab('stats')} className={`flex flex-col items-center gap-1 ${activeTab === 'stats' ? 'text-emerald-500' : 'text-slate-400'}`}><PieChart size={24}/><span className="text-[10px] font-bold">Resumo</span></button><button onClick={() => setActiveTab('jogos')} className={`flex flex-col items-center gap-1 ${activeTab === 'jogos' ? 'text-emerald-500' : 'text-slate-400'}`}><Trophy size={24}/><span className="text-[10px] font-bold">Bolão</span></button><button onClick={() => setActiveTab('perfil')} className={`flex flex-col items-center gap-1 ${activeTab === 'perfil' ? 'text-emerald-500' : 'text-slate-400'}`}><User size={24}/><span className="text-[10px] font-bold">Perfil</span></button></div>
+          <div className="flex justify-between items-center pb-2 max-w-lg mx-auto"><button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400'}`}><Book size={22}/><span className="text-[9px] font-bold">Álbum</span></button><button onClick={() => setActiveTab('stats')} className={`flex flex-col items-center gap-1 ${activeTab === 'stats' ? 'text-emerald-500' : 'text-slate-400'}`}><PieChart size={22}/><span className="text-[9px] font-bold">Resumo</span></button><button onClick={() => setActiveTab('jogos')} className={`flex flex-col items-center gap-1 ${activeTab === 'jogos' ? 'text-emerald-500' : 'text-slate-400'}`}><Trophy size={22}/><span className="text-[9px] font-bold">Bolão</span></button><button onClick={() => setActiveTab('perfil')} className={`flex flex-col items-center gap-1 ${activeTab === 'perfil' ? 'text-emerald-500' : 'text-slate-400'}`}><User size={22}/><span className="text-[9px] font-bold">Perfil</span></button></div>
       </nav>
     </div>
   );
