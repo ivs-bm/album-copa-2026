@@ -115,6 +115,10 @@ export default function App() {
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       setIsStandalone(true);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker registrado!'))
+        .catch((err) => console.log('Erro ao registrar SW:', err));
     }
     
     const handleBeforeInstallPrompt = (e) => {
