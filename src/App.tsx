@@ -288,9 +288,9 @@ export default function App() {
       )}
 
       {/* ======================================================================= */}
-      {/* CONTEÚDO PRINCIPAL (MAIN): Container base com os espaçamentos idênticos ao 1º Print */}
+      {/* CONTEÚDO PRINCIPAL (MAIN): Container base */}
       {/* ======================================================================= */}
-      <main className="w-full flex-1 flex flex-col px-3 py-4 space-y-4">
+      <main className="w-full flex-1 flex flex-col px-3 py-4 gap-4 min-h-0">
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
@@ -338,38 +338,62 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 2: ESTATÍSTICAS (GRÁFICO) - Preenche toda a tela da guia Resumo */}
+// ============================================================================
+// ABA 2: ESTATÍSTICAS (RESUMO)
+// ============================================================================
 {activeTab === 'stats' && (
-    <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 min-h-[calc(100dvh-155px)] flex-col justify-evenly w-full`}>
-        <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
-        
-        {/* GRÁFICO DE PIZZA */}
-        <div className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center" 
-             style={{ 
-                 background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`
-             }}>
-            <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
-                <span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span>
-                <span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span>
-            </div>
+  <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex">
+    <div
+      className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full flex-1 min-h-[calc(100dvh-170px)] overflow-hidden`}
+    >
+      {/* AJUSTE DE LAYOUT: o Resumo agora ocupa toda a altura útil da tela,
+          sem alterar nenhum dado, gráfico ou informação exibida. */}
+      <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
+
+      {/* GRÁFICO DE PIZZA */}
+      <div
+        className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center"
+        style={{
+          background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`
+        }}
+      >
+        <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
+          <span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span>
+          <span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span>
+        </div>
+      </div>
+
+      {/* BLOCOS DE INFORMAÇÃO NUMÉRICA */}
+      <div className="space-y-3 w-full max-w-sm mx-auto mt-4">
+        <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <span className="flex items-center gap-2 font-bold text-emerald-500">
+            <div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas
+          </span>
+          <span className={`font-black ${titleColor}`}>
+            {stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span>
+          </span>
         </div>
 
-        {/* BLOCOS DE INFORMAÇÃO NUMÉRICA */}
-        <div className="space-y-3 w-full max-w-sm mx-auto mt-4">
-            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
-                <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <span className="flex items-center gap-2 font-bold text-purple-500"><div className="w-3 h-3 rounded-full bg-purple-500"></div> Repetidas</span>
-                <span className={`font-black ${titleColor}`}>{stats.repetidas} <span className="text-xs font-normal opacity-50">({stats.percRepetidas}%)</span></span>
-            </div>
-            <div className={`flex justify-between items-center p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
-                <span className={`flex items-center gap-2 font-bold ${textColor}`}><div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-300'}`}></div> Faltantes</span>
-                <span className={`font-black ${titleColor}`}>{stats.faltantes} <span className="text-xs font-normal opacity-50">({stats.percFaltantes}%)</span></span>
-            </div>
+        <div className="flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+          <span className="flex items-center gap-2 font-bold text-purple-500">
+            <div className="w-3 h-3 rounded-full bg-purple-500"></div> Repetidas
+          </span>
+          <span className={`font-black ${titleColor}`}>
+            {stats.repetidas} <span className="text-xs font-normal opacity-50">({stats.percRepetidas}%)</span>
+          </span>
         </div>
+
+        <div className={`flex justify-between items-center p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
+          <span className={`flex items-center gap-2 font-bold ${textColor}`}>
+            <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-300'}`}></div> Faltantes
+          </span>
+          <span className={`font-black ${titleColor}`}>
+            {stats.faltantes} <span className="text-xs font-normal opacity-50">({stats.percFaltantes}%)</span>
+          </span>
+        </div>
+      </div>
     </div>
+  </div>
 )}
 
         {/* ABA 3: BOLÃO - Agora com o código VIP embutido no Troféu */}
@@ -397,17 +421,21 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 4: PERFIL E CONFIGURAÇÕES - Respeitando a largura padrão */}
-        {activeTab === 'perfil' && (
-            <div className="space-y-4 flex flex-1 flex-col w-full">
-                
-                {/* BOTÃO INSTALAR APLICATIVO (PWA) */}
-                {!isStandalone && (
-                   <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
-                     <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> INSTALAR APLICATIVO</span>
-                     <span className="text-[10px] font-medium opacity-90">Acesso direto da tela inicial, rápido e seguro.</span>
-                   </button>
-                )}
+        // ============================================================================
+// ABA 4: PERFIL E CONFIGURAÇÕES
+// ============================================================================
+{activeTab === 'perfil' && (
+  <div className="flex flex-1 flex-col w-full min-h-[calc(100dvh-170px)] gap-4 justify-between">
+    {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível
+        da tela, sem alterar nenhuma informação exibida. */}
+
+    {/* BOTÃO INSTALAR APLICATIVO (PWA) */}
+    {!isStandalone && (
+      <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
+        <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> INSTALAR APLICATIVO</span>
+        <span className="text-[10px] font-medium opacity-90">Acesso direto da tela inicial, rápido e seguro.</span>
+      </button>
+    )}
 
                 {!isPro && (
                   <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col`}>
