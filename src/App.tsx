@@ -285,7 +285,7 @@ export default function App() {
 
         {/* ============================================================================ */}
         {/* ABA 2: ESTATÍSTICAS (RESUMO) - CORRIGIDO: Largura total (full width) */}
-        ================================================
+        =============================================
         {activeTab === 'stats' && (
           <div className="flex-1 w-full flex">
             <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-center w-full`}>
