@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download } from 'lucide-react';
+import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -77,15 +77,19 @@ export default function App() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [toast, setToast] = useState('');
   
-  // NOVOS ESTADOS:
-  const [activeTab, setActiveTab] = useState('album'); // album, stats, jogos, perfil
-  const [isDarkMode, setIsDarkMode] = useState(true); // Tema escuro padrão
-  const [deferredPrompt, setDeferredPrompt] = useState(null); // Para o PWA
+  const [activeTab, setActiveTab] = useState('album'); 
+  const [isDarkMode, setIsDarkMode] = useState(true); 
+  const [deferredPrompt, setDeferredPrompt] = useState(null); 
+  const [isStandalone, setIsStandalone] = useState(false); // Detecção de PWA instalado
   
   const sectionsRef = useRef({});
 
-  // PWA Install Prompt Listener
+  // Verifica se já está rodando como App instalado
   useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      setIsStandalone(true);
+    }
+    
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -98,7 +102,14 @@ export default function App() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setDeferredPrompt(null);
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setIsStandalone(true);
+      }
+    } else {
+      // Fallback inteligente para iOS ou Android que bloqueou o prompt automático
+      setToast("Abra o menu do navegador (3 pontinhos) e toque em 'Adicionar à Tela Inicial'.");
+      setTimeout(() => setToast(''), 4500);
     }
   };
 
@@ -168,7 +179,6 @@ export default function App() {
     </div>
   );
 
-  // Variáveis de Tema
   const themeBg = isDarkMode ? "bg-slate-900" : "bg-slate-50";
   const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
   const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
@@ -184,7 +194,6 @@ export default function App() {
       
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
       
-      {/* HEADER SIMPLIFICADO */}
       <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-3">
@@ -205,13 +214,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* ÁREA DE CONTEÚDO PRINCIPAL (RENDERIZADA BASEADA NA ABA) */}
       <main className="w-full px-3 py-4 space-y-4">
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <>
-              {/* Barra de rolagem rápida do Álbum */}
               <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}>
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
                   {SECTIONS.map(s => (
@@ -231,7 +238,6 @@ export default function App() {
                          {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
                            const key = `${sec.prefix}-${item}`;
                            const status = stickers[key] || 0;
-                           // Cores baseadas no modo escuro/claro
                            const btnClass = status === 0 
                                 ? (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-400')
                                 : status === 1 
@@ -253,10 +259,9 @@ export default function App() {
 
         {/* ABA 2: ESTATÍSTICAS (GRÁFICO) */}
         {activeTab === 'stats' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center`}>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-center min-h-[calc(100vh-150px)]`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
                 
-                {/* Gráfico de Pizza via CSS Conic Gradient */}
                 <div className="relative w-48 h-48 mx-auto mb-8 rounded-full shadow-inner flex items-center justify-center" 
                      style={{ 
                          background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`
@@ -267,7 +272,7 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 mt-auto">
                     <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                         <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
                         <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
@@ -284,14 +289,14 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 3: BOLÃO (PREPARAÇÃO/BASE) */}
+        {/* ABA 3: BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center`}>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col items-center justify-center min-h-[calc(100vh-150px)]`}>
                 <Trophy size={48} className="mx-auto text-yellow-500 mb-4" />
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
                 <p className={`text-sm ${textColor} mb-6`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
                 
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70`}>
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full`}>
                     <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p>
                     <p className={`text-[10px] mt-2 ${textColor}`}>Esta área será ativada automaticamente quando os grupos oficiais forem sorteados pela FIFA.</p>
                 </div>
@@ -300,18 +305,18 @@ export default function App() {
 
         {/* ABA 4: PERFIL E CONFIGURAÇÕES */}
         {activeTab === 'perfil' && (
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col min-h-[calc(100vh-150px)]">
                 
-                {/* PWA INSTALL BUTTON */}
-                {deferredPrompt && (
+                {/* PWA INSTALL BUTTON (Oculta apenas se já estiver instalado) */}
+                {!isStandalone && (
                    <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                      <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> Instalar Aplicação</span>
-                     <span className="text-[10px] font-medium opacity-90">Acesso direto da sua tela inicial, rápido e seguro.</span>
+                     <span className="text-[10px] font-medium opacity-90">Acesso direto da tela inicial, rápido e seguro.</span>
                    </button>
                 )}
 
                 {!isPro && (
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4`}>
+                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1`}>
                      <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
                      {activeFamilyId !== user.uid ? (
                         <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div>
@@ -333,8 +338,8 @@ export default function App() {
                            <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-md"><Copy size={16}/> Copiar Chave PIX</button>
                         </div>
                      ) : (
-                       <div className="grid grid-cols-2 gap-2">
-                          <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" className="text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>
+                       <div className="grid grid-cols-2 gap-2 mt-4">
+                          <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>
                           {activeFamilyId !== user.uid ? (
                             <button className={`bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed flex flex-col items-center justify-center`}><Star size={18} className="mb-1"/> Pro Ativado</button>
                           ) : (
@@ -345,9 +350,8 @@ export default function App() {
                   </div>
                 )}
 
-                {/* FUNÇÕES PRO (Movidas do header) */}
                 {isPro && (
-                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3`}>
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3 flex-1`}>
                         <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2 mb-2`}><KeyRound size={16} className="text-indigo-400"/> Ferramentas do Administrador</h3>
                         
                         <button onClick={() => copyToClipboard(activeFamilyId, "ID da Família copiado!")} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors`}>
@@ -368,7 +372,7 @@ export default function App() {
                     </div>
                 )}
 
-                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
+                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border mt-auto`}>
                    <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
                        <LogOut size={18}/> Sair da Conta
                    </button>
@@ -378,7 +382,6 @@ export default function App() {
         )}
       </main>
 
-      {/* BOTTOM NAVIGATION (NOVO) */}
       <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
           <div className="flex justify-between items-center pb-2 max-w-md mx-auto">
               <button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
