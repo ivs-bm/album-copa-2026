@@ -320,12 +320,23 @@ export default function App() {
 
         {/* ABA 3: BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center`}>
-                <Trophy size={48} className="mx-auto text-yellow-500 mb-4" />
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
+                
+                {/* BOTÃO SECRETO (3 Cliques) */}
+                <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
+                
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
                 <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
                 
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm`}>
+                {/* CAIXA SECRETA DE SENHA VIP */}
+                {showProCode && (
+                  <div className="flex gap-2 mb-6 w-full max-w-xs mx-auto">
+                    <input className={`flex-1 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'} border text-white p-3 rounded-xl text-xs outline-none`} onChange={(e) => setProInput(e.target.value)} placeholder="Código VIP" />
+                    <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro Ativado!"); } }} className="bg-emerald-600 text-white px-6 rounded-xl text-xs font-bold shadow-md">OK</button>
+                  </div>
+                )}
+                
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
                     <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p>
                     <p className={`text-[10px] mt-2 ${textColor}`}>Esta área será ativada automaticamente quando os grupos oficiais forem sorteados pela FIFA.</p>
                 </div>
