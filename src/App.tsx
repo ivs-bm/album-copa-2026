@@ -284,11 +284,11 @@ export default function App() {
         )}
 
         {/* ============================================================================ */}
-        {/* ABA 2: ESTATÍSTICAS (RESUMO) - CORRIGIDO PARA OCUPAR TODA A TELA */}
+        {/* ABA 2: ESTATÍSTICAS (RESUMO) - CORRIGIDO: Largura total (full width) */}
         {/* ============================================================================ */}
         {activeTab === 'stats' && (
-          <div className="flex flex-1 flex-col w-full">
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-center w-full flex-1`}>
+          <div className="flex-1 w-full flex">
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-center w-full`}>
               <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
               <div className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center" 
                    style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`}}>
@@ -297,7 +297,8 @@ export default function App() {
                       <span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span>
                   </div>
               </div>
-              <div className="space-y-3 w-full max-w-sm mx-auto mt-4">
+              {/* REMOVIDO max-w-sm e mx-auto para expandir horizontalmente */}
+              <div className="space-y-3 w-full mt-4">
                   <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                       <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
                       <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
@@ -335,7 +336,7 @@ export default function App() {
         )}
 
         {/* ============================================================================ */}
-        {/* ABA 4: PERFIL E CONFIGURAÇÕES - CORRIGIDO PARA OCUPAR TODA A TELA */}
+        {/* ABA 4: PERFIL E CONFIGURAÇÕES - CORRIGIDO: Largura total (full width) */}
         {/* ============================================================================ */}
         {activeTab === 'perfil' && (
           <div className="flex flex-1 flex-col w-full gap-4">
@@ -347,12 +348,12 @@ export default function App() {
             )}
 
             {!isPro && (
-              <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col`}>
+              <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col w-full`}>
                    <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
                    {activeFamilyId !== user.uid ? (
                      <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div>
                    ) : (
-                     <div className="flex gap-2">
+                     <div className="flex gap-2 w-full">
                        <input type="text" placeholder="Código de convite..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}/>
                        <button onClick={() => {
                          if (joinCode.trim()) {
@@ -363,12 +364,12 @@ export default function App() {
                      </div>
                    )}
                    {pixCode ? (
-                     <div className="space-y-2 mt-auto">
+                     <div className="space-y-2 mt-auto w-full">
                         <input readOnly value={pixCode} className={`w-full ${isDarkMode ? 'bg-slate-900 text-slate-400 border-slate-700' : 'bg-slate-50 text-slate-500 border-slate-200'} text-[10px] p-2 rounded-xl border outline-none text-center`}/>
                         <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-md"><Copy size={16}/> Copiar Chave PIX</button>
                      </div>
                    ) : (
-                     <div className="grid grid-cols-2 gap-2 mt-auto pt-4">
+                     <div className="grid grid-cols-2 gap-2 mt-auto pt-4 w-full">
                         <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>
                         {activeFamilyId !== user.uid ? (
                           <button className={`bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed flex flex-col items-center justify-center`}><Star size={18} className="mb-1"/> Pro Ativado</button>
@@ -381,7 +382,7 @@ export default function App() {
             )}
 
             {isPro && (
-                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3 flex-1`}>
+                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3 w-full`}>
                     <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2 mb-2`}><KeyRound size={16} className="text-indigo-400"/> Ferramentas do Administrador</h3>
                     <button onClick={() => copyToClipboard(activeFamilyId, "ID da Família copiado!")} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors`}>
                         <span className={`text-xs font-bold ${textColor}`}>Código da Família (Convite)</span>
@@ -400,7 +401,7 @@ export default function App() {
                 </div>
             )}
 
-            <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
+            <div className={`${cardBg} p-4 rounded-2xl shadow-sm border w-full`}>
                  <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
                      <LogOut size={18}/> Sair da Conta
                  </button>
