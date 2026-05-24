@@ -112,20 +112,27 @@ export default function App() {
   // ============================================================================
   
   // Efeito 1: Captura a permissão do celular para instalar o App (PWA)
+  // Efeito 1: Registro do Service Worker e Captura de instalação
   useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-      setIsStandalone(true);
+    // Registro do Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(() => console.log('Service Worker registrado!'))
         .catch((err) => console.log('Erro ao registrar SW:', err));
     }
+
+    // Verifica se já está em modo standalone
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      setIsStandalone(true);
+    }
     
+    // Captura o evento de instalação
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
