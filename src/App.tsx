@@ -287,8 +287,8 @@ export default function App() {
         {/* ABA 2: ESTATÍSTICAS (RESUMO) - CORRIGIDO: Largura total (full width) */}
         =============================================
         {activeTab === 'stats' && (
-          <div className="flex-1 w-full flex">
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-center w-full`}>
+          <div className="flex-1 w-full flex -mx-3">
+            <div className={`${cardBg} p-5 shadow-sm border text-center flex flex-col justify-center w-full flex-1`}>
               <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
               <div className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center" 
                    style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`}}>
@@ -298,7 +298,7 @@ export default function App() {
                   </div>
               </div>
               {/* REMOVIDO max-w-sm e mx-auto para expandir horizontalmente */}
-              <div className="space-y-3 w-full mt-4">
+              <div className="space-y-3 w-full mt-4 px-3">
                   <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                       <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
                       <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
@@ -318,7 +318,7 @@ export default function App() {
 
         {/* ABA 3: BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
+            <div className={`${cardBg} p-5 shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full -mx-3`}>
                 <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
                 <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
@@ -339,7 +339,7 @@ export default function App() {
         {/* ABA 4: PERFIL E CONFIGURAÇÕES - CORRIGIDO: Largura total (full width) */}
         {/* ============================================================================ */}
         {activeTab === 'perfil' && (
-          <div className="flex flex-1 flex-col w-full gap-4">
+          <div className="flex flex-1 flex-col w-full gap-4 -mx-3 px-3">
             {!isStandalone && (
               <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                 <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> INSTALAR APLICATIVO</span>
