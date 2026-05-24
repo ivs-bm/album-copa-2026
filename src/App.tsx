@@ -1,5 +1,5 @@
 // ============================================================================
-// CÓDIGO CORRIGIDO: Padrão de largura e preenchimento total aplicado
+// IMPORTAÇÕES E CONFIGURAÇÃO DO FIREBASE
 // ============================================================================
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle } from 'lucide-react';
@@ -12,6 +12,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ============================================================================
+// ESTRUTURA DE DADOS
+// ============================================================================
 const SECTIONS = [
   { id: 'FWC_INI', title: 'Ínicio', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
   { id: 'FWC_HST', title: 'História', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
@@ -175,8 +178,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Main agora usa flex-1 e w-full para preencher toda a área */}
+      {/* Container pai com padding uniforme */}
       <main className="w-full flex-1 flex flex-col p-3 space-y-4">
+        
+        {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
               <div className="sticky top-[65px] z-30 pt-1 pb-2 w-full"><div className={`${cardBg} px-3 py-2 rounded-2xl flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold uppercase">{s.prefix}</span></button>)}</div></div>
@@ -184,30 +189,34 @@ export default function App() {
             </div>
         )}
 
-        {/* Resumo preenchendo toda a página */}
+        {/* ABA 2: RESUMO - Estrutura unificada com a aba Álbum */}
         {activeTab === 'stats' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col justify-center`}>
-                <h2 className="font-black text-lg mb-8">Visão Geral da Coleção</h2>
-                <div className="space-y-3 w-full"><div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10"><span className="font-bold text-emerald-500">Coladas</span><span className="font-black">{stats.coladas}</span></div><div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10"><span className="font-bold text-purple-500">Repetidas</span><span className="font-black">{stats.repetidas}</span></div></div>
+            <div className="flex-1 w-full">
+                <div className={`${cardBg} p-4 rounded-2xl border text-center flex flex-col justify-center`}>
+                    <h2 className="font-black text-lg mb-8">Visão Geral da Coleção</h2>
+                    <div className="space-y-3 w-full"><div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10"><span className="font-bold text-emerald-500">Coladas</span><span className="font-black">{stats.coladas}</span></div><div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10"><span className="font-bold text-purple-500">Repetidas</span><span className="font-black">{stats.repetidas}</span></div></div>
+                </div>
             </div>
         )}
 
-        {/* Bolão preenchendo toda a página */}
+        {/* ABA 3: BOLÃO - Estrutura unificada */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col items-center justify-center`}>
-                <Trophy size={60} className="text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
-                <h2 className="font-black text-xl mb-2">Bolão da Família</h2>
-                <p className="text-sm mb-8">Acompanhe os jogos da Copa!</p>
-                {showProCode && (<div className="flex gap-2 mb-6 w-full"><input className="flex-1 bg-slate-700 text-white p-3 rounded-xl text-xs" onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button></div>)}
+            <div className="flex-1 w-full">
+                <div className={`${cardBg} p-4 rounded-2xl border text-center flex flex-col items-center justify-center`}>
+                    <Trophy size={60} className="text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
+                    <h2 className="font-black text-xl mb-2">Bolão da Família</h2>
+                    <p className="text-sm mb-8">Acompanhe os jogos da Copa!</p>
+                    {showProCode && (<div className="flex gap-2 mb-6 w-full"><input className="flex-1 bg-slate-700 text-white p-3 rounded-xl text-xs" onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button></div>)}
+                </div>
             </div>
         )}
 
-        {/* Perfil preenchendo toda a página */}
+        {/* ABA 4: PERFIL - Estrutura unificada */}
         {activeTab === 'perfil' && (
-            <div className="space-y-4 flex flex-1 w-full flex-col">
+            <div className="flex-1 w-full flex flex-col space-y-4">
                 <button onClick={handleInstallClick} className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl font-black uppercase text-sm">INSTALAR APLICATIVO</button>
-                <div className={`${cardBg} p-6 rounded-3xl border space-y-4 flex-1`}>
-                     {/* ... restante do código do perfil ... */}
+                <div className={`${cardBg} p-4 rounded-2xl border flex-1`}>
+                     {/* Conteúdo do perfil aqui */}
                 </div>
             </div>
         )}
