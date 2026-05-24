@@ -318,7 +318,7 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 3: BOLÃO */}
+        {/* ABA 3: BOLÃO - Agora com o código VIP embutido no Troféu */}
         {activeTab === 'jogos' && (
             <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
                 
