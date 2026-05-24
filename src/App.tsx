@@ -170,11 +170,46 @@ export default function App() {
         </div>
       )}
 
-      <main className="w-full flex-1 flex flex-col p-3 space-y-4">
+      <main className="w-full flex-1 flex flex-col px-3 py-4 space-y-4">
+        
+        {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
-            <div className="flex-1 w-full">
-              <div className="sticky top-[65px] z-30 pt-1 pb-2 w-full"><div className={`${cardBg} px-3 py-2 rounded-2xl flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold uppercase">{s.prefix}</span></button>)}</div></div>
-              <div className="space-y-4">{SECTIONS.map((sec) => (<div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-4 rounded-2xl border`}><h2 className="font-black mb-3 text-sm">{sec.flag} {sec.title}</h2><div className="grid grid-cols-5 gap-2">{(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { const key = `${sec.prefix}-${item}`; const status = stickers[key] || 0; return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? 'bg-slate-100 text-slate-400' : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>{item}</button>; })}</div></div>))}</div>
+            <div className="flex-1">
+              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}>
+                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
+                  {SECTIONS.map(s => (
+                    <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
+                      <span className="text-xl">{s.flag}</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                  {SECTIONS.map((sec) => (
+                    <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
+                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2>
+                       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                         {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
+                           const key = `${sec.prefix}-${item}`;
+                           const status = stickers[key] || 0;
+                           const btnClass = status === 0 
+                                ? (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-400')
+                                : status === 1 
+                                    ? 'bg-emerald-500 text-white shadow-md' 
+                                    : 'bg-purple-600 text-white shadow-md';
+
+                           return (
+                             <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full flex items-center justify-center font-bold text-xs rounded-lg transition-all ${btnClass}`}>
+                               {item}
+                             </button>
+                           );
+                         })}
+                       </div>
+                    </div>
+                  ))}
+              </div>
             </div>
         )}
 
