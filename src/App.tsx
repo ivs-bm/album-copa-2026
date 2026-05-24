@@ -84,25 +84,28 @@ export default function App() {
   // ESTADOS DA APLICAÇÃO (Variáveis que mudam e atualizam a tela)
   // ============================================================================
   const [user, setUser] = useState(null); // Armazena os dados da conta Google logada
-  const [activeTab, setActiveTab] = useState('album'); // Controla qual guia está aberta (album, stats, jogos, perfil)
-  const [isDarkMode, setIsDarkMode] = useState(true); // Controla a chave do Modo Escuro/Claro
-  const [stickers, setStickers] = useState({}); // Dicionário contendo o status de cada figurinha (0, 1 ou 2)
-  const [isPro, setIsPro] = useState(false); // Define se a família atual possui acesso Premium/Pro
-  const [showTutorial, setShowTutorial] = useState(false); // Define se a tela do Guia Rápido está visível
-  const [toast, setToast] = useState(''); // Controla as mensagens pop-up no topo (ex: "Pix copiado")
-  const [activeFamilyId, setActiveFamilyId] = useState(''); // Guarda o código da família sendo visualizada
-  const [joinCode, setJoinCode] = useState(''); // Guarda o texto digitado no input "Entrar em família"
-  const [pixCode, setPixCode] = useState(''); // Guarda o código do PIX gerado para compra do Pro
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // Controle da tela de carregamento inicial
+  const [activeFamilyId, setActiveFamilyId] = useState(''); // ID da família do usuário
+  const [joinCode, setJoinCode] = useState(''); // Código digitado no input de convite
+  const [stickers, setStickers] = useState({}); // Dicionário contendo o status de cada figurinha
+  const [isPro, setIsPro] = useState(false); // Status de conta Premium/Pro
+  const [pixCode, setPixCode] = useState(''); // Armazena o código PIX para tornar-se PRO
+  const [showTutorial, setShowTutorial] = useState(false); // Controle se o modal "Guia Rápido" está aberto
+  const [toast, setToast] = useState(''); // Controle dos alertas verdes no topo da tela
   
-  // Estados referentes ao código secreto (Easter Egg no Troféu)
-  const [trophyClicks, setTrophyClicks] = useState(0); // Conta quantas vezes o usuário clicou no troféu
-  const [proInput, setProInput] = useState(''); // Guarda a senha secreta digitada ("NOSVICOPA2026")
-  const [showProCode, setShowProCode] = useState(false); // Define se a caixa de senha secreta está visível
+  const [activeTab, setActiveTab] = useState('album'); // Aba atual selecionada no menu inferior
+  const [isDarkMode, setIsDarkMode] = useState(true); // Controle do modo Claro/Escuro
   
   // Estados referentes ao PWA (Instalação no celular)
-  const [deferredPrompt, setDeferredPrompt] = useState(null); // Salva o evento do navegador que permite instalar o App
-  const [isStandalone, setIsStandalone] = useState(false); // Verifica se o app já está instalado
-  const sectionsRef = useRef({}); // Referência invisível usada para fazer a rolagem automática até a bandeira clicada
+  const [deferredPrompt, setDeferredPrompt] = useState(null); 
+  const [isStandalone, setIsStandalone] = useState(false); 
+  
+  // Estados referentes ao código VIP secreto (Bolão)
+  const [trophyClicks, setTrophyClicks] = useState(0); 
+  const [showProCode, setShowProCode] = useState(false); 
+  const [proInput, setProInput] = useState(''); 
+  
+  const sectionsRef = useRef({}); // Referência para deslizar as bandeiras
 
   // ============================================================================
   // EFEITOS E LÓGICA DE INICIALIZAÇÃO
@@ -110,42 +113,50 @@ export default function App() {
   
   // Efeito 1: Captura a permissão do celular para instalar o App (PWA)
   useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) setIsStandalone(true);
-    const handleBeforeInstallPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      setIsStandalone(true);
+    }
+    
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  // Função: Botão "Instalar Aplicativo" (Aba Perfil)
-  const handleInstallClick = () => {
+  // Função: Botão "Instalar Aplicativo"
+  const handleInstallClick = async () => {
     if (deferredPrompt) {
-        // Mostra a janela oficial do Android/iOS para instalar
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') { setDeferredPrompt(null); setIsStandalone(true); } });
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setIsStandalone(true);
+      }
     } else {
-        // Se o celular bloquear a janela, mostra o aviso em formato Toast
-        setToast("Use o menu do navegador para instalar.");
-        setTimeout(() => setToast(''), 4500);
+      setToast("Abra o menu do navegador (3 pontinhos) e toque em 'Adicionar à Tela Inicial'.");
+      setTimeout(() => setToast(''), 4500);
     }
   };
 
-  // Efeito 2: Verifica o login no Google ao abrir o App
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-        setUser(u); // Salva o usuário logado
-        if (u) {
-            // Se logou, tenta buscar se ele já estava em alguma família antes
-            const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
-            setActiveFamilyId(savedFamilyId || u.uid);
-        } else {
-            localStorage.removeItem('@AlbumCopa_FamilyId');
-            setActiveFamilyId('');
-        }
-    });
+  // Efeito 2: Verifica o login do usuário quando o App carrega
+  useEffect(() => { 
+    const unsubscribe = onAuthStateChanged(auth, (u) => { 
+      setUser(u); 
+      if (u) {
+        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
+        setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
+      } else {
+        localStorage.removeItem('@AlbumCopa_FamilyId');
+        setActiveFamilyId('');
+      }
+      setIsAuthLoading(false);
+    }); 
     return () => unsubscribe();
   }, []);
 
-  // Efeito 3: Fica "escutando" o banco de dados (Firebase) para atualizar figurinhas em tempo real
+  // Efeito 3: Busca as figurinhas em tempo real no banco de dados (Firestore)
   useEffect(() => {
     if (!activeFamilyId) return;
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
@@ -154,91 +165,115 @@ export default function App() {
   }, [activeFamilyId]);
 
   // ============================================================================
-  // FUNÇÕES DE INTERAÇÃO (CLIQUES NOS BOTÕES)
+  // FUNÇÕES DE INTERAÇÃO
   // ============================================================================
-  
-  // Função: Quando clica em qualquer botão de figurinha (Aba Álbum)
+  // Função: Quando clica na figurinha para colar/repetir
   const toggleSticker = async (key) => {
-    // Rotaciona o status: 0 (Faltante) -> 1 (Colada) -> 2 (Repetida) -> Volta pro 0
     const newStatus = ((stickers[key] || 0) + 1) % 3;
     setStickers({...stickers, [key]: newStatus});
-    // Salva a mudança no banco de dados Firebase
     await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
 
-  // Função: Botão "Tornar-se Pro" (Aba Perfil)
   const handleBuyPro = () => setPixCode("00020126460014br.gov.bcb.pix0124... (Código PIX)");
-  
-  // Função Genérica: Copia textos para a área de transferência do celular e mostra aviso
   const copyToClipboard = (text, msg) => { navigator.clipboard.writeText(text).then(() => { setToast(msg); setTimeout(() => setToast(''), 2000); }); };
   
-  // Função: Quando clica em uma bandeira (Aba Álbum), faz a tela deslizar até aquele país
-  const scrollToSection = (id) => { setActiveTab('album'); setTimeout(() => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' }), 100); };
+  // Função: Faz a tela deslizar ao clicar na bandeira do menu superior
+  const scrollToSection = (id) => {
+      setActiveTab('album');
+      setTimeout(() => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' }), 100);
+  };
 
-  // Função de Cálculo: Conta figurinhas coladas, repetidas e o % completo
+  // Cálculo de Estatísticas da coleção
   const stats = useMemo(() => {
     let coladas = 0; let repetidas = 0;
-    Object.values(stickers).forEach(s => { if (s === 1) coladas++; if (s === 2) repetidas++; });
+    Object.values(stickers).forEach(s => { 
+        if (s === 1) coladas++; 
+        if (s === 2) repetidas++; 
+    });
     const faltantes = TOTAL_STICKERS - (coladas + repetidas);
     return { 
-        coladas, repetidas, faltantes, 
-        percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0,
+        coladas, repetidas, faltantes,
         percColadas: ((coladas / TOTAL_STICKERS) * 100).toFixed(1),
-        percRepetidas: ((repetidas / TOTAL_STICKERS) * 100).toFixed(1)
+        percRepetidas: ((repetidas / TOTAL_STICKERS) * 100).toFixed(1),
+        percFaltantes: ((faltantes / TOTAL_STICKERS) * 100).toFixed(1),
+        percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0 
     };
   }, [stickers]);
 
   // ============================================================================
-  // RENDERIZAÇÃO: TELA DE LOGIN
+  // RENDERIZAÇÃO: TELAS DE CARREGAMENTO E LOGIN
   // ============================================================================
-  // Se não tem usuário logado, trava a tela toda exibindo apenas o Botão do Google
-  if (!user) return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6"><button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold">Entrar com Google</button></div>;
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500 border-opacity-50"></div>
+        <p className="text-white mt-4 font-bold text-sm opacity-80">Carregando...</p>
+      </div>
+    );
+  }
 
-  // Variáveis para trocar a cor das caixas (Cards) dependendo se é Modo Claro ou Escuro
+  if (!user) return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
+      <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-xl">Entrar com Google</button>
+    </div>
+  );
+
+  // Variáveis para trocar cores baseadas no Tema Claro/Escuro
   const themeBg = isDarkMode ? "bg-slate-900" : "bg-slate-50";
   const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
   const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
   const titleColor = isDarkMode ? "text-white" : "text-slate-800";
 
   // ============================================================================
-  // RENDERIZAÇÃO PRINCIPAL: INTERFACE DO APLICATIVO LOGADO
+  // RENDERIZAÇÃO PRINCIPAL (INTERFACE DO APLICATIVO LOGADO)
   // ============================================================================
   return (
-    // DIV PRINCIPAL: Fundo do app que envelopa tudo
-    <div className={`w-full min-h-screen flex flex-col ${themeBg} transition-colors duration-300`}>
-      <style>{`* { box-sizing: border-box !important; } html, body { width: 100%; margin: 0; padding: 0; } .hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+    // DIV PRINCIPAL: Mantido exatamente como no primeiro print (max-w-[100vw] overflow-x-hidden)
+    <div className={`w-full max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
+      <style>{`
+        * { box-sizing: border-box !important; }
+        html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden !important; overscroll-behavior-x: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
       
-      {/* ALERTA TOAST (O balão flutuante que avisa "Pix copiado", "Modo Pro ativado", etc) */}
-      {toast && <div className="fixed top-20 z-[100] left-1/2 -translate-x-1/2 w-max bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl font-bold">{toast}</div>}
+      {/* TOAST NOTIFICATION: Balão de aviso flutuante */}
+      {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
       
       {/* ======================================================================= */}
-      {/* CABEÇALHO SUPERIOR (Header fixo com Foto, Titulo e Progresso) */}
+      {/* CABEÇALHO (HEADER) FIXO */}
       {/* ======================================================================= */}
       <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
-         <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-3">
-               <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
-               <div><h1 className="font-black text-sm">Família Copa</h1><p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p></div>
-            </div>
-            <div className="flex gap-2">
-                {/* BOTÃO: Abrir tela de Ajuda (Guia Rápido) */}
-                <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20"><Info size={18} /></button>
-                {/* BOTÃO: Alternar Modo Claro / Escuro */}
-                <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20">{isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}</button>
-            </div>
-         </div>
-         {/* BARRA DE PROGRESSO: Linha que enche conforme % de figurinhas */}
-         <div className="flex items-center gap-3"><div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div></div>
+        <div className="flex justify-between items-center mb-2">
+           <div className="flex items-center gap-3">
+             <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
+             <div>
+                 <h1 className="font-black text-sm leading-tight">Família Copa</h1>
+                 <p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p>
+             </div>
+           </div>
+           {/* BOTÕES: Guia Rápido e Tema Escuro */}
+           <div className="flex gap-2 shrink-0">
+              <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                  <Info size={18} />
+              </button>
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                  {isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}
+              </button>
+           </div>
+        </div>
+        <div className="flex items-center gap-3 mt-1">
+           <div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div>
+        </div>
       </header>
 
       {/* ======================================================================= */}
-      {/* MODAL: GUIA RÁPIDO (Abre quando clica no botão "i" do topo) */}
+      {/* MODAL: GUIA RÁPIDO */}
       {/* ======================================================================= */}
       {showTutorial && (
-        <div className="fixed inset-0 z-[100] bg-black/60 p-4 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowTutorial(false)}>
+        <div className="fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowTutorial(false)}>
           <div className={`${cardBg} p-6 rounded-3xl w-full max-w-lg shadow-2xl space-y-4`} onClick={e => e.stopPropagation()}>
             <h2 className={`font-black ${titleColor} text-lg border-b ${isDarkMode ? 'border-slate-700' : 'border-slate-200'} pb-2`}>Guia Rápido</h2>
-            <div className="text-xs space-y-3 text-slate-400">
+            <div className="text-sm space-y-3">
               <p>🏷️ <strong>Status:</strong> Toque 1x Colada, 2x Repetida, 3x Faltante.</p>
               <p>👆 <strong>Navegação:</strong> Use a barra superior para pular entre seleções.</p>
               <p>☀️🌙 <strong>Temas:</strong> Use o botão de Sol/Lua para alternar temas.</p>
@@ -247,208 +282,228 @@ export default function App() {
               <p>👤 <strong>Perfil:</strong> Gerencie família, links e instale o app.</p>
               <p>✨ <strong>Usuários Pro:</strong> Ferramentas de administrador.</p>
             </div>
-            {/* BOTÃO FECHAR GUIA RÁPIDO */}
             <button onClick={() => setShowTutorial(false)} className={`w-full ${isDarkMode ? 'bg-emerald-500' : 'bg-slate-900'} text-white py-3 rounded-xl mt-6 font-bold`}>Entendi!</button>
           </div>
         </div>
       )}
 
       {/* ======================================================================= */}
-      {/* ÁREA DE CONTEÚDO CENTRAL (Muda dependendo da Aba selecionada abaixo) */}
+      {/* CONTEÚDO PRINCIPAL (MAIN): Container base com os espaçamentos idênticos ao 1º Print */}
       {/* ======================================================================= */}
-      <main className="w-full flex-1 flex flex-col p-3 space-y-4">
+      <main className="w-full flex-1 flex flex-col px-3 py-4 space-y-4">
         
-        {/* ========================================== */}
-        {/* ABA 1: ÁLBUM DE FIGURINHAS */}
-        {/* ========================================== */}
+        {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
-              
               {/* MENU DE BANDEIRAS HORIZONTAIS: Permite deslizar lateralmente */}
               <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}>
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
-                  
-                  {/* AQUI ESTÃO OS BOTÕES! O comando 'map' cria um botão para cada país */}
                   {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
                       <span className="text-xl">{s.flag}</span>
                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
                     </button>
                   ))}
-
                 </div>
               </div>
 
-              {/* LISTA DAS SEÇÕES (Países) E BOTÕES INDIVIDUAIS DE FIGURINHAS */}
+              {/* LISTA DE SEÇÕES DE PAÍSES E BOTÕES DE FIGURINHAS */}
               <div className="space-y-4">
-                 {SECTIONS.map((sec) => (
-                    <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-4 rounded-2xl border`}>
-                       <h2 className={`font-black ${titleColor} mb-3 text-sm`}>{sec.flag} {sec.title}</h2>
-                       <div className="grid grid-cols-5 gap-2">
-                         {/* Mapeia a quantidade de figurinhas do país e cria os botões quadrados */}
-                         {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { 
-                             const key = `${sec.prefix}-${item}`; 
-                             const status = stickers[key] || 0; 
-                             return (
-                               <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-400') : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>
-                                 {item}
-                               </button>
-                             ); 
+                  {SECTIONS.map((sec) => (
+                    <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
+                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2>
+                       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                         {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
+                           const key = `${sec.prefix}-${item}`;
+                           const status = stickers[key] || 0;
+                           
+                           // Lógica de cores do botão de figurinha
+                           const btnClass = status === 0 
+                                ? (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-400')
+                                : status === 1 
+                                    ? 'bg-emerald-500 text-white shadow-md' 
+                                    : 'bg-purple-600 text-white shadow-md';
+
+                           return (
+                             // BOTÃO INDIVIDUAL DA FIGURINHA
+                             <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full flex items-center justify-center font-bold text-xs rounded-lg transition-all ${btnClass}`}>
+                               {item}
+                             </button>
+                           );
                          })}
                        </div>
                     </div>
-                 ))}
+                  ))}
               </div>
             </div>
         )}
 
-        {/* ========================================== */}
-        {/* ABA 2: RESUMO (ESTATÍSTICAS E GRÁFICO) */}
-        {/* ========================================== */}
+        {/* ABA 2: ESTATÍSTICAS (GRÁFICO) - Agora respeita as margens exatas do Álbum */}
         {activeTab === 'stats' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col justify-center items-center`}>
-                <h2 className={`font-black ${titleColor} text-lg mb-8`}>Visão Geral da Coleção</h2>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col justify-center w-full`}>
+                <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
                 
-                {/* GRÁFICO DE PIZZA (Feito com CSS Gradient dinâmico) */}
-                <div className="relative w-48 h-48 mb-8 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}>
-                    <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center`}>
+                {/* GRÁFICO DE PIZZA */}
+                <div className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center" 
+                     style={{ 
+                         background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`
+                     }}>
+                    <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
                         <span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span>
                         <span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span>
                     </div>
                 </div>
-                
-                {/* BLOCOS DE INFORMAÇÃO NUMÉRICA (Coladas, Repetidas) */}
-                <div className="space-y-3 w-full max-w-sm">
-                    <div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                        <span className="flex items-center gap-2 font-bold text-emerald-500">Coladas</span>
-                        <span className={`font-black ${titleColor}`}>{stats.coladas}</span>
+
+                {/* BLOCOS DE INFORMAÇÃO NUMÉRICA */}
+                <div className="space-y-3 w-full max-w-sm mx-auto mt-4">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
+                        <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
                     </div>
-                    <div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20">
-                        <span className="flex items-center gap-2 font-bold text-purple-500">Repetidas</span>
-                        <span className={`font-black ${titleColor}`}>{stats.repetidas}</span>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                        <span className="flex items-center gap-2 font-bold text-purple-500"><div className="w-3 h-3 rounded-full bg-purple-500"></div> Repetidas</span>
+                        <span className={`font-black ${titleColor}`}>{stats.repetidas} <span className="text-xs font-normal opacity-50">({stats.percRepetidas}%)</span></span>
+                    </div>
+                    <div className={`flex justify-between items-center p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
+                        <span className={`flex items-center gap-2 font-bold ${textColor}`}><div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-300'}`}></div> Faltantes</span>
+                        <span className={`font-black ${titleColor}`}>{stats.faltantes} <span className="text-xs font-normal opacity-50">({stats.percFaltantes}%)</span></span>
                     </div>
                 </div>
             </div>
         )}
 
-        {/* ========================================== */}
-        {/* ABA 3: BOLÃO E CÓDIGO SECRETO (TROFÉU) */}
-        {/* ========================================== */}
+        {/* ABA 3: BOLÃO - Agora com o código VIP embutido no Troféu */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col items-center justify-center`}>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
                 
-                {/* BOTÃO SECRETO: Clicar 3 vezes no troféu abre o input do Pro */}
-                <Trophy size={60} className="text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
+                {/* BOTÃO SECRETO (3 Cliques) */}
+                <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-                <p className={`text-sm ${textColor} mb-8`}>Acompanhe os jogos da Copa!</p>
+                <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
                 
-                {/* CAIXA SECRETA DE SENHA VIP: Só aparece após os 3 cliques no troféu */}
+                {/* CAIXA SECRETA DE SENHA VIP */}
                 {showProCode && (
-                  <div className="flex gap-2 mb-6 w-full max-w-xs">
-                    {/* INPUT: Digitar "NOSVICOPA2026" */}
-                    <input className={`flex-1 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'} text-white p-3 rounded-xl text-xs`} onChange={(e) => setProInput(e.target.value)} />
-                    {/* BOTÃO OK: Confirma a senha secreta VIP */}
-                    <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button>
+                  <div className="flex gap-2 mb-6 w-full max-w-xs mx-auto">
+                    <input className={`flex-1 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'} border text-white p-3 rounded-xl text-xs outline-none`} onChange={(e) => setProInput(e.target.value)} placeholder="Código VIP" />
+                    <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro Ativado!"); } }} className="bg-emerald-600 text-white px-6 rounded-xl text-xs font-bold shadow-md">OK</button>
                   </div>
                 )}
                 
-                <div className={`p-6 rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-100 border-slate-200'} w-full max-w-sm`}><p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p></div>
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
+                    <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p>
+                    <p className={`text-[10px] mt-2 ${textColor}`}>Esta área será ativada automaticamente quando os grupos oficiais forem sorteados pela FIFA.</p>
+                </div>
             </div>
         )}
 
-        {/* ========================================== */}
-        {/* ABA 4: PERFIL E CONFIGURAÇÕES */}
-        {/* ========================================== */}
+        {/* ABA 4: PERFIL E CONFIGURAÇÕES - Respeitando a largura padrão */}
         {activeTab === 'perfil' && (
-            <div className="space-y-4 flex flex-1 w-full flex-col">
+            <div className="space-y-4 flex flex-1 flex-col w-full">
                 
-                {/* BOTÃO OFICIAL PWA: Instalar aplicativo (Sempre visível até ser instalado) */}
+                {/* BOTÃO INSTALAR APLICATIVO (PWA) */}
                 {!isStandalone && (
-                  <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl shadow-lg font-black uppercase text-sm tracking-wide">
-                     Instalar Aplicativo
-                  </button>
+                   <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
+                     <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> INSTALAR APLICATIVO</span>
+                     <span className="text-[10px] font-medium opacity-90">Acesso direto da tela inicial, rápido e seguro.</span>
+                   </button>
                 )}
-                
-                {/* BLOCO PARA CONTAS FREE (Área Premium - Convite ou Compra) */}
+
                 {!isPro && (
-                  <div className={`${cardBg} p-6 rounded-3xl border space-y-4 flex-1 flex flex-col`}>
+                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col`}>
                      <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
                      {activeFamilyId !== user.uid ? (
-                        <div className="text-center font-bold text-xs p-4 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div>
+                        <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div>
                      ) : (
                        <div className="flex gap-2">
-                         {/* INPUT DE CONVITE */}
-                         <input type="text" placeholder="Código..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-4 py-3 text-xs border outline-none`}/>
-                         {/* BOTÃO DE ENTRAR NA FAMÍLIA */}
-                         <button onClick={() => { if (joinCode.trim()) { setActiveFamilyId(joinCode.trim()); localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim()); } }} className="bg-emerald-600 text-white px-6 rounded-xl font-bold text-xs">Entrar</button>
+                         <input type="text" placeholder="Código de convite..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}/>
+                         <button onClick={() => {
+                           if (joinCode.trim()) {
+                             setActiveFamilyId(joinCode.trim());
+                             localStorage.setItem('@AlbumCopa_FamilyId', joinCode.trim());
+                           }
+                         }} className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shrink-0 shadow-md">Entrar</button>
                        </div>
                      )}
-                     <div className="grid grid-cols-2 gap-3 mt-auto pt-4">
-                        {/* BOTÃO VER VÍDEO NO YOUTUBE */}
-                        <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 text-white py-4 rounded-xl font-bold text-xs">Ver Vídeo</a>
-                        {activeFamilyId !== user.uid ? (
-                            <button className="bg-emerald-600 text-white py-4 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed">Pro Ativado</button>
-                        ) : (
-                            <button onClick={handleBuyPro} className="bg-indigo-600 text-white py-4 rounded-xl font-bold text-xs">Tornar-se Pro</button>
-                        )}
-                     </div>
+                     
+                     {pixCode ? (
+                        <div className="space-y-2 mt-auto">
+                           <input readOnly value={pixCode} className={`w-full ${isDarkMode ? 'bg-slate-900 text-slate-400 border-slate-700' : 'bg-slate-50 text-slate-500 border-slate-200'} text-[10px] p-2 rounded-xl border outline-none text-center`}/>
+                           <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-md"><Copy size={16}/> Copiar Chave PIX</button>
+                        </div>
+                     ) : (
+                       <div className="grid grid-cols-2 gap-2 mt-auto pt-4">
+                          <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>
+                          {activeFamilyId !== user.uid ? (
+                            <button className={`bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed flex flex-col items-center justify-center`}><Star size={18} className="mb-1"/> Pro Ativado</button>
+                          ) : (
+                            <button onClick={handleBuyPro} className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><KeyRound size={18} className="mb-1"/> Tornar-se Pro</button>
+                          )}
+                       </div>
+                     )}
                   </div>
                 )}
 
-                {/* BLOCO PARA CONTAS PRO (Ferramentas de Administrador) */}
                 {isPro && (
                     <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3 flex-1`}>
                         <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2 mb-2`}><KeyRound size={16} className="text-indigo-400"/> Ferramentas do Administrador</h3>
                         
-                        {/* BOTÃO: Copiar Código da Família (Convite) */}
-                        <button onClick={() => copyToClipboard(activeFamilyId, "ID copiado!")} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50' : 'bg-slate-100'}`}>
-                            <span className={`text-xs font-bold ${textColor}`}>Código da Família</span><Copy size={14} />
+                        <button onClick={() => copyToClipboard(activeFamilyId, "ID da Família copiado!")} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors`}>
+                            <span className={`text-xs font-bold ${textColor}`}>Código da Família (Convite)</span>
+                            <Copy size={14} className={textColor} />
                         </button>
 
-                        {/* BOTÃO: Gerar e Copiar Lista de Faltantes */}
-                        <button onClick={() => { 
-                            let m = SECTIONS.map(sec => { const l = getSectionKeys(sec).filter(k => (stickers[k] || 0) === 0).map(k => k.split('-')[1]); return l.length > 0 ? `${sec.flag} *${sec.prefix}*: ${l.join(', ')}` : null; }).filter(s => s !== null).join('\n'); 
-                            copyToClipboard(`🏆 *Faltam:*\n${m}`, "Lista copiada!"); 
-                        }} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50' : 'bg-slate-100'}`}>
-                            <span className={`text-xs font-bold ${textColor}`}>Copiar Faltantes</span><Share2 size={14} />
+                        <button onClick={() => {
+                            let m = SECTIONS.map(sec => {
+                                const l = getSectionKeys(sec).filter(k => (stickers[k] || 0) === 0).map(k => k.split('-')[1]);
+                                return l.length > 0 ? `${sec.flag} *${sec.prefix}*: ${l.join(', ')}` : null;
+                            }).filter(s => s !== null).join('\n');
+                            copyToClipboard(`🏆 *Faltam:*\n${m}`, "Lista copiada!");
+                        }} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors`}>
+                            <span className={`text-xs font-bold ${textColor}`}>Copiar Lista de Faltantes</span>
+                            <Share2 size={14} className={textColor} />
                         </button>
                     </div>
                 )}
 
-                {/* BOTÃO DE SAIR DA CONTA (Aparece tanto para PRO quanto para FREE) */}
-                <div className={`${cardBg} p-4 rounded-2xl border`}>
-                   <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-4 rounded-xl font-bold text-sm">
-                       Sair da Conta
+                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
+                   <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
+                       <LogOut size={18}/> Sair da Conta
                    </button>
                 </div>
+
             </div>
         )}
       </main>
 
       {/* ======================================================================= */}
-      {/* MENU INFERIOR (BOTTOM NAVIGATION): Os 4 botões do rodapé */}
+      {/* MENU INFERIOR (BOTTOM NAVIGATION) */}
       {/* ======================================================================= */}
-      <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pt-2 px-6 z-50`}>
+      <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
           <div className="flex justify-between items-center pb-2 max-w-md mx-auto">
-              {/* BOTÃO INFERIOR 1: ÁLBUM */}
-              <button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                 <Book size={24}/><span className="text-[10px] font-bold">Álbum</span>
+              <button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
+                  <Book size={22} className={activeTab === 'album' ? 'fill-emerald-500/20' : ''}/>
+                  <span className="text-[9px] font-bold">Álbum</span>
               </button>
-              {/* BOTÃO INFERIOR 2: RESUMO */}
-              <button onClick={() => setActiveTab('stats')} className={`flex flex-col items-center gap-1 ${activeTab === 'stats' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                 <PieChart size={24}/><span className="text-[10px] font-bold">Resumo</span>
+              
+              <button onClick={() => setActiveTab('stats')} className={`flex flex-col items-center gap-1 ${activeTab === 'stats' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
+                  <PieChart size={22} className={activeTab === 'stats' ? 'fill-emerald-500/20' : ''}/>
+                  <span className="text-[9px] font-bold">Resumo</span>
               </button>
-              {/* BOTÃO INFERIOR 3: BOLÃO */}
-              <button onClick={() => setActiveTab('jogos')} className={`flex flex-col items-center gap-1 ${activeTab === 'jogos' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                 <Trophy size={24}/><span className="text-[10px] font-bold">Bolão</span>
+
+              <button onClick={() => setActiveTab('jogos')} className={`flex flex-col items-center gap-1 ${activeTab === 'jogos' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
+                  <Trophy size={22} className={activeTab === 'jogos' ? 'fill-emerald-500/20' : ''}/>
+                  <span className="text-[9px] font-bold">Bolão</span>
               </button>
-              {/* BOTÃO INFERIOR 4: PERFIL */}
-              <button onClick={() => setActiveTab('perfil')} className={`flex flex-col items-center gap-1 ${activeTab === 'perfil' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                 <User size={24}/><span className="text-[10px] font-bold">Perfil</span>
+
+              <button onClick={() => setActiveTab('perfil')} className={`flex flex-col items-center gap-1 ${activeTab === 'perfil' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors relative`}>
+                  {!isPro && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
+                  <User size={22} className={activeTab === 'perfil' ? 'fill-emerald-500/20' : ''}/>
+                  <span className="text-[9px] font-bold">Perfil</span>
               </button>
           </div>
       </nav>
+
     </div>
   );
 }
