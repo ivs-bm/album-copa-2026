@@ -258,26 +258,26 @@ export default function App() {
       {/* ======================================================================= */}
       <main className="w-full flex-1 flex flex-col p-3 space-y-4">
         
+        {/* ========================================== */}
         {/* ABA 1: ÁLBUM DE FIGURINHAS */}
+        {/* ========================================== */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
               
-              {/* === INÍCIO DO TRECHO SUBSTITUÍDO: MENU DE BANDEIRAS HORIZONTAIS === */}
               {/* MENU DE BANDEIRAS HORIZONTAIS: Permite deslizar lateralmente */}
-              <div className="sticky top-[65px] z-30 pt-1 pb-2 w-full">
-                <div className={`${cardBg} px-3 py-2 rounded-2xl flex gap-4 overflow-x-auto hide-scrollbar`}>
+              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}>
+                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
                   
                   {/* AQUI ESTÃO OS BOTÕES! O comando 'map' cria um botão para cada país */}
                   {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
                       <span className="text-xl">{s.flag}</span>
-                      <span className="text-[8px] font-bold uppercase">{s.prefix}</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
                     </button>
                   ))}
 
                 </div>
               </div>
-              {/* === FIM DO TRECHO SUBSTITUÍDO === */}
 
               {/* LISTA DAS SEÇÕES (Países) E BOTÕES INDIVIDUAIS DE FIGURINHAS */}
               <div className="space-y-4">
@@ -302,7 +302,9 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 2: RESUMO (ESTATÍSTICAS / GRÁFICO) */}
+        {/* ========================================== */}
+        {/* ABA 2: RESUMO (ESTATÍSTICAS E GRÁFICO) */}
+        {/* ========================================== */}
         {activeTab === 'stats' && (
             <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col justify-center items-center`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-8`}>Visão Geral da Coleção</h2>
@@ -329,7 +331,9 @@ export default function App() {
             </div>
         )}
 
+        {/* ========================================== */}
         {/* ABA 3: BOLÃO E CÓDIGO SECRETO (TROFÉU) */}
+        {/* ========================================== */}
         {activeTab === 'jogos' && (
             <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col items-center justify-center`}>
                 
@@ -353,7 +357,9 @@ export default function App() {
             </div>
         )}
 
+        {/* ========================================== */}
         {/* ABA 4: PERFIL E CONFIGURAÇÕES */}
+        {/* ========================================== */}
         {activeTab === 'perfil' && (
             <div className="space-y-4 flex flex-1 w-full flex-col">
                 
