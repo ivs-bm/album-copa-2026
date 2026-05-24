@@ -159,7 +159,7 @@ export default function App() {
             <div className="text-xs space-y-3">
               <p>🏷️ <strong>Status:</strong> Toque 1x Colada, 2x Repetida, 3x Faltante.</p>
               <p>👆 <strong>Navegação:</strong> Barra superior para pular seleções.</p>
-              <p>☀️🌙 <strong>Temas:</strong> Sol/Lua para alternar cores.</p>
+              <p>☀️🌙 <strong>Sol/Lua:</strong> Para alternar o Tema (Claro/Escuro).</p>
               <p>📊 <strong>Resumo:</strong> Visão Geral da coleção com gráficos.</p>
               <p>🏆 <strong>Bolão:</strong> Acompanhe jogos da Copa.</p>
               <p>👤 <strong>Perfil:</strong> Gerencie família e links.</p>
