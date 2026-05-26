@@ -185,8 +185,30 @@ export default function App() {
     await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
 
-  const handleBuyPro = () => setPixCode("00020126460014br.gov.bcb.pix0124... (Código PIX)");
-  const copyToClipboard = (text, msg) => { navigator.clipboard.writeText(text).then(() => { setToast(msg); setTimeout(() => setToast(''), 2000); }); };
+  // Função atualizada para chamar sua API real
+  const handleBuyPro = async () => {
+    setToast("Gerando código Pix...");
+    try {
+      const response = await fetch('/api/pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid, email: user.email })
+      });
+      
+      const data = await response.json();
+      
+      if (data.qr_code) {
+        setPixCode(data.qr_code); // Aqui ele recebe o código real da API
+        setToast("Pix gerado com sucesso!");
+      } else {
+        setToast("Erro: " + (data.error || "Erro desconhecido"));
+        console.error("Erro no Pix:", data);
+      }
+    } catch (e) {
+      setToast("Erro ao conectar com servidor.");
+      console.error(e);
+    }
+  };
   
   // Função: Faz a tela deslizar ao clicar na bandeira do menu superior
   const scrollToSection = (id) => {
