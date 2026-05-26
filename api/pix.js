@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         },
         external_reference: userId, 
         description: 'Cofre Família Pro - Álbum 2026',
-        notification_url: `https://${req.headers.host}/api/webhook`
+        notification_url: `https://albumfamiliacopa.com.br/api/webhook`
       })
     });
     
