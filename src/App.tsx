@@ -358,9 +358,17 @@ export default function App() {
 
   // ============================================================================
 
+  
+  const copyToClipboard = (text, msg) => { 
+    navigator.clipboard.writeText(text).then(() => { 
+      setToast(msg); 
+      // Faz o aviso de cópia sumir após 2 segundos
+      setTimeout(() => setToast(''), 2000); 
+    }); 
+  };
+  
   // Função: Quando clica na figurinha para colar/repetir
-
-  const toggleSticker = async (key) => {
+    const toggleSticker = async (key) => {
 
     const newStatus = ((stickers[key] || 0) + 1) % 3;
 
@@ -382,14 +390,19 @@ export default function App() {
         body: JSON.stringify({ userId: user.uid, email: user.email || 'comprador@album.com' })
       });
       const data = await response.json();
+      
       if (data.qr_code) {
         setPixCode(data.qr_code);
         setToast("Pix gerado com sucesso!");
+        // O aviso some após 3 segundos
+        setTimeout(() => setToast(''), 3000); 
       } else {
         setToast("Erro: " + (data.error || "Erro ao gerar Pix"));
+        setTimeout(() => setToast(''), 3000);
       }
     } catch (e) {
       setToast("Erro de conexão.");
+      setTimeout(() => setToast(''), 3000);
       console.error(e);
     }
   };
