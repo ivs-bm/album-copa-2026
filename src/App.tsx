@@ -1,3 +1,6 @@
+// ============================================================================
+// IMPORTAÇÕES E CONFIGURAÇÃO DO FIREBASE - Atualizado em 25/05/2026 - 23:20
+// ============================================================================
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -63,28 +66,32 @@ const SECTIONS = [
   { id: 'PAN', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20 },
 ];
 
+const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_, i) => `${sec.prefix}-${i + 1}`) : sec.items.map(item => `${sec.prefix}-${item}`);
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('album');
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [stickers, setStickers] = useState({});
-  const [isPro, setIsPro] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [toast, setToast] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeFamilyId, setActiveFamilyId] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [stickers, setStickers] = useState({});
+  const [isPro, setIsPro] = useState(false);
   const [pixCode, setPixCode] = useState('');
-  const [trophyClicks, setTrophyClicks] = useState(0);
-  const [proInput, setProInput] = useState('');
-  const [showProCode, setShowProCode] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [toast, setToast] = useState('');
+  
+  const [activeTab, setActiveTab] = useState('album'); 
+  const [isDarkMode, setIsDarkMode] = useState(true); 
+  const [deferredPrompt, setDeferredPrompt] = useState(null); 
+  const [isStandalone, setIsStandalone] = useState(false); 
+  
+  const [trophyClicks, setTrophyClicks] = useState(0); 
+  const [proInput, setProInput] = useState(''); 
+  const [showProCode, setShowProCode] = useState(false); 
+  
   const sectionsRef = useRef({});
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(console.log); }
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) setIsStandalone(true);
     const handleBeforeInstallPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -92,8 +99,12 @@ export default function App() {
   }, []);
 
   const handleInstallClick = () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { setDeferredPrompt(null); }); } 
-    else { setToast("Use o menu do navegador para instalar."); }
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => { setDeferredPrompt(null); });
+    } else {
+        setToast("Use o menu do navegador para instalar.");
+    }
   };
 
   useEffect(() => {
@@ -120,7 +131,9 @@ export default function App() {
     await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
 
-  // FUNÇÃO CORRETA QUE CHAMA A API DO MERCADO PAGO
+  // ============================================================================
+  // AQUI FOI FEITA A CORREÇÃO DA INTEGRAÇÃO DO PIX (Chamada de API Real)
+  // ============================================================================
   const handleBuyPro = async () => {
     setToast("Gerando Pix...");
     try {
@@ -132,12 +145,13 @@ export default function App() {
       const data = await response.json();
       if (data.qr_code) {
         setPixCode(data.qr_code);
-        setToast("Pix gerado!");
+        setToast("Pix gerado com sucesso!");
       } else {
-        setToast("Erro: " + (data.error || "Erro na API"));
+        setToast("Erro: " + (data.error || "Erro ao gerar Pix"));
       }
     } catch (e) {
       setToast("Erro de conexão.");
+      console.error(e);
     }
   };
 
@@ -147,16 +161,16 @@ export default function App() {
   const stats = useMemo(() => {
     let coladas = 0; let repetidas = 0;
     Object.values(stickers).forEach(s => { if (s === 1) coladas++; if (s === 2) repetidas++; });
-    return { coladas, repetidas, percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
+    const faltantes = TOTAL_STICKERS - (coladas + repetidas);
+    return { coladas, repetidas, faltantes, percentage: TOTAL_STICKERS > 0 ? (((coladas + repetidas) / TOTAL_STICKERS) * 100).toFixed(0) : 0 };
   }, [stickers]);
 
   if (!user) return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6"><button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold">Entrar com Google</button></div>;
 
   const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
-  const themeBg = isDarkMode ? "bg-slate-900" : "bg-slate-50";
 
   return (
-    <div className={`w-full min-h-screen ${themeBg} transition-colors duration-300`}>
+    <div className={`w-full min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} transition-colors duration-300`}>
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl">{toast}</div>}
       
       <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
@@ -170,48 +184,59 @@ export default function App() {
          <div className="h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400" style={{ width: `${stats.percentage}%` }}></div></div>
       </header>
 
-      {/* Main Container Unificado para todas as abas */}
-      <main className="w-full max-w-md mx-auto flex-1 flex flex-col p-3 space-y-4">
-        
-        {/* ABA ÁLBUM */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center" onClick={() => setShowTutorial(false)}>
+          <div className={`${cardBg} p-6 rounded-3xl w-full max-w-lg shadow-2xl`} onClick={e => e.stopPropagation()}>
+            <h2 className="font-black text-lg border-b pb-2 mb-4">Guia Rápido</h2>
+            <div className="text-xs space-y-3">
+              <p>🏷️ <strong>Status:</strong> Toque 1x Colada, 2x Repetida, 3x Faltante.</p>
+              <p>👆 <strong>Navegação:</strong> Use a barra superior para pular entre seleções.</p>
+              <p>☀️🌙 <strong>Temas:</strong> Use o botão de Sol/Lua para alternar temas.</p>
+              <p>📊 <strong>Resumo:</strong> Visão Geral da sua coleção com gráficos.</p>
+              <p>🏆 <strong>Bolão:</strong> Acompanhe os jogos da Copa.</p>
+              <p>👤 <strong>Perfil:</strong> Gerencie família, links e instale o app.</p>
+              <p>✨ <strong>Usuários Pro:</strong> Ferramentas de administrador.</p>
+            </div>
+            <button onClick={() => setShowTutorial(false)} className="w-full bg-emerald-600 text-white py-3 rounded-xl mt-6 font-bold">Entendi!</button>
+          </div>
+        </div>
+      )}
+
+      <main className="w-full flex-1 flex flex-col p-3 space-y-4">
         {activeTab === 'album' && (
-            <div className="w-full">
-              <div className="sticky top-[65px] z-30 pt-1 pb-2 w-full"><div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold uppercase">{s.prefix}</span></button>)}</div></div>
+            <div className="flex-1 w-full">
+              <div className="sticky top-[65px] z-30 pt-1 pb-2 w-full"><div className={`${cardBg} px-3 py-2 rounded-2xl flex gap-4 overflow-x-auto hide-scrollbar`}>{SECTIONS.map(s => <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]"><span className="text-xl">{s.flag}</span><span className="text-[8px] font-bold uppercase">{s.prefix}</span></button>)}</div></div>
               <div className="space-y-4">{SECTIONS.map((sec) => (<div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-4 rounded-2xl border`}><h2 className="font-black mb-3 text-sm">{sec.flag} {sec.title}</h2><div className="grid grid-cols-5 gap-2">{(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => { const key = `${sec.prefix}-${item}`; const status = stickers[key] || 0; return <button key={key} onClick={() => toggleSticker(key)} className={`aspect-square w-full rounded-lg font-bold text-xs ${status === 0 ? 'bg-slate-100 text-slate-400' : status === 1 ? 'bg-emerald-500 text-white' : 'bg-purple-600 text-white'}`}>{item}</button>; })}</div></div>))}</div>
             </div>
         )}
 
-        {/* ABA RESUMO */}
         {activeTab === 'stats' && (
-            <div className={`${cardBg} p-4 rounded-2xl border text-center w-full`}>
+            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col justify-center`}>
                 <h2 className="font-black text-lg mb-8">Visão Geral da Coleção</h2>
                 <div className="space-y-3 w-full"><div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-500/10"><span className="font-bold text-emerald-500">Coladas</span><span className="font-black">{stats.coladas}</span></div><div className="flex justify-between items-center p-4 rounded-2xl bg-purple-500/10"><span className="font-bold text-purple-500">Repetidas</span><span className="font-black">{stats.repetidas}</span></div></div>
             </div>
         )}
 
-        {/* ABA BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-4 rounded-2xl border text-center w-full`}>
-                <Trophy size={60} className="mx-auto text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
+            <div className={`${cardBg} p-6 rounded-3xl border text-center flex-1 w-full flex flex-col items-center justify-center`}>
+                <Trophy size={60} className="text-yellow-500 mb-6 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 <h2 className="font-black text-xl mb-2">Bolão da Família</h2>
                 <p className="text-sm mb-8">Acompanhe os jogos da Copa!</p>
                 {showProCode && (<div className="flex gap-2 mb-6 w-full"><input className="flex-1 bg-slate-700 text-white p-3 rounded-xl text-xs" onChange={(e) => setProInput(e.target.value)} /><button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro!"); } }} className="bg-emerald-500 text-white px-6 rounded-xl text-xs font-bold">OK</button></div>)}
             </div>
         )}
 
-        {/* ABA PERFIL */}
         {activeTab === 'perfil' && (
-            <div className="w-full space-y-4">
-                {!isStandalone && <button onClick={handleInstallClick} className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl font-black uppercase text-sm">INSTALAR APLICATIVO</button>}
-                <div className={`${cardBg} p-4 rounded-2xl border w-full`}>
-                    {/* Código Pix Real vindo da API */}
+            <div className="space-y-4 flex flex-1 w-full flex-col">
+                <button onClick={handleInstallClick} className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl font-black uppercase text-sm">INSTALAR APLICATIVO</button>
+                <div className={`${cardBg} p-6 rounded-3xl border space-y-4 flex-1`}>
                     {pixCode ? (
                        <div className="space-y-2">
-                           <textarea readOnly value={pixCode} className="w-full h-20 bg-slate-900 text-white p-2 rounded text-xs" />
-                           <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full bg-emerald-600 py-3 rounded-xl text-xs font-bold">Copiar Chave PIX</button>
+                           <textarea readOnly value={pixCode} className="w-full h-24 bg-slate-900 text-white p-2 rounded text-xs border border-slate-700" />
+                           <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full bg-emerald-600 py-3 rounded-xl text-xs font-bold text-white">Copiar Chave PIX</button>
                        </div>
                     ) : (
-                       <button onClick={handleBuyPro} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-sm">Tornar-se Pro</button>
+                       <button onClick={handleBuyPro} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-xs">Tornar-se Pro</button>
                     )}
                 </div>
             </div>
