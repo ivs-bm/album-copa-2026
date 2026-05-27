@@ -387,7 +387,10 @@ export default function App() {
       const response = await fetch('/api/pix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, email: user.email || 'comprador@album.com' })
+        body: JSON.stringify({ 
+			userId: activeFamilyId || user.uid, // <--- A MUDANÇA ESTÁ AQUI
+			email: user.email || 'comprador@album.com' 
+        })
       });
       const data = await response.json();
       
