@@ -4,6 +4,8 @@
 
 // ============================================================================
 
+import { getFirestore, doc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Importação dos ícones visuais usados nos botões e menus do aplicativo
@@ -305,33 +307,31 @@ export default function App() {
 
 
   // Efeito 2: Verifica o login do usuário quando o App carrega
-
   useEffect(() => { 
-
-    const unsubscribe = onAuthStateChanged(auth, (u) => { 
-
+    const unsubscribe = onAuthStateChanged(auth, async (u) => { 
       setUser(u); 
-
       if (u) {
-
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
-
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
+        
+        // NOVO CÓDIGO: Registra o usuário no banco imediatamente no login
+        // Ele usa o merge: true para nunca apagar as figurinhas se o usuário já existir
+        try {
+          await setDoc(doc(db, 'family_albums', u.uid), {
+            adminEmail: u.email,
+            // Apenas marca false se o campo não existir (não tira o Pro de quem já pagou)
+          }, { merge: true });
+        } catch (error) {
+          console.error("Erro ao registrar usuário no banco:", error);
+        }
 
       } else {
-
         localStorage.removeItem('@AlbumCopa_FamilyId');
-
         setActiveFamilyId('');
-
       }
-
       setIsAuthLoading(false);
-
     }); 
-
     return () => unsubscribe();
-
   }, []);
 
 
@@ -387,7 +387,10 @@ export default function App() {
       const response = await fetch('/api/pix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, email: user.email || 'comprador@album.com' })
+        body: JSON.stringify({ 
+			userId: activeFamilyId || user.uid, // <--- A MUDANÇA ESTÁ AQUI
+			email: user.email || 'comprador@album.com' 
+        })
       });
       const data = await response.json();
       
@@ -1124,4 +1127,3 @@ export default function App() {
   );
 
 } 
-
