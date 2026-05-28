@@ -237,7 +237,12 @@ export default function App() {
 
   const scrollToSection = (id) => {
       setActiveTab('album');
-      setTimeout(() => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' }), 100);
+      // Adicionando um pequeno offset para a rolagem não ficar escondida atrás do menu fixo
+      const element = sectionsRef.current[id];
+      if (element) {
+          const topPos = element.getBoundingClientRect().top + window.scrollY - 160; 
+          window.scrollTo({ top: topPos, behavior: 'smooth' });
+      }
   };
 
   const stats = useMemo(() => {
@@ -277,9 +282,8 @@ export default function App() {
   const titleColor = isDarkMode ? "text-white" : "text-slate-800";
 
   return (
-    // AQUI OCORREU O AJUSTE PARA O MENU FIXO: 
-    // Usamos h-[100dvh] e overflow-y-auto para forçar a rolagem a acontecer apenas DENTRO deste container
-    <div className={`w-full h-[100dvh] flex flex-col ${themeBg} relative overflow-y-auto overflow-x-hidden pb-20 transition-colors duration-300`}>
+    // DIV PRINCIPAL: Restauramos o min-h-screen e o overflow-x-hidden para travar a largura e impedir o esbugalhamento das figurinhas
+    <div className={`w-full max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
       <style>{`
         * { box-sizing: border-box !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -287,8 +291,8 @@ export default function App() {
       
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
       
-      {/* CABEÇALHO (HEADER) FIXO - Z-Index 50 para ficar sempre acima */}
-      <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-50 shadow-md`}>
+      {/* CABEÇALHO (HEADER) FIXO - Alterado de sticky para fixed top-0 w-full e altura fixa de 76px */}
+      <header className={`w-full h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md`}>
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-3">
              <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
@@ -329,14 +333,15 @@ export default function App() {
         </div>
       )}
 
-      <main className="w-full flex-1 flex flex-col px-3 py-4 gap-4 min-h-0">
+      {/* CONTEÚDO PRINCIPAL - Adicionado pt-[90px] para que as abas comecem sempre DENTRO da visão, abaixo do cabeçalho fixo */}
+      <main className="w-full flex-1 flex flex-col px-3 pt-[90px] pb-4 gap-4 max-w-3xl mx-auto">
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
-              {/* MENU DE BANDEIRAS HORIZONTAIS FIXO NO TOPO - top-[72px] acompanha a altura do header */}
-              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[72px] z-40 pt-1 pb-2 w-full`}>
-                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
+              {/* MENU DE BANDEIRAS HORIZONTAIS FIXO NO TOPO - fixado logo abaixo do cabeçalho de 76px */}
+              <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
                       <span className="text-xl">{s.flag}</span>
@@ -346,7 +351,8 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Adicionado pt-[70px] para empurrar as figurinhas para baixo do menu de bandeiras que agora é flutuante */}
+              <div className="space-y-4 pt-[70px]">
                   {SECTIONS.map((sec) => (
                     <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
                        <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2>
@@ -375,8 +381,8 @@ export default function App() {
 
         {/* ABA 2: ESTATÍSTICAS (RESUMO) */}
         {activeTab === 'stats' && (
-          <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex">
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full flex-1 min-h-[calc(100dvh-170px)] overflow-hidden`}>
+          <div className="flex-1 w-full flex flex-col max-w-md mx-auto">
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full flex-1`}>
               <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
               <div className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}>
                 <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
@@ -405,7 +411,7 @@ export default function App() {
 
         {/* ABA 3: BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full max-w-md mx-auto`}>
                 <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
                 <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
@@ -422,9 +428,9 @@ export default function App() {
             </div>
         )}
 
-        {/* ABA 5: TROCAS JUSTAS (MATCH) - Agora fora da aba de jogos! */}
+        {/* ABA 5: TROCAS JUSTAS (MATCH) */}
         {activeTab === 'trocas' && (
-            <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex flex-col gap-4">
+            <div className="flex-1 w-full flex flex-col gap-4 max-w-md mx-auto">
               <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
                 <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
@@ -461,7 +467,7 @@ export default function App() {
 
         {/* ABA 4: PERFIL E CONFIGURAÇÕES */}
         {activeTab === 'perfil' && (
-          <div className="flex flex-1 flex-col w-full min-h-[calc(100dvh-170px)] gap-4 justify-between">
+          <div className="flex flex-1 flex-col w-full gap-4 justify-between max-w-md mx-auto">
             {!isStandalone && (
               <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-4 rounded-2xl shadow-lg transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                 <span className="font-black text-base uppercase tracking-wide flex items-center gap-2"><Download size={20}/> INSTALAR APLICATIVO</span>
@@ -488,7 +494,6 @@ export default function App() {
                  
                  {pixCode ? (
                     <div className="space-y-2 mt-auto">
-                       {/* TEXTAREA AQUI GARANTE QUE O CÓDIGO PIX NÃO FIQUE CORTADO VISUALMENTE */}
                        <textarea readOnly value={pixCode} className={`w-full h-24 ${isDarkMode ? 'bg-slate-900 text-slate-400 border-slate-700' : 'bg-slate-50 text-slate-500 border-slate-200'} text-[10px] p-2 rounded-xl border outline-none font-mono`} />
                        <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-md"><Copy size={16}/> Copiar Chave PIX</button>
                     </div>
