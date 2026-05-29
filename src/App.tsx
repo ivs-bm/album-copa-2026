@@ -12,58 +12,59 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Adicionada a propriedade "group" para facilitar o novo menu superior
 const SECTIONS = [
-  { id: 'FWC_INI', title: 'Ínicio', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'] },
-  { id: 'FWC_HST', title: 'História', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'] },
-  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', flag: '🥤', count: 14 },
-  { id: 'MEX', title: 'México', prefix: 'MEX', flag: '🇲🇽', count: 20 },
-  { id: 'RSA', title: 'África do Sul', prefix: 'RSA', flag: '🇿🇦', count: 20 },
-  { id: 'KOR', title: 'Coreia do Sul', prefix: 'KOR', flag: '🇰🇷', count: 20 },
-  { id: 'CZE', title: 'Rep. Tcheca', prefix: 'CZE', flag: '🇨🇿', count: 20 },
-  { id: 'CAN', title: 'Canadá', prefix: 'CAN', flag: '🇨🇦', count: 20 },
-  { id: 'BIH', title: 'Bósnia', prefix: 'BIH', flag: '🇧🇦', count: 20 },
-  { id: 'QAT', title: 'Catar', prefix: 'QAT', flag: '🇶🇦', count: 20 },
-  { id: 'SUI', title: 'Suíça', prefix: 'SUI', flag: '🇨🇭', count: 20 },
-  { id: 'BRA', title: 'Brasil', prefix: 'BRA', flag: '🇧🇷', count: 20 },
-  { id: 'MAR', title: 'Marrocos', prefix: 'MAR', flag: '🇲🇦', count: 20 },
-  { id: 'HAI', title: 'Haiti', prefix: 'HAI', flag: '🇭🇹', count: 20 },
-  { id: 'SCO', title: 'Escócia', prefix: 'SCO', flag: '🇬🇧', count: 20 },
-  { id: 'USA', title: 'EUA', prefix: 'USA', flag: '🇺🇸', count: 20 },
-  { id: 'PAR', title: 'Paraguai', prefix: 'PAR', flag: '🇵🇾', count: 20 },
-  { id: 'AUS', title: 'Austrália', prefix: 'AUS', flag: '🇦🇺', count: 20 },
-  { id: 'TUR', title: 'Turquia', prefix: 'TUR', flag: '🇹🇷', count: 20 },
-  { id: 'GER', title: 'Alemanha', prefix: 'GER', flag: '🇩🇪', count: 20 },
-  { id: 'CUW', title: 'Curaçao', prefix: 'CUW', flag: '🇨🇼', count: 20 },
-  { id: 'CIV', title: 'Costa do Marfim', prefix: 'CIV', flag: '🇨🇮', count: 20 },
-  { id: 'ECU', title: 'Equador', prefix: 'ECU', flag: '🇪🇨', count: 20 },
-  { id: 'NED', title: 'Holanda', prefix: 'NED', flag: '🇳🇱', count: 20 },
-  { id: 'JPN', title: 'Japão', prefix: 'JPN', flag: '🇯🇵', count: 20 },
-  { id: 'SWE', title: 'Suécia', prefix: 'SWE', flag: '🇸🇪', count: 20 },
-  { id: 'TUN', title: 'Tunísia', prefix: 'TUN', flag: '🇹🇳', count: 20 },
-  { id: 'BEL', title: 'Bélgica', prefix: 'BEL', flag: '🇧🇪', count: 20 },
-  { id: 'EGY', title: 'Egito', prefix: 'EGY', flag: '🇪🇬', count: 20 },
-  { id: 'IRN', title: 'Irã', prefix: 'IRN', flag: '🇮🇷', count: 20 },
-  { id: 'NZL', title: 'Nova Zelândia', prefix: 'NZL', flag: '🇳🇿', count: 20 },
-  { id: 'ESP', title: 'Espanha', prefix: 'ESP', flag: '🇪🇸', count: 20 },
-  { id: 'CPV', title: 'Cabo Verde', prefix: 'CPV', flag: '🇨🇻', count: 20 },
-  { id: 'KSA', title: 'Arábia Saudita', prefix: 'KSA', flag: '🇸🇦', count: 20 },
-  { id: 'URU', title: 'Uruguai', prefix: 'URU', flag: '🇺🇾', count: 20 },
-  { id: 'FRA', title: 'França', prefix: 'FRA', flag: '🇫🇷', count: 20 },
-  { id: 'SEN', title: 'Senegal', prefix: 'SEN', flag: '🇸🇳', count: 20 },
-  { id: 'IRQ', title: 'Iraque', prefix: 'IRQ', flag: '🇮🇶', count: 20 },
-  { id: 'NOR', title: 'Noruega', prefix: 'NOR', flag: '🇳🇴', count: 20 },
-  { id: 'ARG', title: 'Argentina', prefix: 'ARG', flag: '🇦🇷', count: 20 },
-  { id: 'ALG', title: 'Argélia', prefix: 'ALG', flag: '🇩🇿', count: 20 },
-  { id: 'AUT', title: 'Áustria', prefix: 'AUT', flag: '🇦🇹', count: 20 },
-  { id: 'JOR', title: 'Jordânia', prefix: 'JOR', flag: '🇯🇴', count: 20 },
-  { id: 'POR', title: 'Portugal', prefix: 'POR', flag: '🇵🇹', count: 20 },
-  { id: 'COD', title: 'Congo', prefix: 'COD', flag: '🇨🇩', count: 20 },
-  { id: 'UZB', title: 'Uzbequistão', prefix: 'UZB', flag: '🇺🇿', count: 20 },
-  { id: 'COL', title: 'Colômbia', prefix: 'COL', flag: '🇨🇴', count: 20 },
-  { id: 'ENG', title: 'Inglaterra', prefix: 'ENG', flag: '🇬🇧', count: 20 },
-  { id: 'CRO', title: 'Croácia', prefix: 'CRO', flag: '🇭🇷', count: 20 },
-  { id: 'GHA', title: 'Gana', prefix: 'GHA', flag: '🇬🇭', count: 20 },
-  { id: 'PAN', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20 },
+  { id: 'FWC_INI', title: 'Ínicio', prefix: 'FWC', flag: '🏠', items: ['00', '1', '2', '3', '4', '5', '6', '7', '8'], group: 'Especiais' },
+  { id: 'FWC_HST', title: 'História', prefix: 'FWC', flag: '🏆', items: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'], group: 'Especiais' },
+  { id: 'CC', title: 'Coca-Cola', prefix: 'CC', flag: '🥤', count: 14, group: 'Especiais' },
+  { id: 'MEX', title: 'México', prefix: 'MEX', flag: '🇲🇽', count: 20, group: 'Grupo A' },
+  { id: 'RSA', title: 'África do Sul', prefix: 'RSA', flag: '🇿🇦', count: 20, group: 'Grupo A' },
+  { id: 'KOR', title: 'Coreia do Sul', prefix: 'KOR', flag: '🇰🇷', count: 20, group: 'Grupo A' },
+  { id: 'CZE', title: 'Rep. Tcheca', prefix: 'CZE', flag: '🇨🇿', count: 20, group: 'Grupo A' },
+  { id: 'CAN', title: 'Canadá', prefix: 'CAN', flag: '🇨🇦', count: 20, group: 'Grupo B' },
+  { id: 'BIH', title: 'Bósnia', prefix: 'BIH', flag: '🇧🇦', count: 20, group: 'Grupo B' },
+  { id: 'QAT', title: 'Catar', prefix: 'QAT', flag: '🇶🇦', count: 20, group: 'Grupo B' },
+  { id: 'SUI', title: 'Suíça', prefix: 'SUI', flag: '🇨🇭', count: 20, group: 'Grupo B' },
+  { id: 'BRA', title: 'Brasil', prefix: 'BRA', flag: '🇧🇷', count: 20, group: 'Grupo C' },
+  { id: 'MAR', title: 'Marrocos', prefix: 'MAR', flag: '🇲🇦', count: 20, group: 'Grupo C' },
+  { id: 'HAI', title: 'Haiti', prefix: 'HAI', flag: '🇭🇹', count: 20, group: 'Grupo C' },
+  { id: 'SCO', title: 'Escócia', prefix: 'SCO', flag: '🇬🇧', count: 20, group: 'Grupo C' },
+  { id: 'USA', title: 'EUA', prefix: 'USA', flag: '🇺🇸', count: 20, group: 'Grupo D' },
+  { id: 'PAR', title: 'Paraguai', prefix: 'PAR', flag: '🇵🇾', count: 20, group: 'Grupo D' },
+  { id: 'AUS', title: 'Austrália', prefix: 'AUS', flag: '🇦🇺', count: 20, group: 'Grupo D' },
+  { id: 'TUR', title: 'Turquia', prefix: 'TUR', flag: '🇹🇷', count: 20, group: 'Grupo D' },
+  { id: 'GER', title: 'Alemanha', prefix: 'GER', flag: '🇩🇪', count: 20, group: 'Grupo E' },
+  { id: 'CUW', title: 'Curaçao', prefix: 'CUW', flag: '🇨🇼', count: 20, group: 'Grupo E' },
+  { id: 'CIV', title: 'Costa do Marfim', prefix: 'CIV', flag: '🇨🇮', count: 20, group: 'Grupo E' },
+  { id: 'ECU', title: 'Equador', prefix: 'ECU', flag: '🇪🇨', count: 20, group: 'Grupo E' },
+  { id: 'NED', title: 'Holanda', prefix: 'NED', flag: '🇳🇱', count: 20, group: 'Grupo F' },
+  { id: 'JPN', title: 'Japão', prefix: 'JPN', flag: '🇯🇵', count: 20, group: 'Grupo F' },
+  { id: 'SWE', title: 'Suécia', prefix: 'SWE', flag: '🇸🇪', count: 20, group: 'Grupo F' },
+  { id: 'TUN', title: 'Tunísia', prefix: 'TUN', flag: '🇹🇳', count: 20, group: 'Grupo F' },
+  { id: 'BEL', title: 'Bélgica', prefix: 'BEL', flag: '🇧🇪', count: 20, group: 'Grupo G' },
+  { id: 'EGY', title: 'Egito', prefix: 'EGY', flag: '🇪🇬', count: 20, group: 'Grupo G' },
+  { id: 'IRN', title: 'Irã', prefix: 'IRN', flag: '🇮🇷', count: 20, group: 'Grupo G' },
+  { id: 'NZL', title: 'Nova Zelândia', prefix: 'NZL', flag: '🇳🇿', count: 20, group: 'Grupo G' },
+  { id: 'ESP', title: 'Espanha', prefix: 'ESP', flag: '🇪🇸', count: 20, group: 'Grupo H' },
+  { id: 'CPV', title: 'Cabo Verde', prefix: 'CPV', flag: '🇨🇻', count: 20, group: 'Grupo H' },
+  { id: 'KSA', title: 'Arábia Saudita', prefix: 'KSA', flag: '🇸🇦', count: 20, group: 'Grupo H' },
+  { id: 'URU', title: 'Uruguai', prefix: 'URU', flag: '🇺🇾', count: 20, group: 'Grupo H' },
+  { id: 'FRA', title: 'França', prefix: 'FRA', flag: '🇫🇷', count: 20, group: 'Grupo I' },
+  { id: 'SEN', title: 'Senegal', prefix: 'SEN', flag: '🇸🇳', count: 20, group: 'Grupo I' },
+  { id: 'IRQ', title: 'Iraque', prefix: 'IRQ', flag: '🇮🇶', count: 20, group: 'Grupo I' },
+  { id: 'NOR', title: 'Noruega', prefix: 'NOR', flag: '🇳🇴', count: 20, group: 'Grupo I' },
+  { id: 'ARG', title: 'Argentina', prefix: 'ARG', flag: '🇦🇷', count: 20, group: 'Grupo J' },
+  { id: 'ALG', title: 'Argélia', prefix: 'ALG', flag: '🇩🇿', count: 20, group: 'Grupo J' },
+  { id: 'AUT', title: 'Áustria', prefix: 'AUT', flag: '🇦🇹', count: 20, group: 'Grupo J' },
+  { id: 'JOR', title: 'Jordânia', prefix: 'JOR', flag: '🇯🇴', count: 20, group: 'Grupo J' },
+  { id: 'POR', title: 'Portugal', prefix: 'POR', flag: '🇵🇹', count: 20, group: 'Grupo K' },
+  { id: 'COD', title: 'Congo', prefix: 'COD', flag: '🇨🇩', count: 20, group: 'Grupo K' },
+  { id: 'UZB', title: 'Uzbequistão', prefix: 'UZB', flag: '🇺🇿', count: 20, group: 'Grupo K' },
+  { id: 'COL', title: 'Colômbia', prefix: 'COL', flag: '🇨🇴', count: 20, group: 'Grupo K' },
+  { id: 'ENG', title: 'Inglaterra', prefix: 'ENG', flag: '🇬🇧', count: 20, group: 'Grupo L' },
+  { id: 'CRO', title: 'Croácia', prefix: 'CRO', flag: '🇭🇷', count: 20, group: 'Grupo L' },
+  { id: 'GHA', title: 'Gana', prefix: 'GHA', flag: '🇬🇭', count: 20, group: 'Grupo L' },
+  { id: 'PAN', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20, group: 'Grupo L' },
 ];
 
 const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_, i) => `${sec.prefix}-${i + 1}`) : sec.items.map(item => `${sec.prefix}-${item}`);
@@ -96,6 +97,9 @@ export default function App() {
   const [tradeStats, setTradeStats] = useState({ send: [], receive: [] });
   const [isLoadingCompare, setIsLoadingCompare] = useState(false);
   const [friendData, setFriendData] = useState(null);
+
+  // Nova variável para controlar a aba de grupos ativa
+  const [activeGroup, setActiveGroup] = useState('Especiais');
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -235,13 +239,18 @@ export default function App() {
     }
   };
 
-  const scrollToSection = (id) => {
-      setActiveTab('album');
-      const element = sectionsRef.current[id];
+  // Nova função para rolar até o primeiro país de um grupo
+  const scrollToGroup = (groupName) => {
+    setActiveTab('album');
+    setActiveGroup(groupName);
+    const firstSectionOfGroup = SECTIONS.find(s => s.group === groupName);
+    if (firstSectionOfGroup) {
+      const element = sectionsRef.current[firstSectionOfGroup.id];
       if (element) {
-          const topPos = element.getBoundingClientRect().top + window.scrollY - 160; 
+          const topPos = element.getBoundingClientRect().top + window.scrollY - 130; 
           window.scrollTo({ top: topPos, behavior: 'smooth' });
       }
+    }
   };
 
   const stats = useMemo(() => {
@@ -279,6 +288,9 @@ export default function App() {
   const cardBg = isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-100 text-slate-800";
   const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
   const titleColor = isDarkMode ? "text-white" : "text-slate-800";
+
+  // Extrair a lista única de grupos para montar o menu
+  const uniqueGroups = [...new Set(SECTIONS.map(item => item.group))];
 
   return (
     <div className={`w-full max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
@@ -331,28 +343,31 @@ export default function App() {
         </div>
       )}
 
-      {/* CONTEÚDO PRINCIPAL - pt-[90px] para a área nascer sempre abaixo do Header Fixo */}
-      <main className={`w-full flex flex-col px-3 pb-4 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[150px]' : 'pt-[90px] flex-1 justify-center'}`}>
+      {/* CONTEÚDO PRINCIPAL */}
+      <main className={`w-full flex flex-col px-3 pb-4 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[130px]' : 'pt-[90px] flex-1 justify-center'}`}>
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="w-full">
-              {/* MENU DE BANDEIRAS HORIZONTAIS FIXO NO TOPO - w-full para preencher o espaço lateral */}
+              {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
               <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar w-full`}>
-                  {SECTIONS.map(s => (
-                    <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center min-w-[44px]">
-                      <span className="text-xl">{s.flag}</span>
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{s.prefix}</span>
+                <div className={`${cardBg} px-2 py-2 rounded-2xl shadow-sm border flex gap-2 overflow-x-auto hide-scrollbar w-full max-w-3xl mx-auto`}>
+                  {uniqueGroups.map(groupName => (
+                    <button 
+                        key={groupName} 
+                        onClick={() => scrollToGroup(groupName)} 
+                        className={`flex flex-col items-center justify-center min-w-[70px] px-3 py-1.5 rounded-xl transition-colors text-xs font-bold whitespace-nowrap ${activeGroup === groupName ? 'bg-emerald-600 text-white' : isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}
+                    >
+                      {groupName}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 pt-[10px]">
                   {SECTIONS.map((sec) => (
                     <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
-                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2>
+                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title} <span className="text-[10px] font-normal opacity-50 ml-auto">{sec.group}</span></h2>
                        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                          {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
                            const key = `${sec.prefix}-${item}`;
@@ -381,7 +396,6 @@ export default function App() {
           <div className="w-full flex flex-col max-w-md mx-auto">
             <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col w-full`}>
               <h2 className={`font-black ${titleColor} text-lg mb-4`}>Visão Geral da Coleção</h2>
-              {/* Gráfico reduzido verticalmente para w-40 h-40 */}
               <div className="relative w-40 h-40 mx-auto mb-3 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}>
                 <div className={`w-28 h-28 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
                   <span className={`text-xl font-black ${titleColor}`}>{stats.percentage}%</span>
