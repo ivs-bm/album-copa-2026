@@ -98,7 +98,7 @@ export default function App() {
   const [isLoadingCompare, setIsLoadingCompare] = useState(false);
   const [friendData, setFriendData] = useState(null);
 
-  // Nova variável para controlar a aba de grupos ativa
+  // Variável para controlar a aba de grupos ativa
   const [activeGroup, setActiveGroup] = useState('Especiais');
 
   useEffect(() => {
@@ -239,7 +239,7 @@ export default function App() {
     }
   };
 
-  // Nova função para rolar até o primeiro país de um grupo
+  // Função para rolar até o primeiro país de um grupo
   const scrollToGroup = (groupName) => {
     setActiveTab('album');
     setActiveGroup(groupName);
@@ -289,11 +289,11 @@ export default function App() {
   const textColor = isDarkMode ? "text-slate-200" : "text-slate-600";
   const titleColor = isDarkMode ? "text-white" : "text-slate-800";
 
-  // Extrair a lista única de grupos para montar o menu
   const uniqueGroups = [...new Set(SECTIONS.map(item => item.group))];
 
   return (
-    <div className={`w-full max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
+    // DIV PRINCIPAL com w-full (100%) mas centrado na tela.
+    <div className={`w-full min-h-screen flex flex-col items-center ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
       <style>{`
         * { box-sizing: border-box !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -301,8 +301,8 @@ export default function App() {
       
       {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
       
-      {/* CABEÇALHO (HEADER) FIXO */}
-      <header className={`w-full h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md`}>
+      {/* CABEÇALHO FIXO (Limitado e Centralizado) */}
+      <header className={`w-full max-w-3xl h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-1/2 -translate-x-1/2 z-50 shadow-md`}>
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-3">
              <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
@@ -343,15 +343,15 @@ export default function App() {
         </div>
       )}
 
-      {/* CONTEÚDO PRINCIPAL */}
-      <main className={`w-full flex flex-col px-3 pb-4 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[130px]' : 'pt-[90px] flex-1 justify-center'}`}>
+      {/* CONTEÚDO PRINCIPAL (Padronizado e Centralizado) */}
+      <main className={`w-full max-w-3xl flex flex-col px-3 pb-4 ${activeTab === 'album' ? 'pt-[130px]' : 'pt-[90px] flex-1 justify-center'}`}>
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="w-full">
-              {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
-              <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                <div className={`${cardBg} px-2 py-2 rounded-2xl shadow-sm border flex gap-2 overflow-x-auto hide-scrollbar w-full max-w-3xl mx-auto`}>
+              {/* MENU DE GRUPOS FIXO NO TOPO (Limitado e Centralizado) */}
+              <div className={`fixed top-[76px] left-1/2 -translate-x-1/2 w-full max-w-3xl z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+                <div className={`${cardBg} px-2 py-2 rounded-2xl shadow-sm border flex gap-2 overflow-x-auto hide-scrollbar w-full`}>
                   {uniqueGroups.map(groupName => (
                     <button 
                         key={groupName} 
@@ -364,9 +364,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-[10px]">
+              <div className="space-y-4 pt-[10px] w-full">
                   {SECTIONS.map((sec) => (
-                    <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
+                    <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border w-full`}>
                        <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title} <span className="text-[10px] font-normal opacity-50 ml-auto">{sec.group}</span></h2>
                        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                          {(sec.count ? Array.from({length: sec.count}, (_, i) => i + 1) : sec.items).map(item => {
@@ -393,7 +393,7 @@ export default function App() {
 
         {/* ABA 2: ESTATÍSTICAS (RESUMO) */}
         {activeTab === 'stats' && (
-          <div className="w-full flex flex-col max-w-md mx-auto">
+          <div className="w-full flex flex-col">
             <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col w-full`}>
               <h2 className={`font-black ${titleColor} text-lg mb-4`}>Visão Geral da Coleção</h2>
               <div className="relative w-40 h-40 mx-auto mb-3 rounded-full shadow-inner flex items-center justify-center" style={{ background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)` }}>
@@ -403,7 +403,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="space-y-2 w-full max-w-sm mx-auto mt-2">
+              <div className="space-y-2 w-full mt-2">
                 <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                   <span className="flex items-center gap-2 font-bold text-emerald-500"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas</span>
                   <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
@@ -423,17 +423,17 @@ export default function App() {
 
         {/* ABA 3: BOLÃO */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col items-center justify-center w-full max-w-md mx-auto`}>
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col items-center justify-center w-full`}>
                 <Trophy size={40} className="mx-auto text-yellow-500 mb-3 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
                 <h2 className={`font-black ${titleColor} text-lg mb-2`}>Bolão da Família</h2>
-                <p className={`text-xs ${textColor} mb-4 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
+                <p className={`text-xs ${textColor} mb-4 w-full`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
                 {showProCode && (
-                  <div className="flex gap-2 mb-4 w-full max-w-xs mx-auto">
+                  <div className="flex gap-2 mb-4 w-full">
                     <input className={`flex-1 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'} border text-white p-3 rounded-xl text-xs outline-none`} onChange={(e) => setProInput(e.target.value)} placeholder="Código VIP" />
                     <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro Ativado!"); } }} className="bg-emerald-600 text-white px-6 rounded-xl text-xs font-bold shadow-md">OK</button>
                   </div>
                 )}
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full`}>
                     <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos</p>
                     <p className={`text-[10px] mt-1 ${textColor}`}>Disponível após o sorteio dos grupos.</p>
                 </div>
@@ -442,7 +442,7 @@ export default function App() {
 
         {/* ABA 5: TROCAS JUSTAS (MATCH) */}
         {activeTab === 'trocas' && (
-            <div className="w-full flex flex-col gap-3 max-w-md mx-auto">
+            <div className="w-full flex flex-col gap-3">
               <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
                 <h2 className={`font-black ${titleColor} text-base mb-2 flex items-center gap-2`}><ArrowRightLeft size={18} className="text-emerald-500"/> Trocas Justas</h2>
                 <p className={`text-[10px] ${textColor} mb-3`}>Digite o código de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
@@ -477,7 +477,7 @@ export default function App() {
 
         {/* ABA 4: PERFIL E CONFIGURAÇÕES */}
         {activeTab === 'perfil' && (
-          <div className="w-full flex flex-col gap-3 max-w-md mx-auto">
+          <div className="w-full flex flex-col gap-3 justify-between">
             {!isStandalone && (
               <button onClick={handleInstallClick} className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-3 rounded-2xl shadow-md transition-all border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                 <span className="font-black text-sm uppercase tracking-wide flex items-center gap-2"><Download size={16}/> INSTALAR APLICATIVO</span>
@@ -550,8 +550,8 @@ export default function App() {
         )}
       </main>
 
-      {/* MENU INFERIOR (BOTTOM NAVIGATION) */}
-      <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
+      {/* MENU INFERIOR (Limitado e Centralizado) */}
+      <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
           <div className="flex justify-between items-center pb-2 max-w-md mx-auto">
               <button onClick={() => setActiveTab('album')} className={`flex flex-col items-center gap-1 ${activeTab === 'album' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
                   <Book size={22} className={activeTab === 'album' ? 'fill-emerald-500/20' : ''}/>
