@@ -420,6 +420,7 @@ export default function App() {
         setTradeStats({ send, receive });
         setFriendData({ id: compareId.trim(), email: docSnap.data().adminEmail });
         setToast("Análise concluída!");
+		setTimeout(() => setToast(''), 5000);
       } else {
         setToast("Álbum não encontrado!");
       }
@@ -427,6 +428,12 @@ export default function App() {
       setToast("Erro ao buscar álbum.");
     }
     setIsLoadingCompare(false);
+  };
+  // Função: Limpar a tela de trocas para uma nova consulta
+          const handleClearCompare = () => {
+            setCompareId('');
+            setFriendData(null);
+            setTradeStats({ send: [], receive: [] });
   };
   
   
@@ -979,7 +986,7 @@ export default function App() {
                       tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
                     </div>
                   </div>
-                  {/* Bloco: Você Dá */}
+                  {/* Bloco: Você Entrega */}
                   <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30 flex-1`}>
                     <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
                     <div className="flex flex-wrap gap-2">
@@ -987,6 +994,12 @@ export default function App() {
                       tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
                     </div>
                   </div>
+				  
+				  {/* NOVO BOTÃO DE LIMPEZA */}
+                  <button onClick={handleClearCompare} className={`w-full mt-2 py-3 rounded-xl font-bold text-xs transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
+                     Limpar e fazer nova consulta?
+                  </button>
+				  
                 </div>
               )}
             </div>
