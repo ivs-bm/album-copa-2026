@@ -10,13 +10,13 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Importação dos ícones visuais usados nos botões e menus do aplicativo
 
-import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle } from 'lucide-react';
+import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, ArrowRightLeft } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 
-import { getFirestore, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
 
 
@@ -211,6 +211,16 @@ export default function App() {
   const [showProCode, setShowProCode] = useState(false); 
 
   const [proInput, setProInput] = useState(''); 
+  
+ 
+ 
+  // ==========================================================
+  // NOVOS ESTADOS: Referentes ao motor de Trocas Justas
+  // ==========================================================
+  const [compareId, setCompareId] = useState('');
+  const [tradeStats, setTradeStats] = useState({ send: [], receive: [] });
+  const [isLoadingCompare, setIsLoadingCompare] = useState(false);
+  const [friendData, setFriendData] = useState(null);
 
   
 
@@ -377,6 +387,49 @@ export default function App() {
     await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
 
   };
+  
+  
+  // ==========================================================
+  // NOVA FUNÇÃO: Comparar Álbuns (Troca Justa)
+  // ==========================================================
+  const handleCompareAlbums = async () => {
+    if (!compareId.trim() || compareId.trim() === activeFamilyId) {
+      return setToast("Digite um código de amigo válido.");
+    }
+    setIsLoadingCompare(true);
+    setToast("Analisando álbuns...");
+    try {
+      const docRef = doc(db, 'family_albums', compareId.trim());
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const friendStickers = docSnap.data().stickers || {};
+        let send = []; // Figurinhas que eu tenho 2 e ele tem 0
+        let receive = []; // Figurinhas que ele tem 2 e eu tenho 0
+
+        SECTIONS.forEach(sec => {
+          const keys = sec.count ? Array.from({length: sec.count}, (_, i) => `${sec.prefix}-${i+1}`) : sec.items.map(i => `${sec.prefix}-${i}`);
+          keys.forEach(k => {
+            const myStatus = stickers[k] || 0;
+            const friendStatus = friendStickers[k] || 0;
+            if (myStatus === 2 && friendStatus === 0) send.push(k);
+            if (friendStatus === 2 && myStatus === 0) receive.push(k);
+          });
+        });
+
+        setTradeStats({ send, receive });
+        setFriendData({ id: compareId.trim(), email: docSnap.data().adminEmail });
+        setToast("Análise concluída!");
+      } else {
+        setToast("Álbum não encontrado!");
+      }
+    } catch (e) {
+      setToast("Erro ao buscar álbum.");
+    }
+    setIsLoadingCompare(false);
+  };
+  
+  
 
   // ============================================================================
   // AQUI FOI FEITA A CORREÇÃO DA INTEGRAÇÃO DO PIX (Chamada de API Real)
@@ -900,6 +953,47 @@ export default function App() {
 
 
 
+{/* ========================================================== */}
+{/* NOVA ABA 5: TROCAS JUSTAS (MATCH) */}
+{/* ========================================================== */}
+        {activeTab === 'trocas' && (
+            <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex flex-col gap-4">
+              <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
+                <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
+                <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
+                <div className="flex gap-2">
+                  <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
+                  <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
+                    {isLoadingCompare ? '...' : 'Analisar'}
+                  </button>
+                </div>
+              </div>
+
+              {friendData && (
+                <div className="flex-1 flex flex-col gap-4">
+                  {/* Bloco: Você Recebe */}
+                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-emerald-500/30 flex-1`}>
+                    <h3 className="font-bold text-emerald-500 text-sm mb-3">Você Recebe ({tradeStats.receive.length})</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {tradeStats.receive.length === 0 ? <p className="text-xs opacity-50">Ele não tem figurinhas repetidas que você precise.</p> : 
+                      tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
+                    </div>
+                  </div>
+                  {/* Bloco: Você Dá */}
+                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30 flex-1`}>
+                    <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {tradeStats.send.length === 0 ? <p className="text-xs opacity-50">Você não tem figurinhas repetidas que ele precise.</p> : 
+                      tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+        )}
+		
+		
+		
 {/* // ============================================================================ */}
 
 {/* // ABA 4: PERFIL E CONFIGURAÇÕES */}
@@ -1103,6 +1197,18 @@ export default function App() {
                   <span className="text-[9px] font-bold">Bolão</span>
 
               </button>
+			
+			
+			
+			{/* NOVO BOTÃO: Trocas Justas */}
+              
+			  <button onClick={() => setActiveTab('trocas')} className={`flex flex-col items-center gap-1 ${activeTab === 'trocas' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-300'} transition-colors`}>
+                  
+				  <ArrowRightLeft size={22} className={activeTab === 'trocas' ? 'stroke-emerald-500' : ''}/>
+                  
+				  <span className="text-[9px] font-bold">Trocas</span>
+              
+			  </button>
 
 
 
