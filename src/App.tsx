@@ -392,20 +392,26 @@ export default function App() {
   // ==========================================================
   // NOVA FUNÇÃO: Comparar Álbuns (Troca Justa)
   // ==========================================================
+  // Função: Comparar Álbuns (Troca Justa)
   const handleCompareAlbums = async () => {
+    // CORREÇÃO 1: Adicionado o timer se o código for inválido ou vazio
     if (!compareId.trim() || compareId.trim() === activeFamilyId) {
-      return setToast("Digite um código de amigo válido.");
+      setToast("Digite um código de amigo válido.");
+      setTimeout(() => setToast(''), 3000);
+      return; 
     }
+    
     setIsLoadingCompare(true);
     setToast("Analisando álbuns...");
+    
     try {
       const docRef = doc(db, 'family_albums', compareId.trim());
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const friendStickers = docSnap.data().stickers || {};
-        let send = []; // Figurinhas que eu tenho 2 e ele tem 0
-        let receive = []; // Figurinhas que ele tem 2 e eu tenho 0
+        let send = []; 
+        let receive = []; 
 
         SECTIONS.forEach(sec => {
           const keys = sec.count ? Array.from({length: sec.count}, (_, i) => `${sec.prefix}-${i+1}`) : sec.items.map(i => `${sec.prefix}-${i}`);
@@ -420,15 +426,22 @@ export default function App() {
         setTradeStats({ send, receive });
         setFriendData({ id: compareId.trim(), email: docSnap.data().adminEmail });
         setToast("Análise concluída!");
-		setTimeout(() => setToast(''), 5000);
+        setTimeout(() => setToast(''), 5000); 
       } else {
+        // CORREÇÃO 2: Adicionado o timer se o álbum não for encontrado no banco
         setToast("Álbum não encontrado!");
+        setTimeout(() => setToast(''), 3000);
       }
     } catch (e) {
+      // CORREÇÃO 3: Adicionado o timer se der erro de conexão com o Firebase
       setToast("Erro ao buscar álbum.");
+      setTimeout(() => setToast(''), 3000);
     }
     setIsLoadingCompare(false);
   };
+  
+  
+  
   // Função: Limpar a tela de trocas para uma nova consulta
           const handleClearCompare = () => {
             setCompareId('');
