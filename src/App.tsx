@@ -438,8 +438,8 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // 160 é o espaço exato em pixels do cabeçalho + novo menu de grupos
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 160; 
+              // 170 é o espaço exato em pixels do cabeçalho + novo menu de grupos
+              const topPos = element.getBoundingClientRect().top + window.scrollY - 170; 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -672,16 +672,16 @@ export default function App() {
             <div className="flex-1 w-full">
               {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
               <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                <div className={`${cardBg} px-4 py-2 rounded-2xl shadow-sm border flex gap-6 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
+                {/* MUDANÇA: gap-6 reduzido para gap-3 para equilibrar o visual dos cartões */}
+                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-3 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {uniqueGroups.map(groupName => {
                     const groupSections = SECTIONS.filter(s => s.group === groupName);
                     return (
-                      <div key={groupName} className="flex flex-col items-center shrink-0">
-                        {/* MUDANÇA AQUI: tracking-[0.25em] afasta as letras para preencher a largura */}
-                        <span className="text-emerald-500 font-bold text-[10px] uppercase mb-1.5 tracking-[0.25em] ml-[0.25em]">{groupName}</span>
+                      // MUDANÇA PRINCIPAL: Classes px-4, py-2, rounded-xl e cores dinâmicas de fundo/borda para criar a caixa
+                      <div key={groupName} className={`flex flex-col items-center shrink-0 px-4 py-2 rounded-xl border shadow-sm ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
+                        <span className="text-emerald-500 font-bold text-[10px] uppercase mb-2 tracking-[0.25em] ml-[0.25em]">{groupName}</span>
                         <div className="flex gap-4">
                           {groupSections.map(s => (
-                            // MUDANÇA AQUI: flex-col empilha a bandeira e a sigla
                             <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
                               <span className="text-xl leading-none">{s.flag}</span>
                               <span className="text-[8px] font-bold text-slate-400 mt-1">{s.prefix}</span>
