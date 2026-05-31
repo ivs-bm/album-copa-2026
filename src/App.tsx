@@ -54,7 +54,7 @@ const SECTIONS = [
   { id: 'BRA', title: 'Brasil', prefix: 'BRA', flag: '🇧🇷', count: 20, group: 'Grupo C' },
   { id: 'MAR', title: 'Marrocos', prefix: 'MAR', flag: '🇲🇦', count: 20, group: 'Grupo C' },
   { id: 'HAI', title: 'Haiti', prefix: 'HAI', flag: '🇭🇹', count: 20, group: 'Grupo C' },
-  { id: 'SCO', title: 'Escócia', prefix: 'SCO', flag: '🇬🇧', count: 20, group: 'Grupo C' },
+  { id: 'SCO', title: 'Escócia', prefix: 'SCO', flag: '🇬🇧', flagUrlApple: '/gb-sct-iphone.png', flagUrlAndroid: '/gb-sct-android.png', count: 20, group: 'Grupo C' },
   { id: 'USA', title: 'EUA', prefix: 'USA', flag: '🇺🇸', count: 20, group: 'Grupo D' },
   { id: 'PAR', title: 'Paraguai', prefix: 'PAR', flag: '🇵🇾', count: 20, group: 'Grupo D' },
   { id: 'AUS', title: 'Austrália', prefix: 'AUS', flag: '🇦🇺', count: 20, group: 'Grupo D' },
@@ -87,7 +87,7 @@ const SECTIONS = [
   { id: 'COD', title: 'Congo', prefix: 'COD', flag: '🇨🇩', count: 20, group: 'Grupo K' },
   { id: 'UZB', title: 'Uzbequistão', prefix: 'UZB', flag: '🇺🇿', count: 20, group: 'Grupo K' },
   { id: 'COL', title: 'Colômbia', prefix: 'COL', flag: '🇨🇴', count: 20, group: 'Grupo K' },
-  { id: 'ENG', title: 'Inglaterra', prefix: 'ENG', flag: '🇬🇧', count: 20, group: 'Grupo L' },
+  { id: 'ENG', title: 'Inglaterra', prefix: 'ENG', flag: '🇬🇧', flagUrlApple: '/gb-eng-iphone.png', flagUrlAndroid: '/gb-eng-android.png', count: 20, group: 'Grupo L' },
   { id: 'CRO', title: 'Croácia', prefix: 'CRO', flag: '🇭🇷', count: 20, group: 'Grupo L' },
   { id: 'GHA', title: 'Gana', prefix: 'GHA', flag: '🇬🇭', count: 20, group: 'Grupo L' },
   { id: 'PAN', title: 'Panamá', prefix: 'PAN', flag: '🇵🇦', count: 20, group: 'Grupo L' },
@@ -134,6 +134,11 @@ export default function App() {
   const [showTutorial, setShowTutorial] = useState(false); // Controle se o modal "Guia Rápido" está aberto
 
   const [toast, setToast] = useState(''); // Controle dos alertas verdes no topo da tela
+  
+  
+  
+  // Detector de Sistema: Verifica se o usuário está no iPhone/iPad/Mac
+  const isAppleDevice = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
 
   
 
@@ -683,7 +688,12 @@ export default function App() {
                         <div className="flex gap-4">
                           {groupSections.map(s => (
                             <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
-                              <span className="text-xl leading-none">{s.flag}</span>
+                              {/* Lógica da Imagem vs Emoji */}
+                              {s.flagUrlApple ? (
+                                <img src={isAppleDevice ? s.flagUrlApple : s.flagUrlAndroid} alt={s.title} className="w-5 h-5 object-contain" />
+                              ) : (
+                                <span className="text-xl leading-none">{s.flag}</span>
+                              )}
                               <span className="text-[8px] font-bold text-slate-400 mt-1">{s.prefix}</span>
                             </button>
                           ))}
@@ -702,7 +712,11 @@ export default function App() {
                     <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
                        {/* MUDANÇA AQUI: Inserido o sec.prefix com cor mais clara entre a bandeira e o nome */}
                        <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>
-                          <span className="text-lg">{sec.flag}</span>
+                          {sec.flagUrlApple ? (
+                            <img src={isAppleDevice ? sec.flagUrlApple : sec.flagUrlAndroid} alt={sec.title} className="w-[18px] h-[18px] object-contain" />
+                          ) : (
+                            <span className="text-lg">{sec.flag}</span>
+                          )}
                           <span className="text-slate-400 font-bold text-xs">{sec.prefix}</span>
                           {sec.title}
                        </h2>
