@@ -592,7 +592,7 @@ export default function App() {
 
     // DIV PRINCIPAL: Mantido exatamente como no primeiro print (max-w-[100vw] overflow-x-hidden)
 
-    <div className={`w-full max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
+    <div className={`w-full min-w-[100vw] max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
 
       <style>{`
 
