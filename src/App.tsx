@@ -438,8 +438,8 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // 170 é o espaço exato em pixels do cabeçalho + novo menu de grupos
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 170; 
+              // AUMENTAMOS AQUI: de -170 para -190 para compensar o menu que ficou mais alto
+              const topPos = element.getBoundingClientRect().top + window.scrollY - 190; 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
