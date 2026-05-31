@@ -818,13 +818,9 @@ export default function App() {
 
 {activeTab === 'stats' && (
 
-  <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex">
+  <div className="w-full flex flex-col max-w-md mx-auto h-[calc(100dvh-170px)]">
 
-    <div
-
-      className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full flex-1 min-h-[calc(100dvh-170px)] overflow-hidden`}
-
-    >
+    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full h-full`}>
 
       {/* AJUSTE DE LAYOUT: o Resumo agora ocupa toda a altura útil da tela,
 
@@ -980,7 +976,7 @@ export default function App() {
 {/* NOVA ABA 5: TROCAS JUSTAS (MATCH) */}
 {/* ========================================================== */}
         {activeTab === 'trocas' && (
-            <div className="flex-1 w-full min-h-[calc(100dvh-170px)] flex flex-col gap-4">
+            <div className="w-full flex flex-col gap-3 max-w-md mx-auto h-[calc(100dvh-170px)] justify-between overflow-y-auto hide-scrollbar">
               <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
                 <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
@@ -1031,7 +1027,7 @@ export default function App() {
 
 {activeTab === 'perfil' && (
 
-  <div className="flex flex-1 flex-col w-full min-h-[calc(100dvh-170px)] gap-4 justify-between">
+  <div className="w-full flex flex-col gap-3 justify-between max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar">
 
     {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível
 
