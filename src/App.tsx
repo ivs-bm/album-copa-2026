@@ -676,8 +676,10 @@ export default function App() {
                   {uniqueGroups.map(groupName => {
                     const groupSections = SECTIONS.filter(s => s.group === groupName);
                     return (
-                      <div key={groupName} className="flex flex-col shrink-0">
-                        <span className="text-emerald-500 font-bold text-sm mb-1">{groupName}</span>
+                      // AQUI ESTÁ A MUDANÇA: Adicionado 'items-center' para centralizar
+                      <div key={groupName} className="flex flex-col items-center shrink-0">
+                        {/* Texto menor (text-xs) e maiúsculo (uppercase) para dar estética de cabeçalho */}
+                        <span className="text-emerald-500 font-bold text-xs uppercase mb-1">{groupName}</span>
                         <div className="flex gap-3">
                           {groupSections.map(s => (
                             <button key={s.id} onClick={() => scrollToSection(s.id)} className="text-xl hover:scale-110 transition-transform cursor-pointer">
