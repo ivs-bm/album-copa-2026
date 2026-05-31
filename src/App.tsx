@@ -438,8 +438,8 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // 150 é o espaço exato em pixels do cabeçalho + novo menu de grupos
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 150; 
+              // 160 é o espaço exato em pixels do cabeçalho + novo menu de grupos
+              const topPos = element.getBoundingClientRect().top + window.scrollY - 160; 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -676,14 +676,15 @@ export default function App() {
                   {uniqueGroups.map(groupName => {
                     const groupSections = SECTIONS.filter(s => s.group === groupName);
                     return (
-                      // AQUI ESTÁ A MUDANÇA: Adicionado 'items-center' para centralizar
                       <div key={groupName} className="flex flex-col items-center shrink-0">
-                        {/* Texto menor (text-xs) e maiúsculo (uppercase) para dar estética de cabeçalho */}
-                        <span className="text-emerald-500 font-bold text-xs uppercase mb-1">{groupName}</span>
-                        <div className="flex gap-3">
+                        {/* MUDANÇA AQUI: tracking-[0.25em] afasta as letras para preencher a largura */}
+                        <span className="text-emerald-500 font-bold text-[10px] uppercase mb-1.5 tracking-[0.25em] ml-[0.25em]">{groupName}</span>
+                        <div className="flex gap-4">
                           {groupSections.map(s => (
-                            <button key={s.id} onClick={() => scrollToSection(s.id)} className="text-xl hover:scale-110 transition-transform cursor-pointer">
-                              {s.flag}
+                            // MUDANÇA AQUI: flex-col empilha a bandeira e a sigla
+                            <button key={s.id} onClick={() => scrollToSection(s.id)} className="flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
+                              <span className="text-xl leading-none">{s.flag}</span>
+                              <span className="text-[8px] font-bold text-slate-400 mt-1">{s.prefix}</span>
                             </button>
                           ))}
                         </div>
@@ -696,14 +697,15 @@ export default function App() {
 
 
               {/* LISTA DE SEÇÕES DE PAÍSES E BOTÕES DE FIGURINHAS */}
-
               <div className="space-y-4">
-
                   {SECTIONS.map((sec) => (
-
                     <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
-
-                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>{sec.flag} {sec.title}</h2>
+                       {/* MUDANÇA AQUI: Inserido o sec.prefix com cor mais clara entre a bandeira e o nome */}
+                       <h2 className={`font-black ${titleColor} mb-3 flex items-center gap-2 text-sm`}>
+                          <span className="text-lg">{sec.flag}</span>
+                          <span className="text-slate-400 font-bold text-xs">{sec.prefix}</span>
+                          {sec.title}
+                       </h2>
 
                        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
 
