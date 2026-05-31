@@ -486,13 +486,16 @@ export default function App() {
   
 
   // Função: Faz a tela deslizar ao clicar na bandeira do menu superior
-
   const scrollToSection = (id) => {
-
       setActiveTab('album');
-
-      setTimeout(() => sectionsRef.current[id]?.scrollIntoView({ behavior: 'smooth' }), 100);
-
+      setTimeout(() => {
+          const element = sectionsRef.current[id];
+          if (element) {
+              // 140 é o espaço exato em pixels do cabeçalho + menu de bandeiras
+              const topPos = element.getBoundingClientRect().top + window.scrollY - 140; 
+              window.scrollTo({ top: topPos, behavior: 'smooth' });
+          }
+      }, 100);
   };
 
 
@@ -615,7 +618,7 @@ export default function App() {
 
       {/* ======================================================================= */}
 
-      <header className={`w-full ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 sticky top-0 z-40 shadow-md`}>
+      <header className={`w-full h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md`}>
 
         <div className="flex justify-between items-center mb-2">
 
@@ -711,7 +714,7 @@ export default function App() {
 
       {/* ======================================================================= */}
 
-      <main className="w-full flex-1 flex flex-col px-3 py-4 gap-4 min-h-0">
+      <main className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[140px]' : 'pt-[90px]'}`}>
 
         
 
@@ -723,9 +726,9 @@ export default function App() {
 
               {/* MENU DE BANDEIRAS HORIZONTAIS: Permite deslizar lateralmente */}
 
-              <div className={`${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'} sticky top-[65px] z-30 pt-1 pb-2 w-full`}>
+              <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
 
-                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar`}>
+                <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-4 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
 
                   {SECTIONS.map(s => (
 
