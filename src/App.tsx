@@ -665,7 +665,7 @@ export default function App() {
 
       {/* ======================================================================= */}
 
-      <main className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[150px]' : 'pt-[90px]'}`}>
+      <main className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[190px]' : 'pt-[90px]'}`}>
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
