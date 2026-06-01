@@ -1101,23 +1101,32 @@ export default function App() {
 
 
                         <button onClick={() => {
-
-                            let m = SECTIONS.map(sec => {
-
+                            // 1. Mapeia as Faltantes (status === 0)
+                            let faltantes = SECTIONS.map(sec => {
                                 const l = getSectionKeys(sec).filter(k => (stickers[k] || 0) === 0).map(k => k.split('-')[1]);
-
                                 return l.length > 0 ? `${sec.flag} *${sec.prefix}*: ${l.join(', ')}` : null;
-
                             }).filter(s => s !== null).join('\n');
 
-                            copyToClipboard(`🏆 *Faltam:*\n${m}`, "Lista copiada!");
+                            // 2. Mapeia as Repetidas (status === 2)
+                            let repetidas = SECTIONS.map(sec => {
+                                const l = getSectionKeys(sec).filter(k => (stickers[k] || 0) === 2).map(k => k.split('-')[1]);
+                                return l.length > 0 ? `${sec.flag} *${sec.prefix}*: ${l.join(', ')}` : null;
+                            }).filter(s => s !== null).join('\n');
+
+                            // 3. Monta o texto final com formatação para o WhatsApp
+                            let textoFinal = '';
+                            if (faltantes) textoFinal += `🏆 *FALTAM:*\n${faltantes}\n\n`;
+                            if (repetidas) textoFinal += `🔄 *REPETIDAS (Para Troca):*\n${repetidas}`;
+                            
+                            // Caso raro de álbum 100% completo e sem repetidas
+                            if (!faltantes && !repetidas) textoFinal = "Álbum completo e sem repetidas disponíveis!";
+
+                            copyToClipboard(textoFinal.trim(), "Lista copiada!");
 
                         }} className={`w-full flex items-center justify-between p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'} transition-colors`}>
-
-                            <span className={`text-xs font-bold ${textColor}`}>Copiar Lista de Faltantes</span>
-
+                            {/* O texto do botão também foi atualizado para refletir a nova função */}
+                            <span className={`text-xs font-bold ${textColor}`}>Copiar Faltantes e Repetidas</span>
                             <Share2 size={14} className={textColor} />
-
                         </button>
 
                     </div>
