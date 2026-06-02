@@ -1115,8 +1115,8 @@ export default function App() {
 
                             // 3. Monta o texto final com formatação para o WhatsApp
                             let textoFinal = '';
-                            if (repetidas) textoFinal += `🔄 *REPETIDAS (Para Troca):*\n${repetidas}`;
-							if (faltantes) textoFinal += `🏆 *FALTAM:*\n${faltantes}\n\n`;
+                            if (repetidas) textoFinal += `🔄 *REPETIDAS (Para Troca):*\n${repetidas}\n\n`;
+							if (faltantes) textoFinal += `🏆 *FALTAM:*\n${faltantes}`;
                             
                             
                             // Caso raro de álbum 100% completo e sem repetidas
