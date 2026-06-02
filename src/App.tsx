@@ -143,6 +143,8 @@ export default function App() {
   
 
   const [activeTab, setActiveTab] = useState('album'); // Aba atual selecionada no menu inferior
+  
+  const [statsFilter, setStatsFilter] = useState(null); // Filtros: 'coladas', 'repetidas', 'faltantes' ou null
 
   const [isDarkMode, setIsDarkMode] = useState(true); // Controle do modo Claro/Escuro
 
@@ -774,111 +776,82 @@ export default function App() {
 
 
 {/* // ABA 2: ESTATÍSTICAS (RESUMO) */}
-
 {/* // ============================================================================ */}
-
 {activeTab === 'stats' && (
-
   <div className="w-full flex flex-col max-w-md mx-auto h-[calc(100dvh-170px)]">
-
-    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col justify-between w-full h-full`}>
-
-      {/* AJUSTE DE LAYOUT: o Resumo agora ocupa toda a altura útil da tela,
-
-          sem alterar nenhum dado, gráfico ou informação exibida. */}
-
-      <h2 className={`font-black ${titleColor} text-lg mb-6`}>Visão Geral da Coleção</h2>
-
-
+    {/* MUDANÇA: Adicionado overflow-y-auto para permitir rolagem interna caso a lista de bandeiras fique grande */}
+    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col w-full h-full overflow-y-auto hide-scrollbar gap-4`}>
+      
+      <h2 className={`font-black ${titleColor} text-lg shrink-0`}>Visão Geral da Coleção</h2>
 
       {/* GRÁFICO DE PIZZA */}
-
       <div
-
-        className="relative w-48 h-48 mx-auto mb-4 rounded-full shadow-inner flex items-center justify-center"
-
+        className="relative w-48 h-48 mx-auto rounded-full shadow-inner flex items-center justify-center shrink-0"
         style={{
-
           background: `conic-gradient(#10b981 0% ${stats.percColadas}%, #9333ea ${stats.percColadas}% ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}%, ${isDarkMode ? '#334155' : '#e2e8f0'} ${parseFloat(stats.percColadas) + parseFloat(stats.percRepetidas)}% 100%)`
-
         }}
-
       >
-
         <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-white'} flex flex-col items-center justify-center shadow-md`}>
-
           <span className={`text-2xl font-black ${titleColor}`}>{stats.percentage}%</span>
-
           <span className={`text-[10px] ${textColor} font-bold uppercase`}>Completado</span>
-
         </div>
-
       </div>
 
-
-
-      {/* BLOCOS DE INFORMAÇÃO NUMÉRICA */}
-
-      <div className="space-y-3 w-full max-w-sm mx-auto mt-4">
-
-        <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-
+      {/* BLOCOS DE INFORMAÇÃO NUMÉRICA (AGORA CLICÁVEIS) */}
+      <div className="space-y-3 w-full max-w-sm mx-auto shrink-0">
+        <div onClick={() => setStatsFilter(statsFilter === 'coladas' ? null : 'coladas')} className={`flex justify-between items-center p-3 rounded-xl bg-emerald-500/10 border cursor-pointer transition-all ${statsFilter === 'coladas' ? 'border-emerald-500 scale-[1.02] shadow-md' : 'border-emerald-500/20 hover:scale-[1.01]'}`}>
           <span className="flex items-center gap-2 font-bold text-emerald-500">
-
             <div className="w-3 h-3 rounded-full bg-emerald-500"></div> Coladas
-
           </span>
-
-          <span className={`font-black ${titleColor}`}>
-
-            {stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span>
-
-          </span>
-
+          <span className={`font-black ${titleColor}`}>{stats.coladas} <span className="text-xs font-normal opacity-50">({stats.percColadas}%)</span></span>
         </div>
 
-
-
-        <div className="flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-
+        <div onClick={() => setStatsFilter(statsFilter === 'repetidas' ? null : 'repetidas')} className={`flex justify-between items-center p-3 rounded-xl bg-purple-500/10 border cursor-pointer transition-all ${statsFilter === 'repetidas' ? 'border-purple-500 scale-[1.02] shadow-md' : 'border-purple-500/20 hover:scale-[1.01]'}`}>
           <span className="flex items-center gap-2 font-bold text-purple-500">
-
             <div className="w-3 h-3 rounded-full bg-purple-500"></div> Repetidas
-
           </span>
-
-          <span className={`font-black ${titleColor}`}>
-
-            {stats.repetidas} <span className="text-xs font-normal opacity-50">({stats.percRepetidas}%)</span>
-
-          </span>
-
+          <span className={`font-black ${titleColor}`}>{stats.repetidas} <span className="text-xs font-normal opacity-50">({stats.percRepetidas}%)</span></span>
         </div>
 
-
-
-        <div className={`flex justify-between items-center p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
-
+        <div onClick={() => setStatsFilter(statsFilter === 'faltantes' ? null : 'faltantes')} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer transition-all ${isDarkMode ? 'bg-slate-700/50' : 'bg-slate-100'} ${statsFilter === 'faltantes' ? (isDarkMode ? 'border-slate-400 scale-[1.02] shadow-md' : 'border-slate-400 scale-[1.02] shadow-md') : (isDarkMode ? 'border-slate-600 hover:scale-[1.01]' : 'border-slate-200 hover:scale-[1.01]')}`}>
           <span className={`flex items-center gap-2 font-bold ${textColor}`}>
-
             <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-slate-500' : 'bg-slate-300'}`}></div> Faltantes
-
           </span>
-
-          <span className={`font-black ${titleColor}`}>
-
-            {stats.faltantes} <span className="text-xs font-normal opacity-50">({stats.percFaltantes}%)</span>
-
-          </span>
-
+          <span className={`font-black ${titleColor}`}>{stats.faltantes} <span className="text-xs font-normal opacity-50">({stats.percFaltantes}%)</span></span>
         </div>
-
       </div>
+
+      {/* LISTA DINÂMICA DE BANDEIRAS (Aparece ao clicar em um filtro) */}
+      {statsFilter && (
+        <div className="w-full pt-4 border-t border-slate-500/20 animate-fade-in mt-auto shrink-0">
+           <p className="text-[10px] font-bold text-slate-400 uppercase mb-3 tracking-wider">
+               Países com {statsFilter} (Toque para ir)
+           </p>
+           <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 px-2">
+               {SECTIONS.filter(sec => {
+                    // Aqui o código descobre quais países atendem à regra clicada
+                    const keys = getSectionKeys(sec);
+                    if (statsFilter === 'coladas') return keys.some(k => (stickers[k] || 0) === 1);
+                    if (statsFilter === 'repetidas') return keys.some(k => (stickers[k] || 0) === 2);
+                    if (statsFilter === 'faltantes') return keys.some(k => (stickers[k] || 0) === 0);
+                    return false;
+               }).map(sec => (
+                    // Botão da Bandeira: Limpa o filtro e navega para o país
+                    <button key={sec.id} onClick={() => { setStatsFilter(null); scrollToSection(sec.id); }} className="flex flex-col items-center shrink-0 hover:scale-110 transition-transform cursor-pointer">
+                        {sec.flagUrlApple ? (
+                            <img src={isAppleDevice ? sec.flagUrlApple : sec.flagUrlAndroid} alt={sec.title} className="w-6 h-6 object-contain" />
+                        ) : (
+                            <span className="text-2xl leading-none">{sec.flag}</span>
+                        )}
+                        <span className="text-[9px] font-bold text-slate-400 mt-1">{sec.prefix}</span>
+                    </button>
+               ))}
+           </div>
+        </div>
+      )}
 
     </div>
-
   </div>
-
 )}
 
 
