@@ -101,6 +101,15 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
+// ============================================================================
+// ESTRUTURA DE DADOS: JOGOS DO BOLÃO (FASE DE TESTES)
+// ============================================================================
+const MATCHES = [
+  { id: 'm1', date: '11/06/2026 - 16:00', teamA: 'BRA', teamB: 'SCO' },
+  { id: 'm2', date: '12/06/2026 - 13:00', teamA: 'MEX', teamB: 'RSA' },
+  { id: 'm3', date: '12/06/2026 - 16:00', teamA: 'ENG', teamB: 'PAN' }
+];
+
 
 
 // ============================================================================
@@ -172,6 +181,23 @@ export default function App() {
   
   
   const [magicCode, setMagicCode] = useState('');
+  
+  
+  // ESTADOS DO BOLÃO
+  const [guesses, setGuesses] = useState({}); // Memória que guarda os gols digitados
+  
+  // Função que atualiza o número digitado na caixinha em tempo real
+  const handleGuess = (matchId, team, value) => {
+    // Permite apenas números entre 0 e 99
+    if (value !== '' && (value < 0 || value > 99)) return; 
+    setGuesses(prev => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [team]: value
+      }
+    }));
+  };
 
 
 
@@ -849,19 +875,90 @@ export default function App() {
 
 
 
-        {/* ABA 3: BOLÃO - TERRENO LIMPO PARA A FASE 1 */}
+        {/* ABA 3: BOLÃO - FASE 1 (LAYOUT DOS JOGOS) */}
         {activeTab === 'jogos' && (
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
+            <div className="w-full flex flex-col gap-4 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-6">
                 
-                <Trophy size={48} className="mx-auto text-yellow-500 mb-4" />
-                
-                <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-                <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
-                
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
-                    <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Fase 1 do Bolão</p>
-                    <p className={`text-[10px] mt-2 ${textColor}`}>O novo motor de palpites será ativado em breve.</p>
+                {/* CABEÇALHO DO BOLÃO */}
+                <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center shrink-0`}>
+                    <Trophy size={40} className="mx-auto text-yellow-500 mb-3" />
+                    <h2 className={`font-black ${titleColor} text-lg mb-1`}>Bolão da Família</h2>
+                    <p className={`text-xs ${textColor}`}>Faça seus palpites antes do início de cada partida.</p>
                 </div>
+
+                {/* LISTA DE JOGOS */}
+                <div className="space-y-4">
+                  {MATCHES.map(match => {
+                     // Busca os dados completos da seleção cruzando as informações com o SECTIONS
+                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
+                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                     
+                     return (
+                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
+                           {/* Data e Hora */}
+                           <div className="text-center text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest bg-slate-500/10 py-1 rounded-md max-w-[160px] mx-auto">
+                               {match.date}
+                           </div>
+                           
+                           {/* Placar Interativo */}
+                           <div className="flex justify-between items-center gap-2">
+                              
+                              {/* Time A */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tA?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tA?.title}</span>
+                              </div>
+
+                              {/* Caixas de Palpite */}
+                              <div className="flex items-center gap-3 justify-center w-[40%]">
+                                 <input 
+                                   type="number" 
+                                   value={guesses[match.id]?.a ?? ''} 
+                                   onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} focus:border-emerald-500 outline-none`} 
+                                 />
+                                 <span className="text-slate-300 font-black text-sm">X</span>
+                                 <input 
+                                   type="number" 
+                                   value={guesses[match.id]?.b ?? ''} 
+                                   onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} focus:border-emerald-500 outline-none`} 
+                                 />
+                              </div>
+
+                              {/* Time B */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tB?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tB?.title}</span>
+                              </div>
+
+                           </div>
+                        </div>
+                     );
+                  })}
+                </div>
+
+                {/* BOTÃO DE SALVAR */}
+                <button 
+                  onClick={() => {
+                     setToast("Salvando palpites...");
+                     setTimeout(() => setToast("Pronto para a Fase 2!"), 2000);
+                  }}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0"
+                >
+                  Salvar Meus Palpites
+                </button>
+
             </div>
         )}
 
