@@ -952,7 +952,14 @@ export default function App() {
                 <button 
                   onClick={() => {
                      setToast("Salvando palpites...");
-                     setTimeout(() => setToast("Pronto para a Fase 2!"), 2000);
+                     
+                     // Simulando o tempo de ida ao banco de dados (1.5 segundos)
+                     setTimeout(() => {
+                         setToast("Pronto para a Fase 2!");
+                         
+                         // Novo timer: Apaga o balão da tela após 3 segundos
+                         setTimeout(() => setToast(''), 3000); 
+                     }, 1500);
                   }}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0"
                 >
