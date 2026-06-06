@@ -157,16 +157,6 @@ export default function App() {
   const [isStandalone, setIsStandalone] = useState(false); 
 
   
-
-  // Estados referentes ao código VIP secreto (Bolão)
-
-  const [trophyClicks, setTrophyClicks] = useState(0); 
-
-  const [showProCode, setShowProCode] = useState(false); 
-
-  const [proInput, setProInput] = useState(''); 
-  
- 
  
   // ==========================================================
   // NOVOS ESTADOS: Referentes ao motor de Trocas Justas
@@ -179,6 +169,9 @@ export default function App() {
   
 
   const sectionsRef = useRef({}); // Referência para deslizar as bandeiras
+  
+  
+  const [magicCode, setMagicCode] = useState('');
 
 
 
@@ -856,52 +849,20 @@ export default function App() {
 
 
 
-        {/* ABA 3: BOLÃO - Agora com o código VIP embutido no Troféu */}
-
+        {/* ABA 3: BOLÃO - TERRENO LIMPO PARA A FASE 1 */}
         {activeTab === 'jogos' && (
-
             <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
-
                 
-
-                {/* BOTÃO SECRETO (3 Cliques) */}
-
-                <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
-
+                <Trophy size={48} className="mx-auto text-yellow-500 mb-4" />
                 
-
                 <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-
                 <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
-
                 
-
-                {/* CAIXA SECRETA DE SENHA VIP */}
-
-                {showProCode && (
-
-                  <div className="flex gap-2 mb-6 w-full max-w-xs mx-auto">
-
-                    <input className={`flex-1 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'} border text-white p-3 rounded-xl text-xs outline-none`} onChange={(e) => setProInput(e.target.value)} placeholder="Código VIP" />
-
-                    <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro Ativado!"); } }} className="bg-emerald-600 text-white px-6 rounded-xl text-xs font-bold shadow-md">OK</button>
-
-                  </div>
-
-                )}
-
-                
-
                 <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
-
-                    <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p>
-
-                    <p className={`text-[10px] mt-2 ${textColor}`}>Esta área será ativada automaticamente quando os grupos oficiais forem sorteados pela FIFA.</p>
-
+                    <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Fase 1 do Bolão</p>
+                    <p className={`text-[10px] mt-2 ${textColor}`}>O novo motor de palpites será ativado em breve.</p>
                 </div>
-
             </div>
-
         )}
 
 
@@ -1106,6 +1067,42 @@ export default function App() {
                     </div>
 
                 )}
+				
+				{/* ÁREA DE CÓDIGOS (VIP OU LIGAS) */}
+                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border flex flex-col gap-3 relative overflow-hidden`}>
+                  <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}>
+                    <Trophy size={16} className="text-yellow-500"/>
+                    Comunidade e Códigos
+                  </h3>
+                  <p className={`text-[11px] leading-tight ${textColor}`}>Tem um código promocional ou convite de liga? Insira abaixo para desbloquear acessos.</p>
+                  
+                  <div className="flex gap-2 mt-1">
+                    <input 
+                      type="text" 
+                      placeholder="Digite seu código..." 
+                      value={magicCode}
+                      onChange={(e) => setMagicCode(e.target.value)}
+                      className={`flex-1 px-3 py-2 rounded-xl border text-sm uppercase ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-emerald-500 transition-colors`}
+                    />
+                    <button 
+                      onClick={() => {
+                        // Resgata o código exato que você usava antes
+                        if (magicCode.trim().toUpperCase() === 'NOSVICOPA2026') {
+                           setIsPro(true);
+                           setMagicCode('');
+                           setToast("Modo Pro Ativado com Sucesso!");
+                           setTimeout(() => setToast(''), 3000);
+                        } else {
+                           setToast("Código inválido ou expirado.");
+                           setTimeout(() => setToast(''), 3000);
+                        }
+                      }}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm"
+                    >
+                      Ativar
+                    </button>
+                  </div>
+                </div>
 
 
 
