@@ -410,9 +410,12 @@ export default function App() {
           setStickers(data.stickers || {}); 
           setIsPro(!!data.isPro); 
           
-          // Carrega os palpites salvos deste usuário específico
+          // Carrega os palpites salvos deste usuário específico (CORREÇÃO DE VAZAMENTO)
           if (user && data.bolao && data.bolao[user.uid]) {
               setGuesses(data.bolao[user.uid].guesses || {});
+          } else {
+              // Se o usuário não tem palpites nesta liga, ZERA as caixinhas obrigatoriamente
+              setGuesses({}); 
           }
           
           // Carrega os placares oficiais do servidor (Gabarito)
@@ -420,6 +423,12 @@ export default function App() {
 		  
 		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
           setAllPlayersData(data.bolao || {});
+      } else {
+          // Se o documento inteiro ainda não existir, zera tudo por segurança
+          setStickers({});
+          setGuesses({});
+          setOfficialScores({});
+          setAllPlayersData({});
       }
     });
   }, [activeFamilyId, user]);
