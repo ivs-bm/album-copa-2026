@@ -1351,13 +1351,38 @@ export default function App() {
                       className={`flex-1 px-3 py-2 rounded-xl border text-sm uppercase ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-emerald-500 transition-colors`}
                     />
                     <button 
-                      onClick={() => {
-                        // Resgata o código exato que você usava antes
-                        if (magicCode.trim().toUpperCase() === 'NOSVICOPA2026') {
+                      onClick={async () => {
+                        const code = magicCode.trim().toUpperCase();
+                        
+                        if (code === 'NOSVICOPA2026') {
+                           // 1. Lógica antiga: Ativa o Modo Pro
                            setIsPro(true);
                            setMagicCode('');
                            setToast("Modo Pro Ativado com Sucesso!");
                            setTimeout(() => setToast(''), 3000);
+                           
+                        } else if (code.startsWith('LIGA-')) {
+                           // 2. NOVA LÓGICA: Entrar ou Criar uma Liga
+                           setToast("Conectando à Liga...");
+                           try {
+                               // Cria o documento da liga no banco se não existir (merge: true impede de apagar se já existir)
+                               await setDoc(doc(db, 'family_albums', code), {
+                                   isLeague: true,
+                                   createdAt: new Date().toISOString()
+                               }, { merge: true });
+                               
+                               // Altera o "canal" do aplicativo para apontar para essa nova Liga
+                               setActiveFamilyId(code);
+                               localStorage.setItem('@AlbumCopa_FamilyId', code);
+                               
+                               setMagicCode('');
+                               setToast(`Você entrou na ${code}! 🏆`);
+                               setTimeout(() => setToast(''), 4000);
+                           } catch (error) {
+                               setToast("Erro ao entrar na liga.");
+                               setTimeout(() => setToast(''), 3000);
+                           }
+                           
                         } else {
                            setToast("Código inválido ou expirado.");
                            setTimeout(() => setToast(''), 3000);
