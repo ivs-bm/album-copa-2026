@@ -102,12 +102,20 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 // ============================================================================
-// ESTRUTURA DE DADOS: JOGOS DO BOLÃO (FASE DE TESTES)
+// ESTRUTURA DE DADOS: JOGOS DO BOLÃO (AMISTOSOS DE TESTE)
 // ============================================================================
 const MATCHES = [
-  { id: 'm1', date: '11/06/2026 - 16:00', teamA: 'BRA', teamB: 'SCO' },
-  { id: 'm2', date: '12/06/2026 - 13:00', teamA: 'MEX', teamB: 'RSA' },
-  { id: 'm3', date: '12/06/2026 - 16:00', teamA: 'ENG', teamB: 'PAN' }
+  // Sábado - 06/06/2026
+  { id: 'm1', date: '06/06 - 10:00', teamA: 'BEL', teamB: 'TUN' }, // Bélgica x Tunísia
+  { id: 'm2', date: '06/06 - 15:30', teamA: 'USA', teamB: 'GER' }, // Estados Unidos x Alemanha
+  { id: 'm3', date: '06/06 - 16:00', teamA: 'SUI', teamB: 'AUS' }, // Suíça x Austrália
+  { id: 'm4', date: '06/06 - 16:00', teamA: 'PAN', teamB: 'BIH' }, // Panamá x Bósnia
+  { id: 'm5', date: '06/06 - 17:00', teamA: 'ENG', teamB: 'NZL' }, // Inglaterra x Nova Zelândia
+  { id: 'm6', date: '06/06 - 19:00', teamA: 'BRA', teamB: 'EGY' }, // Brasil x Egito
+  
+  // Domingo - 07/06/2026
+  { id: 'm7', date: '07/06 - 16:00', teamA: 'MAR', teamB: 'NOR' }, // Marrocos x Noruega
+  { id: 'm8', date: '07/06 - 20:00', teamA: 'COL', teamB: 'JOR' }  // Colômbia x Jordânia
 ];
 
 
