@@ -195,6 +195,8 @@ export default function App() {
   const [guesses, setGuesses] = useState({}); // Memória que guarda os palpites individuais
   const [officialScores, setOfficialScores] = useState({}); // Memória que guarda o Gabarito Oficial
   const [isAdminMode, setIsAdminMode] = useState(false); // Controle da tela do Administrador
+  const [allPlayersData, setAllPlayersData] = useState({}); // Memória para todos os jogadores da família
+  const [bolaoView, setBolaoView] = useState('jogos'); // Controle da subtela: 'jogos' ou 'ranking'
   
   // Função que atualiza o número digitado na caixinha em tempo real
   const handleGuess = (matchId, team, value) => {
@@ -213,6 +215,71 @@ export default function App() {
         }));
     }
   };
+    
+  // ==========================================================
+  // INÍCIO DO PASSO 3: CÉREBRO MATEMÁTICO E RANKING
+  // ==========================================================
+  
+  // Função Matemática: Calcula os pontos de um único palpite
+  const calculatePoints = (guessA, guessB, realA, realB) => {
+      // Se alguém não preencheu a caixa, 0 pontos
+      if (guessA === '' || guessB === '' || realA === '' || realB === '' || guessA === undefined || guessB === undefined) return 0;
+      
+      const gA = parseInt(guessA, 10);
+      const gB = parseInt(guessB, 10);
+      const rA = parseInt(realA, 10);
+      const rB = parseInt(realB, 10);
+
+      // Regra 1: Cravou o placar exato
+      if (gA === rA && gB === rB) return 5; 
+
+      const guessDiff = gA - gB;
+      const realDiff = rA - rB;
+
+      // Regra 2: Acertou a diferença de gols (saldo) ou acertou o empate (ambos os saldos são 0)
+      if (guessDiff === realDiff) return 3; 
+
+      const guessWinner = guessDiff > 0 ? 'A' : (guessDiff < 0 ? 'B' : 'E');
+      const realWinner = realDiff > 0 ? 'A' : (realDiff < 0 ? 'B' : 'E');
+
+      // Regra 3: Acertou apenas quem ia vencer
+      if (guessWinner === realWinner) return 1; 
+
+      // Errou tudo
+      return 0; 
+  };
+
+  // Motor do Ranking: Processa a matemática apenas quando os dados mudam
+  const rankingList = useMemo(() => {
+      const players = Object.entries(allPlayersData).map(([uid, playerData]) => {
+          let totalPoints = 0;
+          let exactMatches = 0; // Critério de desempate principal
+
+          // Passa por todos os jogos que o jogador palpitou
+          Object.keys(playerData.guesses || {}).forEach(matchId => {
+              const guess = playerData.guesses[matchId];
+              const real = officialScores[matchId];
+              
+              // Só calcula se o Admin já preencheu o Gabarito Oficial daquela partida
+              if (real && real.a !== '' && real.b !== '') {
+                  const pts = calculatePoints(guess?.a, guess?.b, real.a, real.b);
+                  totalPoints += pts;
+                  if (pts === 5) exactMatches++;
+              }
+          });
+
+          return {
+              uid,
+              name: playerData.name || 'Jogador',
+              photo: playerData.photo || null,
+              points: totalPoints,
+              exactMatches
+          };
+      });
+
+      // Ordena do maior pro menor ponto. Em caso de empate, quem tem mais "Cravadas" sobe.
+      return players.sort((a, b) => b.points - a.points || b.exactMatches - a.exactMatches);
+  }, [allPlayersData, officialScores]);
 
 
 
@@ -350,6 +417,9 @@ export default function App() {
           
           // Carrega os placares oficiais do servidor (Gabarito)
           setOfficialScores(data.bolao_official || {});
+		  
+		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
+          setAllPlayersData(data.bolao || {});
       }
     });
   }, [activeFamilyId, user]);
@@ -900,7 +970,13 @@ export default function App() {
         {activeTab === 'jogos' && (
             <div className="w-full flex flex-col gap-4 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-6">
                 
-                {/* CABEÇALHO DO BOLÃO */}
+				{/* MENU DE NAVEGAÇÃO DO BOLÃO (JOGOS / RANKING) */}
+                <div className="flex bg-slate-500/10 p-1 rounded-xl w-full max-w-[240px] mx-auto mb-2 shrink-0">
+                    <button onClick={() => setBolaoView('jogos')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bolaoView === 'jogos' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}>Jogos</button>
+                    <button onClick={() => setBolaoView('ranking')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bolaoView === 'ranking' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}>Ranking</button>
+                </div>
+                
+				{/* CABEÇALHO DO BOLÃO */}
                 <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center shrink-0 relative transition-colors ${isAdminMode ? 'border-red-500/50 bg-red-500/5' : ''}`}>
                     
                     {/* BOTÃO SECRETO DE ADMIN (Só aparece para o dono da família) */}
@@ -922,94 +998,136 @@ export default function App() {
                     </p>
                 </div>
 
-                {/* LISTA DE JOGOS */}
-                <div className="space-y-4">
-                  {MATCHES.map(match => {
-                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
-                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
-                     
-                     return (
-                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
-                           <div className="text-center text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest bg-slate-500/10 py-1 rounded-md max-w-[160px] mx-auto">
-                               {match.date}
-                           </div>
-                           
-                           <div className="flex justify-between items-center gap-2">
-                              {/* Time A */}
-                              <div className="flex flex-col items-center w-[30%]">
-                                 {tA?.flagUrlApple ? (
-                                    <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
-                                 ) : (
-                                    <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
-                                 )}
-                                 <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tA?.title}</span>
-                              </div>
+                {/* ----------------- SUB-TELA 1: JOGOS ----------------- */}
+                {bolaoView === 'jogos' && (
+                    <>
+                        {/* LISTA DE JOGOS */}
+                        <div className="space-y-4">
+                          {MATCHES.map(match => {
+                             const tA = SECTIONS.find(s => s.prefix === match.teamA);
+                             const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                             
+                             return (
+                                <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
+                                   <div className="text-center text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest bg-slate-500/10 py-1 rounded-md max-w-[160px] mx-auto">
+                                       {match.date}
+                                   </div>
+                                   
+                                   <div className="flex justify-between items-center gap-2">
+                                      {/* Time A */}
+                                      <div className="flex flex-col items-center w-[30%]">
+                                         {tA?.flagUrlApple ? (
+                                            <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                         ) : (
+                                            <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
+                                         )}
+                                         <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tA?.title}</span>
+                                      </div>
 
-                              {/* Caixas de Palpite / Resultado Oficial */}
-                              <div className="flex items-center gap-3 justify-center w-[40%]">
-                                 <input 
-                                   type="number" 
-                                   value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
-                                   onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
-                                   placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
-                                 />
-                                 <span className="text-slate-300 font-black text-sm">X</span>
-                                 <input 
-                                   type="number" 
-                                   value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
-                                   onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
-                                   placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
-                                 />
-                              </div>
+                                      {/* Caixas de Palpite / Resultado Oficial */}
+                                      <div className="flex items-center gap-3 justify-center w-[40%]">
+                                         <input 
+                                           type="number" 
+                                           value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
+                                           onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
+                                           placeholder="-"
+                                           className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
+                                         />
+                                         <span className="text-slate-300 font-black text-sm">X</span>
+                                         <input 
+                                           type="number" 
+                                           value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
+                                           onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
+                                           placeholder="-"
+                                           className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
+                                         />
+                                      </div>
 
-                              {/* Time B */}
-                              <div className="flex flex-col items-center w-[30%]">
-                                 {tB?.flagUrlApple ? (
-                                    <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
-                                 ) : (
-                                    <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
-                                 )}
-                                 <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tB?.title}</span>
-                              </div>
-                           </div>
+                                      {/* Time B */}
+                                      <div className="flex flex-col items-center w-[30%]">
+                                         {tB?.flagUrlApple ? (
+                                            <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                         ) : (
+                                            <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
+                                         )}
+                                         <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tB?.title}</span>
+                                      </div>
+                                   </div>
+                                </div>
+                             );
+                          })}
                         </div>
-                     );
-                  })}
-                </div>
 
-                {/* BOTÃO DE SALVAR */}
-                <button 
-                  onClick={async () => {
-                     setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
-                     try {
-                         if (isAdminMode) {
-                             // Salva no banco global como resultado oficial
-                             await updateDoc(doc(db, 'family_albums', activeFamilyId), {
-                                 'bolao_official': officialScores
-                             });
-                             setToast("Resultados oficiais atualizados! 🛑");
-                         } else {
-                             // Salva no banco individual como palpite
-                             await updateDoc(doc(db, 'family_albums', activeFamilyId), {
-                                 [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
-                                 [`bolao.${user.uid}.photo`]: user.photoURL || '',
-                                 [`bolao.${user.uid}.guesses`]: guesses
-                             });
-                             setToast("Palpites salvos com sucesso! 🏆");
-                         }
-                         setTimeout(() => setToast(''), 3000);
-                     } catch (error) {
-                         setToast("Erro ao salvar. Verifique a internet.");
-                         setTimeout(() => setToast(''), 3000);
-                     }
-                  }}
-                  className={`w-full text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0 ${isAdminMode ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
-                >
-                  {isAdminMode ? 'Salvar Resultados Oficiais' : 'Salvar Meus Palpites'}
-                </button>
+                        {/* BOTÃO DE SALVAR */}
+                        <button 
+                          onClick={async () => {
+                             setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
+                             try {
+                                 if (isAdminMode) {
+                                     await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                                         'bolao_official': officialScores
+                                     });
+                                     setToast("Resultados oficiais updated! 🛑");
+                                 } else {
+                                     await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                                         [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+                                         [`bolao.${user.uid}.photo`]: user.photoURL || '',
+                                         [`bolao.${user.uid}.guesses`]: guesses
+                                     });
+                                     setToast("Palpites salvos com sucesso! 🏆");
+                                 }
+                                 setTimeout(() => setToast(''), 3000);
+                             } catch (error) {
+                                 setToast("Erro ao salvar. Verifique a internet.");
+                                 setTimeout(() => setToast(''), 3000);
+                             }
+                          }}
+                          className={`w-full text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0 ${isAdminMode ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
+                        >
+                          {isAdminMode ? 'Salvar Resultados Oficiais' : 'Salvar Meus Palpites'}
+                        </button>
+                    </>
+                )}
 
+                {/* ----------------- SUB-TELA 2: RANKING ----------------- */}
+                {bolaoView === 'ranking' && (
+                    <div className="space-y-3 mt-2">
+                        {rankingList.length === 0 ? (
+                            <p className="text-center text-xs text-slate-400 py-6">Nenhum palpite ou resultado oficial registrado ainda.</p>
+                        ) : (
+                            rankingList.map((player, index) => (
+                                <div key={player.uid} className={`${cardBg} p-3 rounded-xl shadow-sm border flex items-center gap-3`}>
+                                    
+                                    {/* Medalhas (Ouro, Prata, Bronze) */}
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${index === 0 ? 'bg-yellow-500 text-white shadow-md' : index === 1 ? 'bg-slate-300 text-slate-800 shadow-sm' : index === 2 ? 'bg-amber-700 text-white shadow-sm' : 'bg-slate-500/10 text-slate-400'}`}>
+                                        {index + 1}
+                                    </div>
+                                    
+                                    {/* Foto do Perfil Google */}
+                                    {player.photo ? (
+                                        <img src={player.photo} alt="avatar" className="w-10 h-10 rounded-full border-2 border-emerald-500/20" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-slate-500/20 flex items-center justify-center">
+                                            <User size={18} className="text-slate-400"/>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Nome e Desempate */}
+                                    <div className="flex-1">
+                                        <h3 className={`font-bold text-sm ${titleColor}`}>{player.name}</h3>
+                                        <p className="text-[10px] text-slate-400">{player.exactMatches} placares exatos (cravadas)</p>
+                                    </div>
+                                    
+                                    {/* Pontuação Final */}
+                                    <div className="text-right">
+                                        <span className="font-black text-emerald-500 text-2xl leading-none">{player.points}</span>
+                                        <span className="text-[9px] text-slate-400 block mt-1 uppercase tracking-widest">pontos</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
             </div>
         )}
 
