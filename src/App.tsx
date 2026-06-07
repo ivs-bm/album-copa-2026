@@ -319,19 +319,22 @@ export default function App() {
 
 
 
-  // Efeito 3: Busca as figurinhas em tempo real no banco de dados (Firestore)
-
+  // Efeito 3: Busca as figurinhas e os palpites do Bolão em tempo real no banco
   useEffect(() => {
-
     if (!activeFamilyId) return;
-
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
-
-      if (d.exists()) { setStickers(d.data().stickers || {}); setIsPro(!!d.data().isPro); }
-
+      if (d.exists()) { 
+          const data = d.data();
+          setStickers(data.stickers || {}); 
+          setIsPro(!!data.isPro); 
+          
+          // Carrega os palpites salvos deste usuário específico
+          if (user && data.bolao && data.bolao[user.uid]) {
+              setGuesses(data.bolao[user.uid].guesses || {});
+          }
+      }
     });
-
-  }, [activeFamilyId]);
+  }, [activeFamilyId, user]);
 
 
 
@@ -950,16 +953,22 @@ export default function App() {
 
                 {/* BOTÃO DE SALVAR */}
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                      setToast("Salvando palpites...");
-                     
-                     // Simulando o tempo de ida ao banco de dados (1.5 segundos)
-                     setTimeout(() => {
-                         setToast("Pronto para a Fase 2!");
+                     try {
+                         // Envia os palpites para o Firebase amarrados ao usuário logado
+                         await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                             [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+                             [`bolao.${user.uid}.photo`]: user.photoURL || '',
+                             [`bolao.${user.uid}.guesses`]: guesses
+                         });
                          
-                         // Novo timer: Apaga o balão da tela após 3 segundos
-                         setTimeout(() => setToast(''), 3000); 
-                     }, 1500);
+                         setToast("Palpites salvos com sucesso! 🏆");
+                         setTimeout(() => setToast(''), 3000);
+                     } catch (error) {
+                         setToast("Erro ao salvar. Verifique a internet.");
+                         setTimeout(() => setToast(''), 3000);
+                     }
                   }}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0"
                 >
