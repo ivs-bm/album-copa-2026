@@ -184,19 +184,26 @@ export default function App() {
   
   
   // ESTADOS DO BOLÃO
-  const [guesses, setGuesses] = useState({}); // Memória que guarda os gols digitados
+  const [guesses, setGuesses] = useState({}); // Memória que guarda os palpites individuais
+  const [officialScores, setOfficialScores] = useState({}); // Memória que guarda o Gabarito Oficial
+  const [isAdminMode, setIsAdminMode] = useState(false); // Controle da tela do Administrador
   
   // Função que atualiza o número digitado na caixinha em tempo real
   const handleGuess = (matchId, team, value) => {
-    // Permite apenas números entre 0 e 99
-    if (value !== '' && (value < 0 || value > 99)) return; 
-    setGuesses(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [team]: value
-      }
-    }));
+    if (value !== '' && (value < 0 || value > 99)) return; // Trava contra números absurdos
+    
+    // Se o Admin Mode estiver ligado, salva no Gabarito. Se não, salva no palpite do usuário.
+    if (isAdminMode) {
+        setOfficialScores(prev => ({
+          ...prev,
+          [matchId]: { ...prev[matchId], [team]: value }
+        }));
+    } else {
+        setGuesses(prev => ({
+          ...prev,
+          [matchId]: { ...prev[matchId], [team]: value }
+        }));
+    }
   };
 
 
@@ -319,7 +326,7 @@ export default function App() {
 
 
 
-  // Efeito 3: Busca as figurinhas e os palpites do Bolão em tempo real no banco
+  // Efeito 3: Busca as figurinhas e os dados do Bolão em tempo real no banco
   useEffect(() => {
     if (!activeFamilyId) return;
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
@@ -332,6 +339,9 @@ export default function App() {
           if (user && data.bolao && data.bolao[user.uid]) {
               setGuesses(data.bolao[user.uid].guesses || {});
           }
+          
+          // Carrega os placares oficiais do servidor (Gabarito)
+          setOfficialScores(data.bolao_official || {});
       }
     });
   }, [activeFamilyId, user]);
@@ -878,34 +888,45 @@ export default function App() {
 
 
 
-        {/* ABA 3: BOLÃO - FASE 1 (LAYOUT DOS JOGOS) */}
+        {/* ABA 3: BOLÃO - FASE 1 E 3 (LAYOUT + MODO ADMIN) */}
         {activeTab === 'jogos' && (
             <div className="w-full flex flex-col gap-4 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-6">
                 
                 {/* CABEÇALHO DO BOLÃO */}
-                <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center shrink-0`}>
-                    <Trophy size={40} className="mx-auto text-yellow-500 mb-3" />
-                    <h2 className={`font-black ${titleColor} text-lg mb-1`}>Bolão da Família</h2>
-                    <p className={`text-xs ${textColor}`}>Faça seus palpites antes do início de cada partida.</p>
+                <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center shrink-0 relative transition-colors ${isAdminMode ? 'border-red-500/50 bg-red-500/5' : ''}`}>
+                    
+                    {/* BOTÃO SECRETO DE ADMIN (Só aparece para o dono da família) */}
+                    {activeFamilyId === user.uid && (
+                        <button 
+                            onClick={() => setIsAdminMode(!isAdminMode)}
+                            className={`absolute top-4 right-4 p-2 rounded-lg text-[10px] font-bold uppercase transition-colors ${isAdminMode ? 'bg-red-500 text-white shadow-md' : 'bg-slate-500/10 text-slate-400'}`}
+                        >
+                            {isAdminMode ? 'Modo Admin ON' : 'Admin'}
+                        </button>
+                    )}
+                    
+                    <Trophy size={40} className={`mx-auto mb-3 transition-colors ${isAdminMode ? 'text-red-500' : 'text-yellow-500'}`} />
+                    <h2 className={`font-black ${titleColor} text-lg mb-1`}>
+                        {isAdminMode ? 'Gabarito Oficial (Admin)' : 'Bolão da Família'}
+                    </h2>
+                    <p className={`text-xs ${textColor}`}>
+                        {isAdminMode ? 'Insira os placares reais da Copa. Isso definirá o Ranking.' : 'Faça seus palpites antes do início de cada partida.'}
+                    </p>
                 </div>
 
                 {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
                   {MATCHES.map(match => {
-                     // Busca os dados completos da seleção cruzando as informações com o SECTIONS
                      const tA = SECTIONS.find(s => s.prefix === match.teamA);
                      const tB = SECTIONS.find(s => s.prefix === match.teamB);
                      
                      return (
-                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
-                           {/* Data e Hora */}
+                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
                            <div className="text-center text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest bg-slate-500/10 py-1 rounded-md max-w-[160px] mx-auto">
                                {match.date}
                            </div>
                            
-                           {/* Placar Interativo */}
                            <div className="flex justify-between items-center gap-2">
-                              
                               {/* Time A */}
                               <div className="flex flex-col items-center w-[30%]">
                                  {tA?.flagUrlApple ? (
@@ -916,22 +937,22 @@ export default function App() {
                                  <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tA?.title}</span>
                               </div>
 
-                              {/* Caixas de Palpite */}
+                              {/* Caixas de Palpite / Resultado Oficial */}
                               <div className="flex items-center gap-3 justify-center w-[40%]">
                                  <input 
                                    type="number" 
-                                   value={guesses[match.id]?.a ?? ''} 
+                                   value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
                                    onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
                                    placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} focus:border-emerald-500 outline-none`} 
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
                                  />
                                  <span className="text-slate-300 font-black text-sm">X</span>
                                  <input 
                                    type="number" 
-                                   value={guesses[match.id]?.b ?? ''} 
+                                   value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
                                    onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
                                    placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} focus:border-emerald-500 outline-none`} 
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
                                  />
                               </div>
 
@@ -944,7 +965,6 @@ export default function App() {
                                  )}
                                  <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tB?.title}</span>
                               </div>
-
                            </div>
                         </div>
                      );
@@ -954,25 +974,32 @@ export default function App() {
                 {/* BOTÃO DE SALVAR */}
                 <button 
                   onClick={async () => {
-                     setToast("Salvando palpites...");
+                     setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
                      try {
-                         // Envia os palpites para o Firebase amarrados ao usuário logado
-                         await updateDoc(doc(db, 'family_albums', activeFamilyId), {
-                             [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
-                             [`bolao.${user.uid}.photo`]: user.photoURL || '',
-                             [`bolao.${user.uid}.guesses`]: guesses
-                         });
-                         
-                         setToast("Palpites salvos com sucesso! 🏆");
+                         if (isAdminMode) {
+                             // Salva no banco global como resultado oficial
+                             await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                                 'bolao_official': officialScores
+                             });
+                             setToast("Resultados oficiais atualizados! 🛑");
+                         } else {
+                             // Salva no banco individual como palpite
+                             await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                                 [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+                                 [`bolao.${user.uid}.photo`]: user.photoURL || '',
+                                 [`bolao.${user.uid}.guesses`]: guesses
+                             });
+                             setToast("Palpites salvos com sucesso! 🏆");
+                         }
                          setTimeout(() => setToast(''), 3000);
                      } catch (error) {
                          setToast("Erro ao salvar. Verifique a internet.");
                          setTimeout(() => setToast(''), 3000);
                      }
                   }}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0"
+                  className={`w-full text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0 ${isAdminMode ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
                 >
-                  Salvar Meus Palpites
+                  {isAdminMode ? 'Salvar Resultados Oficiais' : 'Salvar Meus Palpites'}
                 </button>
 
             </div>
