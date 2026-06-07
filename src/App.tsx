@@ -572,7 +572,7 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              const topPos = element.getBoundingClientRect().top + window.scrollY - (savedLeagues.length > 0 ? 245 : 190); 
+              const topPos = element.getBoundingClientRect().top + window.scrollY - (savedLeagues.length > 0 ? 225 : 190); 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -793,15 +793,15 @@ export default function App() {
       {/* ======================================================================= */}
 
       <main 
-        style={{ paddingTop: activeTab === 'album' ? (savedLeagues.length > 0 ? '245px' : '190px') : (savedLeagues.length > 0 ? '145px' : '90px') }} 
-        className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto transition-all`}
-      >
+  style={{ paddingTop: activeTab === 'album' ? (savedLeagues.length > 0 ? '225px' : '190px') : (savedLeagues.length > 0 ? '125px' : '90px') }} 
+  className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto transition-all`}
+	>
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
               {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
-              <div style={{ top: savedLeagues.length > 0 ? '131px' : '76px' }} className={`fixed left-0 w-full z-40 px-3 pt-2 pb-2 transition-all ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+              <div style={{ top: savedLeagues.length > 0 ? '112px' : '76px' }} className={`fixed left-0 w-full z-40 px-3 pt-2 pb-2 transition-all ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 {/* MUDANÇA: gap-6 reduzido para gap-3 para equilibrar o visual dos cartões */}
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-3 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {uniqueGroups.map(groupName => {
