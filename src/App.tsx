@@ -191,6 +191,14 @@ export default function App() {
   const [magicCode, setMagicCode] = useState('');
   
   
+  
+  // Memória das Ligas que o usuário participa
+  const [savedLeagues, setSavedLeagues] = useState(() => {
+     const local = localStorage.getItem('@AlbumCopa_Leagues');
+     return local ? JSON.parse(local) : [];
+  });
+  
+  
   // ESTADOS DO BOLÃO
   const [guesses, setGuesses] = useState({}); // Memória que guarda os palpites individuais
   const [officialScores, setOfficialScores] = useState({}); // Memória que guarda o Gabarito Oficial
@@ -564,8 +572,7 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // AUMENTAMOS AQUI: de -170 para -190 para compensar o menu que ficou mais alto
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 190; 
+              const topPos = element.getBoundingClientRect().top + window.scrollY - (savedLeagues.length > 0 ? 245 : 190); 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -690,55 +697,49 @@ export default function App() {
       
 
       {/* ======================================================================= */}
-
-      {/* CABEÇALHO (HEADER) FIXO */}
-
+      {/* CABEÇALHO (HEADER) FIXO E DINÂMICO */}
       {/* ======================================================================= */}
-
-      <header className={`w-full h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md`}>
-
+      <header className={`w-full min-h-[76px] h-auto ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md transition-all`}>
         <div className="flex justify-between items-center mb-2">
-
            <div className="flex items-center gap-3">
-
              <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
-
              <div>
-
                  <h1 className="font-black text-sm leading-tight">Família Copa</h1>
-
                  <p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p>
-
              </div>
-
            </div>
-
-           {/* BOTÕES: Guia Rápido e Tema Escuro */}
-
            <div className="flex gap-2 shrink-0">
-
-              <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-
-                  <Info size={18} />
-
-              </button>
-
+              <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"><Info size={18} /></button>
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-
                   {isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}
-
               </button>
-
            </div>
-
         </div>
-
-        <div className="flex items-center gap-3 mt-1">
-
+        
+        <div className="flex items-center gap-3 mt-1 mb-1">
            <div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div>
-
         </div>
 
+        {/* BARRA DE TROCA RÁPIDA DE LIGAS */}
+        {(savedLeagues.length > 0 || (user && activeFamilyId !== user.uid)) && (
+            <div className="w-full mt-3 pt-3 border-t border-white/10 flex gap-2 overflow-x-auto hide-scrollbar">
+                <button 
+                   onClick={() => { setActiveFamilyId(user.uid); localStorage.setItem('@AlbumCopa_FamilyId', user.uid); }}
+                   className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${activeFamilyId === user.uid ? 'bg-white text-emerald-800 border-white shadow-md scale-105' : 'bg-black/20 text-white/80 border-transparent hover:bg-black/30'}`}
+                >
+                   🏠 Minha Família
+                </button>
+                {savedLeagues.map(leagueCode => (
+                    <button 
+                       key={leagueCode}
+                       onClick={() => { setActiveFamilyId(leagueCode); localStorage.setItem('@AlbumCopa_FamilyId', leagueCode); }}
+                       className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1 ${activeFamilyId === leagueCode ? 'bg-white text-emerald-800 border-white shadow-md scale-105' : 'bg-black/20 text-white/80 border-transparent hover:bg-black/30'}`}
+                    >
+                       🏆 {leagueCode.replace('LIGA-', '')}
+                    </button>
+                ))}
+            </div>
+        )}
       </header>
 
 
@@ -791,13 +792,16 @@ export default function App() {
 
       {/* ======================================================================= */}
 
-      <main className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[190px]' : 'pt-[90px]'}`}>
+      <main 
+        style={{ paddingTop: activeTab === 'album' ? (savedLeagues.length > 0 ? '245px' : '190px') : (savedLeagues.length > 0 ? '145px' : '90px') }} 
+        className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto transition-all`}
+      >
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
               {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
-              <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+              <div style={{ top: savedLeagues.length > 0 ? '131px' : '76px' }} className={`fixed left-0 w-full z-40 px-3 pt-2 pb-2 transition-all ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 {/* MUDANÇA: gap-6 reduzido para gap-3 para equilibrar o visual dos cartões */}
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-3 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {uniqueGroups.map(groupName => {
@@ -1374,15 +1378,24 @@ export default function App() {
                            // 2. NOVA LÓGICA: Entrar ou Criar uma Liga
                            setToast("Conectando à Liga...");
                            try {
-                               // Cria o documento da liga no banco se não existir (merge: true impede de apagar se já existir)
+                               // Cria ou entra na liga
                                await setDoc(doc(db, 'family_albums', code), {
                                    isLeague: true,
                                    createdAt: new Date().toISOString()
                                }, { merge: true });
                                
-                               // Altera o "canal" do aplicativo para apontar para essa nova Liga
                                setActiveFamilyId(code);
                                localStorage.setItem('@AlbumCopa_FamilyId', code);
+                               
+                               // INSERÇÃO: Salva a liga no histórico do celular como atalho para o cabeçalho
+                               setSavedLeagues(prev => {
+                                   if (!prev.includes(code)) {
+                                       const newList = [...prev, code];
+                                       localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newList));
+                                       return newList;
+                                   }
+                                   return prev;
+                               });
                                
                                setMagicCode('');
                                setToast(`Você entrou na ${code}! 🏆`);
@@ -1391,7 +1404,6 @@ export default function App() {
                                setToast("Erro ao entrar na liga.");
                                setTimeout(() => setToast(''), 3000);
                            }
-                           
                         } else {
                            setToast("Código inválido ou expirado.");
                            setTimeout(() => setToast(''), 3000);
