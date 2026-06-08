@@ -105,17 +105,17 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 // ESTRUTURA DE DADOS: JOGOS DO BOLÃO (AMISTOSOS DE TESTE)
 // ============================================================================
 const MATCHES = [
-  // Sábado - 06/06/2026
-  { id: 'm1', date: '06/06 - 10:00', teamA: 'BEL', teamB: 'TUN' }, // Bélgica x Tunísia
-  { id: 'm2', date: '06/06 - 15:30', teamA: 'USA', teamB: 'GER' }, // Estados Unidos x Alemanha
-  { id: 'm3', date: '06/06 - 16:00', teamA: 'SUI', teamB: 'AUS' }, // Suíça x Austrália
-  { id: 'm4', date: '06/06 - 16:00', teamA: 'PAN', teamB: 'BIH' }, // Panamá x Bósnia
-  { id: 'm5', date: '06/06 - 17:00', teamA: 'ENG', teamB: 'NZL' }, // Inglaterra x Nova Zelândia
-  { id: 'm6', date: '06/06 - 19:00', teamA: 'BRA', teamB: 'EGY' }, // Brasil x Egito
+  // Sábado - 06/06/2026 (Jogos Antigos - Trancados)
+  { id: 'm1', date: '06/06 - 10:00', teamA: 'BEL', teamB: 'TUN', status: 'finished' }, 
+  { id: 'm2', date: '06/06 - 15:30', teamA: 'USA', teamB: 'GER', status: 'finished' }, 
+  { id: 'm3', date: '06/06 - 16:00', teamA: 'SUI', teamB: 'AUS', status: 'finished' }, 
+  { id: 'm4', date: '06/06 - 16:00', teamA: 'PAN', teamB: 'BIH', status: 'finished' }, 
+  { id: 'm5', date: '06/06 - 17:00', teamA: 'ENG', teamB: 'NZL', status: 'finished' }, 
+  { id: 'm6', date: '06/06 - 19:00', teamA: 'BRA', teamB: 'EGY', status: 'finished' }, 
   
-  // Domingo - 07/06/2026
-  { id: 'm7', date: '07/06 - 16:00', teamA: 'MAR', teamB: 'NOR' }, // Marrocos x Noruega
-  { id: 'm8', date: '07/06 - 20:00', teamA: 'COL', teamB: 'JOR' }  // Colômbia x Jordânia
+  // Domingo - 07/06/2026 (Simulando o momento atual)
+  { id: 'm7', date: '07/06 - 16:00', teamA: 'MAR', teamB: 'NOR', status: 'live' }, // Jogo a decorrer agora
+  { id: 'm8', date: '07/06 - 20:00', teamA: 'COL', teamB: 'JOR', status: 'pending' }  // Jogo que ainda vai acontecer
 ];
 
 // ============================================================================
@@ -1050,61 +1050,81 @@ export default function App() {
                 {bolaoView === 'jogos' && (
                     <>
                         {/* LISTA DE JOGOS */}
-                        <div className="space-y-4">
-                          {MATCHES.map(match => {
-                             const tA = SECTIONS.find(s => s.prefix === match.teamA);
-                             const tB = SECTIONS.find(s => s.prefix === match.teamB);
-                             
-                             return (
-                                <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
-                                   <div className="text-center text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest bg-slate-500/10 py-1 rounded-md max-w-[160px] mx-auto">
-                                       {match.date}
-                                   </div>
-                                   
-                                   <div className="flex justify-between items-center gap-2">
-                                      {/* Time A */}
-                                      <div className="flex flex-col items-center w-[30%]">
-                                         {tA?.flagUrlApple ? (
-                                            <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
-                                         ) : (
-                                            <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
-                                         )}
-                                         <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tA?.title}</span>
-                                      </div>
+                <div className="space-y-4">
+                  {MATCHES.map(match => {
+                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
+                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                     
+                     // A MÁGICA DO BLOQUEIO: Tranca se o utilizador não for admin E o jogo não estiver "Em Breve"
+                     const isLocked = !isAdminMode && match.status !== 'pending';
+                     
+                     return (
+                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
+                           
+                           {/* Data, Hora e Etiqueta de Status */}
+                           <div className="flex justify-center items-center gap-2 mb-4">
+                               <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-500/10 py-1 px-3 rounded-md">
+                                   {match.date}
+                               </div>
+                               {match.status === 'finished' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-slate-500 text-white shadow-sm">Encerrado</span>}
+                               {match.status === 'live' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-red-500 text-white shadow-sm animate-pulse">Ao Vivo</span>}
+                               {match.status === 'pending' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-emerald-500 text-white shadow-sm">Em Breve</span>}
+                           </div>
+                           
+                           <div className="flex justify-between items-center gap-2">
+                              {/* Equipa A */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tA?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tA?.title}</span>
+                              </div>
 
-                                      {/* Caixas de Palpite / Resultado Oficial */}
-                                      <div className="flex items-center gap-3 justify-center w-[40%]">
-                                         <input 
-                                           type="number" 
-                                           value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
-                                           onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
-                                           placeholder="-"
-                                           className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
-                                         />
-                                         <span className="text-slate-300 font-black text-sm">X</span>
-                                         <input 
-                                           type="number" 
-                                           value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
-                                           onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
-                                           placeholder="-"
-                                           className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white'} ${isAdminMode ? 'focus:border-red-500' : 'focus:border-emerald-500'} outline-none`} 
-                                         />
-                                      </div>
+                              {/* Caixas de Palpite / Resultado Oficial */}
+                              <div className="flex items-center gap-3 justify-center w-[40%]">
+                                 <input 
+                                   type="number" 
+                                   disabled={isLocked}
+                                   value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
+                                   onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                 />
+                                 <span className="text-slate-300 font-black text-sm">X</span>
+                                 <input 
+                                   type="number" 
+                                   disabled={isLocked}
+                                   value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
+                                   onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                 />
+                              </div>
 
-                                      {/* Time B */}
-                                      <div className="flex flex-col items-center w-[30%]">
-                                         {tB?.flagUrlApple ? (
-                                            <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
-                                         ) : (
-                                            <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
-                                         )}
-                                         <span className={`text-[10px] font-bold mt-2 ${titleColor}`}>{tB?.title}</span>
-                                      </div>
-                                   </div>
-                                </div>
-                             );
-                          })}
+                              {/* Equipa B */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tB?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tB?.title}</span>
+                              </div>
+                           </div>
                         </div>
+                     );
+                  })}
+                </div>
 
                         {/* BOTÃO AUXILIAR: SINCRONIZAR VIA API (Apenas no Modo Admin) */}
                         {isAdminMode && (
