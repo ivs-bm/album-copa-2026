@@ -205,6 +205,7 @@ export default function App() {
   const [isAdminMode, setIsAdminMode] = useState(false); // Controle da tela do Administrador
   const [allPlayersData, setAllPlayersData] = useState({}); // Memória para todos os jogadores da família
   const [bolaoView, setBolaoView] = useState('jogos'); // Controle da subtela: 'jogos' ou 'ranking'
+  const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
   
   // Função que atualiza o número digitado na caixinha em tempo real
   const handleGuess = (matchId, team, value) => {
@@ -1082,7 +1083,42 @@ export default function App() {
                           })}
                         </div>
 
-                        {/* BOTÃO DE SALVAR */}
+                        {/* BOTÃO AUXILIAR: SINCRONIZAR VIA API (Apenas no Modo Admin) */}
+                        {isAdminMode && (
+                            <button
+                              type="button"
+                              disabled={isSyncingAPI}
+                              onClick={async () => {
+                                 setIsSyncingAPI(true);
+                                 setToast("Buscando dados na API Esportiva... 📡");
+                                 try {
+                                     // Faz a requisição segura para a rota interna do servidor
+                                     const response = await fetch('/api/sync-scores', { method: 'GET' });
+                                     const data = await response.json();
+                                     
+                                     if (data.success && data.scores) {
+                                         // Injeta os placares retornados pela API direto na memória do Gabarito
+                                         setOfficialScores(prev => ({
+                                             ...prev,
+                                             ...data.scores
+                                         }));
+                                         setToast("Placares importados! Revise e clique em Salvar. ⚽");
+                                     } else {
+                                         setToast("Nenhum placar novo encontrado na API.");
+                                     }
+                                 } catch (error) {
+                                     setToast("Erro de conexão com o servidor da API.");
+                                 } finally {
+                                     setIsSyncingAPI(false);
+                                     setTimeout(() => setToast(''), 3000);
+                                 }
+                              }}
+                              className={`w-full mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-wider ${isSyncingAPI ? 'opacity-50 cursor-not-allowed animate-pulse' : ''}`}
+                            >
+                              {isSyncingAPI ? 'Sincronizando...' : '🔄 Puxar Resultados da API'}
+                            </button>
+                        )}
+						{/* BOTÃO DE SALVAR */}
                         <button 
                           onClick={async () => {
                              setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
