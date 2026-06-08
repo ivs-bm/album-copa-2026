@@ -118,6 +118,29 @@ const MATCHES = [
   { id: 'm8', date: '07/06 - 20:00', teamA: 'COL', teamB: 'JOR' }  // Colômbia x Jordânia
 ];
 
+// ============================================================================
+// SIMULADOR DE API ESPORTIVA (ETL - Extração e Transformação de Dados)
+// ============================================================================
+const fetchApiScoresMock = async () => {
+    // Simula o atraso de rede conectando a um servidor externo (1.5 segundos)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Simula o JSON de resposta da API já tratado e convertido para o nosso formato
+    return {
+        success: true,
+        scores: {
+            m1: { a: 3, b: 1 }, // Bélgica 3 x 1 Tunísia
+            m2: { a: 1, b: 2 }, // EUA 1 x 2 Alemanha
+            m3: { a: 0, b: 0 }, // Suíça 0 x 0 Austrália
+            m4: { a: 1, b: 0 }, // Panamá 1 x 0 Bósnia
+            m5: { a: 2, b: 2 }, // Inglaterra 2 x 2 Nova Zelândia
+            m6: { a: 4, b: 0 }, // Brasil 4 x 0 Egito
+            m7: { a: 2, b: 1 }, // Marrocos 2 x 1 Noruega
+            m8: { a: 1, b: 1 }  // Colômbia 1 x 1 Jordânia
+        }
+    };
+};
+
 
 
 // ============================================================================
@@ -1092,9 +1115,8 @@ export default function App() {
                                  setIsSyncingAPI(true);
                                  setToast("Buscando dados na API Esportiva... 📡");
                                  try {
-                                     // Faz a requisição segura para a rota interna do servidor
-                                     const response = await fetch('/api/sync-scores', { method: 'GET' });
-                                     const data = await response.json();
+                                     // Aciona o simulador da API de Futebol (Substituirá pelo fetch real na Copa)
+                                     const data = await fetchApiScoresMock();
                                      
                                      if (data.success && data.scores) {
                                          // Injeta os placares retornados pela API direto na memória do Gabarito
