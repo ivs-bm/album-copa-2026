@@ -702,8 +702,8 @@ export default function App() {
       
 
       {/* TOAST NOTIFICATION: Balão de aviso flutuante */}
-
-      {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
+      
+	  {toast && <div style={{ top: savedLeagues.length > 0 ? '140px' : '90px' }} className="fixed z-[60] left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold transition-all">{toast}</div>}
 
       
 
@@ -1091,7 +1091,7 @@ export default function App() {
                                      // Salva no GABARITO MUNDIAL para todas as ligas lerem
                                      await setDoc(doc(db, 'global_data', 'Gabarito_Mundial'), {
                                          scores: officialScores,
-                                         updatedBy: user.email,
+                                         updatedBy: user.email || 'Admin',
                                          lastUpdate: new Date().toISOString()
                                      }, { merge: true });
                                      setToast("Gabarito Mundial atualizado! 🌍");
