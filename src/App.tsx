@@ -425,10 +425,7 @@ export default function App() {
               // Se o usuário não tem palpites nesta liga, ZERA as caixinhas obrigatoriamente
               setGuesses({}); 
           }
-          
-          // Carrega os placares oficiais do servidor (Gabarito)
-          setOfficialScores(data.bolao_official || {});
-		  
+                    
 		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
           setAllPlayersData(data.bolao || {});
       } else {
@@ -440,6 +437,20 @@ export default function App() {
       }
     });
   }, [activeFamilyId, user]);
+  
+  
+  
+  // Efeito 4: Sincronização com o Gabarito Mundial (Para todas as ligas)
+  useEffect(() => {
+    // Este listener não depende do activeFamilyId, ele lê a base global diretamente
+    return onSnapshot(doc(db, 'global_data', 'Gabarito_Mundial'), (d) => {
+      if (d.exists()) {
+          setOfficialScores(d.data().scores || {});
+      } else {
+          setOfficialScores({});
+      }
+    });
+  }, []);
 
 
 
@@ -1077,10 +1088,13 @@ export default function App() {
                              setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
                              try {
                                  if (isAdminMode) {
-                                     await updateDoc(doc(db, 'family_albums', activeFamilyId), {
-                                         'bolao_official': officialScores
-                                     });
-                                     setToast("Resultados oficiais updated! 🛑");
+                                     // Salva no GABARITO MUNDIAL para todas as ligas lerem
+                                     await setDoc(doc(db, 'global_data', 'Gabarito_Mundial'), {
+                                         scores: officialScores,
+                                         updatedBy: user.email,
+                                         lastUpdate: new Date().toISOString()
+                                     }, { merge: true });
+                                     setToast("Gabarito Mundial atualizado! 🌍");
                                  } else {
                                      await updateDoc(doc(db, 'family_albums', activeFamilyId), {
                                          [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
