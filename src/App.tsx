@@ -1057,7 +1057,7 @@ export default function App() {
                      const tA = SECTIONS.find(s => s.prefix === match.teamA);
                      const tB = SECTIONS.find(s => s.prefix === match.teamB);
                      
-                     // A MÁGICA DO BLOQUEIO: Tranca se o utilizador não for admin E o jogo não estiver "Em Breve"
+                     // A MÁGICA DO BLOQUEIO
                      const isLocked = !isAdminMode && match.status !== 'pending';
                      
                      return (
@@ -1123,7 +1123,8 @@ export default function App() {
                                  <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tB?.title}</span>
                               </div>
                            </div>
-						   {/* ========================================== */}
+
+                           {/* ========================================== */}
                            {/* NOVA ÁREA: VER PALPITES DA GALERA (Fase 8) */}
                            {/* ========================================== */}
                            {match.status !== 'pending' && Object.keys(allPlayersData).length > 0 && (
