@@ -229,7 +229,6 @@ export default function App() {
   const [allPlayersData, setAllPlayersData] = useState({}); // Memória para todos os jogadores da família
   const [bolaoView, setBolaoView] = useState('jogos'); // Controle da subtela: 'jogos' ou 'ranking'
   const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
-  const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
   const [expandedMatch, setExpandedMatch] = useState(null); // NOVO: Controla qual jogo exibe os palpites da galera
   
   // Função que atualiza o número digitado na caixinha em tempo real
