@@ -229,6 +229,8 @@ export default function App() {
   const [allPlayersData, setAllPlayersData] = useState({}); // Memória para todos os jogadores da família
   const [bolaoView, setBolaoView] = useState('jogos'); // Controle da subtela: 'jogos' ou 'ranking'
   const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
+  const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
+  const [expandedMatch, setExpandedMatch] = useState(null); // NOVO: Controla qual jogo exibe os palpites da galera
   
   // Função que atualiza o número digitado na caixinha em tempo real
   const handleGuess = (matchId, team, value) => {
@@ -1121,6 +1123,53 @@ export default function App() {
                                  <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tB?.title}</span>
                               </div>
                            </div>
+						   {/* ========================================== */}
+                           {/* NOVA ÁREA: VER PALPITES DA GALERA (Fase 8) */}
+                           {/* ========================================== */}
+                           {match.status !== 'pending' && Object.keys(allPlayersData).length > 0 && (
+                               <div className="mt-4 border-t border-slate-200/20 pt-3">
+                                   <button 
+                                      onClick={() => setExpandedMatch(expandedMatch === match.id ? null : match.id)}
+                                      className="w-full py-2 text-[10px] font-bold text-slate-400 hover:text-emerald-500 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"
+                                   >
+                                       {expandedMatch === match.id ? 'Ocultar Palpites' : '👁️ Ver Palpites da Galera'}
+                                   </button>
+                                   
+                                   {expandedMatch === match.id && (
+                                       <div className="mt-3 space-y-2">
+                                           {Object.entries(allPlayersData).map(([playerId, playerData]) => {
+                                               // Ignora o documento oficial do gabarito, mostrando apenas os jogadores
+                                               if (playerId === 'bolao_official') return null;
+                                               
+                                               const pGuess = playerData.guesses?.[match.id];
+                                               
+                                               return (
+                                                   <div key={playerId} className="flex items-center justify-between bg-black/5 dark:bg-black/20 p-2 rounded-lg">
+                                                       <div className="flex items-center gap-2">
+                                                           <img src={playerData.photoURL || 'https://via.placeholder.com/150'} className="w-6 h-6 rounded-full" alt="avatar" />
+                                                           <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                                               {playerData.displayName?.split(' ')[0] || 'Jogador'}
+                                                           </span>
+                                                       </div>
+                                                       <div className="flex items-center gap-2 font-black text-sm">
+                                                           {pGuess ? (
+                                                               <>
+                                                                   <span className="text-slate-700 dark:text-slate-200">{pGuess.a}</span>
+                                                                   <span className="text-[10px] text-slate-400 font-normal">X</span>
+                                                                   <span className="text-slate-700 dark:text-slate-200">{pGuess.b}</span>
+                                                               </>
+                                                           ) : (
+                                                               <span className="text-[10px] text-slate-400 font-normal uppercase">Sem palpite</span>
+                                                           )}
+                                                       </div>
+                                                   </div>
+                                               );
+                                           })}
+                                       </div>
+                                   )}
+                               </div>
+                           )}
+                           {/* ========================================== */}
                         </div>
                      );
                   })}
