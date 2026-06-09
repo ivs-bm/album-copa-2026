@@ -1146,7 +1146,7 @@ export default function App() {
                                                return (
                                                    <div key={playerId} className="flex items-center justify-between bg-black/5 dark:bg-black/20 p-2 rounded-lg">
                                                        <div className="flex items-center gap-2">
-                                                           <img src={playerData.photoURL || 'https://via.placeholder.com/150'} className="w-6 h-6 rounded-full" alt="avatar" />
+                                                           <img src={playerData.photoURL || `https://ui-avatars.com/api/?name=${playerData.displayName || 'J'}&background=10b981&color=fff`} referrerPolicy="no-referrer" className="w-6 h-6 rounded-full shadow-sm" alt="avatar" />
                                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
                                                                {playerData.displayName?.split(' ')[0] || 'Jogador'}
                                                            </span>
