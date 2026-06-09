@@ -1277,160 +1277,157 @@ export default function App() {
 
 
 {/* ========================================================== */}
-{/* NOVA ABA 5: TROCAS JUSTAS (MATCH) */}
+{/* ABA: TROCAS E CENTRAL DE MATCH (Unificada)                 */}
 {/* ========================================================== */}
-        {activeTab === 'trocas' && (
-            <div className="w-full flex flex-col gap-3 max-w-md mx-auto h-[calc(100dvh-170px)] justify-between overflow-y-auto hide-scrollbar">
-              <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
+{activeTab === 'trocas' && (
+    <div className="w-full flex flex-col gap-6 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-8 pt-2">
+        
+        {/* 1. BUSCA MANUAL (Trocas Justas) */}
+        <div className="flex flex-col gap-3 shrink-0">
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
                 <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
                 <div className="flex gap-2">
-                  <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
-                  <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
-                    {isLoadingCompare ? '...' : 'Analisar'}
-                  </button>
+                    <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
+                    <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
+                        {isLoadingCompare ? '...' : 'Analisar'}
+                    </button>
                 </div>
-              </div>
-
-              {friendData && (
-                <div className="flex-1 flex flex-col gap-4">
-                  {/* Bloco: Você Recebe */}
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-emerald-500/30 flex-1`}>
-                    <h3 className="font-bold text-emerald-500 text-sm mb-3">Você Recebe ({tradeStats.receive.length})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tradeStats.receive.length === 0 ? <p className="text-xs opacity-50">Ele não tem figurinhas repetidas que você precise.</p> : 
-                      tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
-                    </div>
-                  </div>
-                  {/* Bloco: Você Entrega */}
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30 flex-1`}>
-                    <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tradeStats.send.length === 0 ? <p className="text-xs opacity-50">Você não tem figurinhas repetidas que ele precise.</p> : 
-                      tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
-                    </div>
-                  </div>
-				  
-				  {/* NOVO BOTÃO DE LIMPEZA */}
-                  <button onClick={handleClearCompare} className={`w-full mt-2 py-3 rounded-xl font-bold text-xs transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
-                     Limpar e fazer nova consulta?
-                  </button>
-				  
-                </div>
-              )}
             </div>
-        )}
 
-
-
-{/* ========================================== */}
-{/* ABA 4: CENTRAL DE TROCAS (Fase 9)          */}
-{/* ========================================== */}
-{activeTab === 'trocas' && (
-    <div className="p-4 pt-6 max-w-md mx-auto animate-fade-in pb-24">
-        <div className="mb-6">
-            <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <ArrowRightLeft className="text-emerald-500" />
-                Central de Trocas
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-                O sistema cruza as suas figurinhas com as de todos da liga. Veja quem tem o que você precisa!
-            </p>
+            {friendData && (
+                <div className="flex flex-col gap-3 animate-fade-in">
+                    {/* Bloco: Você Recebe */}
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-emerald-500/30`}>
+                        <h3 className="font-bold text-emerald-500 text-sm mb-3">Você Recebe ({tradeStats.receive.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {tradeStats.receive.length === 0 ? <p className="text-xs opacity-50">Ele não tem figurinhas repetidas que você precise.</p> : 
+                            tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
+                        </div>
+                    </div>
+                    
+                    {/* Bloco: Você Entrega */}
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30`}>
+                        <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {tradeStats.send.length === 0 ? <p className="text-xs opacity-50">Você não tem figurinhas repetidas que ele precise.</p> : 
+                            tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
+                        </div>
+                    </div>
+                    
+                    {/* BOTÃO DE LIMPEZA */}
+                    <button onClick={handleClearCompare} className={`w-full mt-1 py-3 rounded-xl font-bold text-xs transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
+                        Limpar e fazer nova consulta?
+                    </button>
+                </div>
+            )}
         </div>
 
-        <div className="space-y-4">
-            {Object.entries(allPlayersData)
-                .filter(([id]) => id !== user.uid && id !== 'bolao_official')
-                .map(([id, data]) => {
-                    // Puxa os seus dados (Usuário Logado)
-                    const myData = allPlayersData[user.uid] || {};
-                    const myAlbum = myData.album || [];
-                    const myDuplicates = myData.duplicates || [];
-                                
-                    // Puxa os dados do amigo/adversário
-                    const otherAlbum = data.album || [];
-                    const otherDuplicates = data.duplicates || [];
+        {/* DIVISOR VISUAL */}
+        <div className="w-full h-px bg-slate-500/20 shrink-0"></div>
 
-                    // LÓGICA DE MATCH (Teoria dos Conjuntos)
-                    // O que eu posso dar (Minhas repetidas que ele NÃO tem no álbum)
-                    const iCanGive = myDuplicates.filter(sticker => !otherAlbum.includes(sticker));
-                                
-                    // O que ele pode me dar (Repetidas dele que eu NÃO tenho no meu álbum)
-                    const heCanGive = otherDuplicates.filter(sticker => !myAlbum.includes(sticker));
+        {/* 2. AUTOMÁTICO (Central de Trocas da Liga) */}
+        <div className="shrink-0 animate-fade-in">
+            <div className="mb-5">
+                <h2 className={`text-xl font-black ${titleColor} flex items-center gap-2`}>
+                    <ArrowRightLeft className="text-emerald-500" />
+                    Central de Trocas
+                </h2>
+                <p className={`text-xs ${textColor} mt-1`}>
+                    O sistema cruza as suas figurinhas com as de todos da liga. Veja quem tem o que você precisa!
+                </p>
+            </div>
 
-                    // Oculta o cartão se não houver possibilidade de troca com esta pessoa
-                    if (iCanGive.length === 0 && heCanGive.length === 0) return null;
+            <div className="space-y-4">
+                {Object.entries(allPlayersData)
+                    .filter(([id]) => id !== user.uid && id !== 'bolao_official')
+                    .map(([id, data]) => {
+                        // Puxa os seus dados (Usuário Logado)
+                        const myData = allPlayersData[user.uid] || {};
+                        const myAlbum = myData.album || [];
+                        const myDuplicates = myData.duplicates || [];
+                        
+                        // Puxa os dados do amigo/adversário
+                        const otherAlbum = data.album || [];
+                        const otherDuplicates = data.duplicates || [];
 
-                    return (
-                        <div key={id} className={`${cardBg} p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50`}>
-                            <div className="flex items-center gap-3 mb-4">
-                                <img 
-                                    src={data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName || 'J'}&background=10b981&color=fff`} 
-                                    referrerPolicy="no-referrer"
-                                    className="w-10 h-10 rounded-full shadow-sm border-2 border-white dark:border-slate-800" 
-                                    alt="avatar" 
-                                />
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                                        {data.displayName?.split(' ')[0] || 'Jogador'}
-                                    </h3>
-                                    <p className="text-[10px] text-slate-500 font-medium">Trocas compatíveis encontradas</p>
+                        // LÓGICA DE MATCH (Teoria dos Conjuntos)
+                        const iCanGive = myDuplicates.filter(sticker => !otherAlbum.includes(sticker));
+                        const heCanGive = otherDuplicates.filter(sticker => !myAlbum.includes(sticker));
+
+                        // Oculta o cartão se não houver possibilidade de troca com esta pessoa
+                        if (iCanGive.length === 0 && heCanGive.length === 0) return null;
+
+                        return (
+                            <div key={id} className={`${cardBg} p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50`}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <img 
+                                        src={data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName || 'J'}&background=10b981&color=fff`} 
+                                        referrerPolicy="no-referrer"
+                                        className="w-10 h-10 rounded-full shadow-sm border-2 border-white dark:border-slate-800" 
+                                        alt="avatar" 
+                                    />
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                                            {data.displayName?.split(' ')[0] || 'Jogador'}
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 font-medium">Trocas compatíveis encontradas</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {heCanGive.length > 0 && (
+                                        <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                <Download size={12} /> Você pode receber ({heCanGive.length}):
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {heCanGive.map(sticker => (
+                                                    <span key={sticker} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                        {sticker}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {iCanGive.length > 0 && (
+                                        <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                            <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                <Share2 size={12} /> Você pode enviar ({iCanGive.length}):
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {iCanGive.map(sticker => (
+                                                    <span key={sticker} className="bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                        {sticker}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="space-y-3">
-                                {/* SEÇÃO: O que eu recebo */}
-                                {heCanGive.length > 0 && (
-                                    <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
-                                        <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                            <Download size={12} /> Você pode receber ({heCanGive.length}):
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {heCanGive.map(sticker => (
-                                                <span key={sticker} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
-                                                    {sticker}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* SEÇÃO: O que eu envio */}
-                                {iCanGive.length > 0 && (
-                                    <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                                        <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                            <Share2 size={12} /> Você pode enviar ({iCanGive.length}):
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                            {iCanGive.map(sticker => (
-                                                <span key={sticker} className="bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
-                                                    {sticker}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        }
-                        
-                        {/* MENSAGEM: Quando não há matches na liga */}
-                        {Object.entries(allPlayersData).filter(([id, data]) => {
-                            if (id === user.uid || id === 'bolao_official') return false;
-                            const myData = allPlayersData[user.uid] || {};
-                            const iCanGive = (myData.duplicates || []).filter(s => !(data.album || []).includes(s));
-                            const heCanGive = (data.duplicates || []).filter(s => !(myData.album || []).includes(s));
-                            return iCanGive.length > 0 || heCanGive.length > 0;
-                        }).length === 0 && (
-                            <div className="text-center py-12 opacity-50">
-                                <ArrowRightLeft size={48} className="mx-auto mb-3 text-slate-400" />
-                                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhuma troca compatível</p>
-                                <p className="text-xs text-slate-500 mt-1 max-w-[250px] mx-auto">Continue adicionando suas repetidas ou convide mais colecionadores para a liga!</p>
-                            </div>
-                        )}
+                        );
+                    })
+                }
+                
+                {/* MENSAGEM: Quando não há matches na liga */}
+                {Object.entries(allPlayersData).filter(([id, data]) => {
+                    if (id === user.uid || id === 'bolao_official') return false;
+                    const myData = allPlayersData[user.uid] || {};
+                    const iCanGive = (myData.duplicates || []).filter(s => !(data.album || []).includes(s));
+                    const heCanGive = (data.duplicates || []).filter(s => !(myData.album || []).includes(s));
+                    return iCanGive.length > 0 || heCanGive.length > 0;
+                }).length === 0 && (
+                    <div className="text-center py-12 opacity-50">
+                        <ArrowRightLeft size={48} className="mx-auto mb-3 text-slate-400" />
+                        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhuma troca compatível</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-[250px] mx-auto">Continue adicionando suas repetidas ou convide mais colecionadores para a liga!</p>
                     </div>
+                )}
+            </div>
+        </div>
+
     </div>
 )}		
 		
