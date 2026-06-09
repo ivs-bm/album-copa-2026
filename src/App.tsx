@@ -102,43 +102,32 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 // ============================================================================
-// ESTRUTURA DE DADOS: JOGOS DO BOLÃO (AMISTOSOS DE TESTE)
+// ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026
 // ============================================================================
 const MATCHES = [
-  // Sábado - 06/06/2026 (Jogos Antigos - Trancados)
-  { id: 'm1', date: '06/06 - 10:00', teamA: 'BEL', teamB: 'TUN', status: 'finished' }, 
-  { id: 'm2', date: '06/06 - 15:30', teamA: 'USA', teamB: 'GER', status: 'finished' }, 
-  { id: 'm3', date: '06/06 - 16:00', teamA: 'SUI', teamB: 'AUS', status: 'finished' }, 
-  { id: 'm4', date: '06/06 - 16:00', teamA: 'PAN', teamB: 'BIH', status: 'finished' }, 
-  { id: 'm5', date: '06/06 - 17:00', teamA: 'ENG', teamB: 'NZL', status: 'finished' }, 
-  { id: 'm6', date: '06/06 - 19:00', teamA: 'BRA', teamB: 'EGY', status: 'finished' }, 
+  // Rodada 1 - Fase de Grupos
+  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'GER', status: 'pending' }, // Jogo 1 (Abertura)
+  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', status: 'pending' }, // Jogo 2
+  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', status: 'pending' }, // Jogo 3
+  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', status: 'pending' }, // Jogo 4
   
-  // Domingo - 07/06/2026 (Simulando o momento atual)
-  { id: 'm7', date: '07/06 - 16:00', teamA: 'MAR', teamB: 'NOR', status: 'live' }, // Jogo a decorrer agora
-  { id: 'm8', date: '07/06 - 20:00', teamA: 'COL', teamB: 'JOR', status: 'pending' }  // Jogo que ainda vai acontecer
+  // Nota: Você pode duplicar essas linhas e adicionar os 104 jogos da Copa aqui.
+  // Basta alterar as siglas (teamA / teamB) quando a FIFA fizer o sorteio oficial dos grupos!
 ];
 
 // ============================================================================
-// SIMULADOR DE API ESPORTIVA (ETL - Extração e Transformação de Dados)
+// CONEXÃO COM O BACK-END (ETL Real)
 // ============================================================================
-const fetchApiScoresMock = async () => {
-    // Simula o atraso de rede conectando a um servidor externo (1.5 segundos)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Simula o JSON de resposta da API já tratado e convertido para o nosso formato
-    return {
-        success: true,
-        scores: {
-            m1: { a: 3, b: 1 }, // Bélgica 3 x 1 Tunísia
-            m2: { a: 1, b: 2 }, // EUA 1 x 2 Alemanha
-            m3: { a: 0, b: 0 }, // Suíça 0 x 0 Austrália
-            m4: { a: 1, b: 0 }, // Panamá 1 x 0 Bósnia
-            m5: { a: 2, b: 2 }, // Inglaterra 2 x 2 Nova Zelândia
-            m6: { a: 4, b: 0 }, // Brasil 4 x 0 Egito
-            m7: { a: 2, b: 1 }, // Marrocos 2 x 1 Noruega
-            m8: { a: 1, b: 1 }  // Colômbia 1 x 1 Jordânia
-        }
-    };
+const fetchApiScores = async () => {
+    try {
+        // Agora a aplicação chama o nosso próprio servidor de forma segura
+        const response = await fetch('/api/sync-scores', { method: 'GET' });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Erro ao buscar dados do servidor interno:", error);
+        return { success: false };
+    }
 };
 
 
@@ -1185,7 +1174,7 @@ export default function App() {
                                  setToast("Buscando dados na API Esportiva... 📡");
                                  try {
                                      // Aciona o simulador da API de Futebol (Substituirá pelo fetch real na Copa)
-                                     const data = await fetchApiScoresMock();
+                                     const data = await fetchApiScores();
                                      
                                      if (data.success && data.scores) {
                                          // Injeta os placares retornados pela API direto na memória do Gabarito
