@@ -1320,7 +1320,119 @@ export default function App() {
               )}
             </div>
         )}
-		
+
+
+
+{/* ========================================== */}
+{/* ABA 4: CENTRAL DE TROCAS (Fase 9)          */}
+{/* ========================================== */}
+{activeTab === 'trocas' && (
+    <div className="p-4 pt-6 max-w-md mx-auto animate-fade-in pb-24">
+        <div className="mb-6">
+            <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <ArrowRightLeft className="text-emerald-500" />
+                Central de Trocas
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+                O sistema cruza as suas figurinhas com as de todos da liga. Veja quem tem o que você precisa!
+            </p>
+        </div>
+
+        <div className="space-y-4">
+            {Object.entries(allPlayersData)
+                .filter(([id]) => id !== user.uid && id !== 'bolao_official')
+                .map(([id, data]) => {
+                    // Puxa os seus dados (Usuário Logado)
+                    const myData = allPlayersData[user.uid] || {};
+                    const myAlbum = myData.album || [];
+                    const myDuplicates = myData.duplicates || [];
+                                
+                    // Puxa os dados do amigo/adversário
+                    const otherAlbum = data.album || [];
+                    const otherDuplicates = data.duplicates || [];
+
+                    // LÓGICA DE MATCH (Teoria dos Conjuntos)
+                    // O que eu posso dar (Minhas repetidas que ele NÃO tem no álbum)
+                    const iCanGive = myDuplicates.filter(sticker => !otherAlbum.includes(sticker));
+                                
+                    // O que ele pode me dar (Repetidas dele que eu NÃO tenho no meu álbum)
+                    const heCanGive = otherDuplicates.filter(sticker => !myAlbum.includes(sticker));
+
+                    // Oculta o cartão se não houver possibilidade de troca com esta pessoa
+                    if (iCanGive.length === 0 && heCanGive.length === 0) return null;
+
+                    return (
+                        <div key={id} className={`${cardBg} p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50`}>
+                            <div className="flex items-center gap-3 mb-4">
+                                <img 
+                                    src={data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName || 'J'}&background=10b981&color=fff`} 
+                                    referrerPolicy="no-referrer"
+                                    className="w-10 h-10 rounded-full shadow-sm border-2 border-white dark:border-slate-800" 
+                                    alt="avatar" 
+                                />
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                                        {data.displayName?.split(' ')[0] || 'Jogador'}
+                                    </h3>
+                                    <p className="text-[10px] text-slate-500 font-medium">Trocas compatíveis encontradas</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                {/* SEÇÃO: O que eu recebo */}
+                                {heCanGive.length > 0 && (
+                                    <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                                        <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                            <Download size={12} /> Você pode receber ({heCanGive.length}):
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {heCanGive.map(sticker => (
+                                                <span key={sticker} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                    {sticker}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* SEÇÃO: O que eu envio */}
+                                {iCanGive.length > 0 && (
+                                    <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                        <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                            <Share2 size={12} /> Você pode enviar ({iCanGive.length}):
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {iCanGive.map(sticker => (
+                                                <span key={sticker} className="bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                    {sticker}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        }
+                        
+                        {/* MENSAGEM: Quando não há matches na liga */}
+                        {Object.entries(allPlayersData).filter(([id, data]) => {
+                            if (id === user.uid || id === 'bolao_official') return false;
+                            const myData = allPlayersData[user.uid] || {};
+                            const iCanGive = (myData.duplicates || []).filter(s => !(data.album || []).includes(s));
+                            const heCanGive = (data.duplicates || []).filter(s => !(myData.album || []).includes(s));
+                            return iCanGive.length > 0 || heCanGive.length > 0;
+                        }).length === 0 && (
+                            <div className="text-center py-12 opacity-50">
+                                <ArrowRightLeft size={48} className="mx-auto mb-3 text-slate-400" />
+                                <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhuma troca compatível</p>
+                                <p className="text-xs text-slate-500 mt-1 max-w-[250px] mx-auto">Continue adicionando suas repetidas ou convide mais colecionadores para a liga!</p>
+                            </div>
+                        )}
+                    </div>
+    </div>
+)}		
 		
 		
 {/* // ============================================================================ */}
