@@ -101,6 +101,35 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
+// ============================================================================
+// ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026
+// ============================================================================
+const MATCHES = [
+  // Rodada 1 - Fase de Grupos
+  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'GER', status: 'pending' }, // Jogo 1 (Abertura)
+  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', status: 'pending' }, // Jogo 2
+  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', status: 'pending' }, // Jogo 3
+  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', status: 'pending' }, // Jogo 4
+  
+  // Nota: Você pode duplicar essas linhas e adicionar os 104 jogos da Copa aqui.
+  // Basta alterar as siglas (teamA / teamB) quando a FIFA fizer o sorteio oficial dos grupos!
+];
+
+// ============================================================================
+// CONEXÃO COM O BACK-END (ETL Real)
+// ============================================================================
+const fetchApiScores = async () => {
+    try {
+        // Agora a aplicação chama o nosso próprio servidor de forma segura
+        const response = await fetch('/api/sync-scores', { method: 'GET' });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Erro ao buscar dados do servidor interno:", error);
+        return { success: false };
+    }
+};
+
 
 
 // ============================================================================
@@ -157,16 +186,6 @@ export default function App() {
   const [isStandalone, setIsStandalone] = useState(false); 
 
   
-
-  // Estados referentes ao código VIP secreto (Bolão)
-
-  const [trophyClicks, setTrophyClicks] = useState(0); 
-
-  const [showProCode, setShowProCode] = useState(false); 
-
-  const [proInput, setProInput] = useState(''); 
-  
- 
  
   // ==========================================================
   // NOVOS ESTADOS: Referentes ao motor de Trocas Justas
@@ -179,6 +198,110 @@ export default function App() {
   
 
   const sectionsRef = useRef({}); // Referência para deslizar as bandeiras
+  
+  
+  const [magicCode, setMagicCode] = useState('');
+  
+  
+  
+  // Memória das Ligas que o usuário participa
+  const [savedLeagues, setSavedLeagues] = useState(() => {
+     const local = localStorage.getItem('@AlbumCopa_Leagues');
+     return local ? JSON.parse(local) : [];
+  });
+  
+  
+  // ESTADOS DO BOLÃO
+  const [guesses, setGuesses] = useState({}); // Memória que guarda os palpites individuais
+  const [officialScores, setOfficialScores] = useState({}); // Memória que guarda o Gabarito Oficial
+  const [isAdminMode, setIsAdminMode] = useState(false); // Controle da tela do Administrador
+  const [allPlayersData, setAllPlayersData] = useState({}); // Memória para todos os jogadores da família
+  const [bolaoView, setBolaoView] = useState('jogos'); // Controle da subtela: 'jogos' ou 'ranking'
+  const [isSyncingAPI, setIsSyncingAPI] = useState(false); // Controle de carregamento da API de jogos
+  const [expandedMatch, setExpandedMatch] = useState(null); // NOVO: Controla qual jogo exibe os palpites da galera
+  
+  // Função que atualiza o número digitado na caixinha em tempo real
+  const handleGuess = (matchId, team, value) => {
+    if (value !== '' && (value < 0 || value > 99)) return; // Trava contra números absurdos
+    
+    // Se o Admin Mode estiver ligado, salva no Gabarito. Se não, salva no palpite do usuário.
+    if (isAdminMode) {
+        setOfficialScores(prev => ({
+          ...prev,
+          [matchId]: { ...prev[matchId], [team]: value }
+        }));
+    } else {
+        setGuesses(prev => ({
+          ...prev,
+          [matchId]: { ...prev[matchId], [team]: value }
+        }));
+    }
+  };
+    
+  // ==========================================================
+  // INÍCIO DO PASSO 3: CÉREBRO MATEMÁTICO E RANKING
+  // ==========================================================
+  
+  // Função Matemática: Calcula os pontos de um único palpite
+  const calculatePoints = (guessA, guessB, realA, realB) => {
+      // Se alguém não preencheu a caixa, 0 pontos
+      if (guessA === '' || guessB === '' || realA === '' || realB === '' || guessA === undefined || guessB === undefined) return 0;
+      
+      const gA = parseInt(guessA, 10);
+      const gB = parseInt(guessB, 10);
+      const rA = parseInt(realA, 10);
+      const rB = parseInt(realB, 10);
+
+      // Regra 1: Cravou o placar exato
+      if (gA === rA && gB === rB) return 5; 
+
+      const guessDiff = gA - gB;
+      const realDiff = rA - rB;
+
+      // Regra 2: Acertou a diferença de gols (saldo) ou acertou o empate (ambos os saldos são 0)
+      if (guessDiff === realDiff) return 3; 
+
+      const guessWinner = guessDiff > 0 ? 'A' : (guessDiff < 0 ? 'B' : 'E');
+      const realWinner = realDiff > 0 ? 'A' : (realDiff < 0 ? 'B' : 'E');
+
+      // Regra 3: Acertou apenas quem ia vencer
+      if (guessWinner === realWinner) return 1; 
+
+      // Errou tudo
+      return 0; 
+  };
+
+  // Motor do Ranking: Processa a matemática apenas quando os dados mudam
+  const rankingList = useMemo(() => {
+      const players = Object.entries(allPlayersData).map(([uid, playerData]) => {
+          let totalPoints = 0;
+          let exactMatches = 0; // Critério de desempate principal
+
+          // Passa por todos os jogos que o jogador palpitou
+          Object.keys(playerData.guesses || {}).forEach(matchId => {
+              const guess = playerData.guesses[matchId];
+              const real = officialScores[matchId];
+              
+              // Só calcula se o Admin já preencheu o Gabarito Oficial daquela partida
+              if (real && real.a !== '' && real.b !== '') {
+                  const pts = calculatePoints(guess?.a, guess?.b, real.a, real.b);
+                  totalPoints += pts;
+                  if (pts === 5) exactMatches++;
+              }
+          });
+
+          return {
+              uid,
+              name: playerData.name || 'Jogador',
+              photo: playerData.photo || null,
+              points: totalPoints,
+              exactMatches
+          };
+      });
+
+      // Ordena do maior pro menor ponto. Em caso de empate, quem tem mais "Cravadas" sobe.
+      return players.sort((a, b) => b.points - a.points || b.exactMatches - a.exactMatches);
+  }, [allPlayersData, officialScores]);
 
 
 
@@ -300,19 +423,48 @@ export default function App() {
 
 
 
-  // Efeito 3: Busca as figurinhas em tempo real no banco de dados (Firestore)
-
+  // Efeito 3: Busca as figurinhas e os dados do Bolão em tempo real no banco
   useEffect(() => {
-
     if (!activeFamilyId) return;
-
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
-
-      if (d.exists()) { setStickers(d.data().stickers || {}); setIsPro(!!d.data().isPro); }
-
+      if (d.exists()) { 
+          const data = d.data();
+          setStickers(data.stickers || {}); 
+          setIsPro(!!data.isPro); 
+          
+          // Carrega os palpites salvos deste usuário específico (CORREÇÃO DE VAZAMENTO)
+          if (user && data.bolao && data.bolao[user.uid]) {
+              setGuesses(data.bolao[user.uid].guesses || {});
+          } else {
+              // Se o usuário não tem palpites nesta liga, ZERA as caixinhas obrigatoriamente
+              setGuesses({}); 
+          }
+                    
+		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
+          setAllPlayersData(data.bolao || {});
+      } else {
+          // Se o documento inteiro ainda não existir, zera tudo por segurança
+          setStickers({});
+          setGuesses({});
+          setOfficialScores({});
+          setAllPlayersData({});
+      }
     });
-
-  }, [activeFamilyId]);
+  }, [activeFamilyId, user]);
+  
+  
+  
+  // Efeito 4: Sincronização com o Gabarito Mundial (Para todas as ligas)
+  useEffect(() => {
+    // Este listener não depende do activeFamilyId, ele lê a base global diretamente
+    return onSnapshot(doc(db, 'global_data', 'Gabarito_Mundial'), (d) => {
+      if (d.exists()) {
+          setOfficialScores(d.data().scores || {});
+      } else {
+          setOfficialScores({});
+      }
+    });
+  }, []);
 
 
 
@@ -445,8 +597,7 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // AUMENTAMOS AQUI: de -170 para -190 para compensar o menu que ficou mais alto
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 190; 
+              const topPos = element.getBoundingClientRect().top + window.scrollY - (savedLeagues.length > 0 ? 225 : 190); 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -565,61 +716,55 @@ export default function App() {
       
 
       {/* TOAST NOTIFICATION: Balão de aviso flutuante */}
-
-      {toast && <div className="fixed top-20 z-50 left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold">{toast}</div>}
+      
+	  {toast && <div style={{ top: savedLeagues.length > 0 ? '140px' : '90px' }} className="fixed z-[60] left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold transition-all">{toast}</div>}
 
       
 
       {/* ======================================================================= */}
-
-      {/* CABEÇALHO (HEADER) FIXO */}
-
+      {/* CABEÇALHO (HEADER) FIXO E DINÂMICO */}
       {/* ======================================================================= */}
-
-      <header className={`w-full h-[76px] ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md`}>
-
+      <header className={`w-full min-h-[76px] h-auto ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md transition-all`}>
         <div className="flex justify-between items-center mb-2">
-
            <div className="flex items-center gap-3">
-
              <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
-
              <div>
-
                  <h1 className="font-black text-sm leading-tight">Família Copa</h1>
-
                  <p className="text-[10px] text-emerald-200">{stats.percentage}% Concluído</p>
-
              </div>
-
            </div>
-
-           {/* BOTÕES: Guia Rápido e Tema Escuro */}
-
            <div className="flex gap-2 shrink-0">
-
-              <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-
-                  <Info size={18} />
-
-              </button>
-
+              <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"><Info size={18} /></button>
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-
                   {isDarkMode ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} />}
-
               </button>
-
            </div>
-
         </div>
-
-        <div className="flex items-center gap-3 mt-1">
-
+        
+        <div className="flex items-center gap-3 mt-1 mb-1">
            <div className="flex-1 h-1.5 bg-black/30 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 transition-all" style={{ width: `${stats.percentage}%` }}></div></div>
-
         </div>
 
+        {/* BARRA DE TROCA RÁPIDA DE LIGAS */}
+        {(savedLeagues.length > 0 || (user && activeFamilyId !== user.uid)) && (
+            <div className="w-full mt-3 pt-3 border-t border-white/10 flex gap-2 overflow-x-auto hide-scrollbar">
+                <button 
+                   onClick={() => { setActiveFamilyId(user.uid); localStorage.setItem('@AlbumCopa_FamilyId', user.uid); }}
+                   className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${activeFamilyId === user.uid ? 'bg-white text-emerald-800 border-white shadow-md scale-105' : 'bg-black/20 text-white/80 border-transparent hover:bg-black/30'}`}
+                >
+                   🏠 Minha Família
+                </button>
+                {savedLeagues.map(leagueCode => (
+                    <button 
+                       key={leagueCode}
+                       onClick={() => { setActiveFamilyId(leagueCode); localStorage.setItem('@AlbumCopa_FamilyId', leagueCode); }}
+                       className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1 ${activeFamilyId === leagueCode ? 'bg-white text-emerald-800 border-white shadow-md scale-105' : 'bg-black/20 text-white/80 border-transparent hover:bg-black/30'}`}
+                    >
+                       🏆 {leagueCode.replace('LIGA-', '')}
+                    </button>
+                ))}
+            </div>
+        )}
       </header>
 
 
@@ -672,13 +817,16 @@ export default function App() {
 
       {/* ======================================================================= */}
 
-      <main className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto ${activeTab === 'album' ? 'pt-[190px]' : 'pt-[90px]'}`}>
+      <main 
+  style={{ paddingTop: activeTab === 'album' ? (savedLeagues.length > 0 ? '225px' : '190px') : (savedLeagues.length > 0 ? '125px' : '90px') }} 
+  className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto transition-all`}
+	>
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
             <div className="flex-1 w-full">
               {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
-              <div className={`fixed top-[76px] left-0 w-full z-40 px-3 pt-2 pb-2 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+              <div style={{ top: savedLeagues.length > 0 ? '112px' : '76px' }} className={`fixed left-0 w-full z-40 px-3 pt-2 pb-2 transition-all ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 {/* MUDANÇA: gap-6 reduzido para gap-3 para equilibrar o visual dos cartões */}
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-3 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {uniqueGroups.map(groupName => {
@@ -856,101 +1004,432 @@ export default function App() {
 
 
 
-        {/* ABA 3: BOLÃO - Agora com o código VIP embutido no Troféu */}
-
+        {/* ABA 3: BOLÃO - FASE 1 E 3 (LAYOUT + MODO ADMIN) */}
         {activeTab === 'jogos' && (
-
-            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center flex flex-1 flex-col items-center justify-center w-full`}>
-
+            <div className="w-full flex flex-col gap-4 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-6">
                 
-
-                {/* BOTÃO SECRETO (3 Cliques) */}
-
-                <Trophy size={48} className="mx-auto text-yellow-500 mb-4 cursor-pointer" onClick={() => { setTrophyClicks(prev => prev + 1); if(trophyClicks >= 2) setShowProCode(true); }} />
-
+				{/* MENU DE NAVEGAÇÃO DO BOLÃO (JOGOS / RANKING) */}
+                <div className="flex bg-slate-500/10 p-1 rounded-xl w-full max-w-[240px] mx-auto mb-2 shrink-0">
+                    <button onClick={() => setBolaoView('jogos')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bolaoView === 'jogos' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}>Jogos</button>
+                    <button onClick={() => setBolaoView('ranking')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${bolaoView === 'ranking' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300'}`}>Ranking</button>
+                </div>
                 
-
-                <h2 className={`font-black ${titleColor} text-xl mb-2`}>Bolão da Família</h2>
-
-                <p className={`text-sm ${textColor} mb-6 max-w-xs mx-auto`}>Acompanhe os jogos da Copa e faça seus palpites para competir com a família!</p>
-
-                
-
-                {/* CAIXA SECRETA DE SENHA VIP */}
-
-                {showProCode && (
-
-                  <div className="flex gap-2 mb-6 w-full max-w-xs mx-auto">
-
-                    <input className={`flex-1 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'} border text-white p-3 rounded-xl text-xs outline-none`} onChange={(e) => setProInput(e.target.value)} placeholder="Código VIP" />
-
-                    <button onClick={() => { if(proInput === 'NOSVICOPA2026') { setIsPro(true); setShowProCode(false); setToast("Modo Pro Ativado!"); } }} className="bg-emerald-600 text-white px-6 rounded-xl text-xs font-bold shadow-md">OK</button>
-
-                  </div>
-
-                )}
-
-                
-
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-700' : 'bg-slate-100 border border-slate-200'} opacity-70 w-full max-w-sm mx-auto`}>
-
-                    <p className={`text-xs font-bold ${textColor}`}>📅 Em Breve: Tabela de Jogos 2026</p>
-
-                    <p className={`text-[10px] mt-2 ${textColor}`}>Esta área será ativada automaticamente quando os grupos oficiais forem sorteados pela FIFA.</p>
-
+				{/* CABEÇALHO DO BOLÃO */}
+                <div className={`${cardBg} p-5 rounded-2xl shadow-sm border text-center shrink-0 relative transition-colors ${isAdminMode ? 'border-red-500/50 bg-red-500/5' : ''}`}>
+                    
+                    {/* BOTÃO SECRETO DE ADMIN (Só aparece para o dono da família) */}
+                    {activeFamilyId === user.uid && (
+                        <button 
+                            onClick={() => setIsAdminMode(!isAdminMode)}
+                            className={`absolute top-4 right-4 p-2 rounded-lg text-[10px] font-bold uppercase transition-colors ${isAdminMode ? 'bg-red-500 text-white shadow-md' : 'bg-slate-500/10 text-slate-400'}`}
+                        >
+                            {isAdminMode ? 'Modo Admin ON' : 'Admin'}
+                        </button>
+                    )}
+                    
+                    <Trophy size={40} className={`mx-auto mb-3 transition-colors ${isAdminMode ? 'text-red-500' : 'text-yellow-500'}`} />
+                    <h2 className={`font-black ${titleColor} text-lg mb-1`}>
+                        {isAdminMode ? 'Gabarito Oficial (Admin)' : 'Bolão da Família'}
+                    </h2>
+                    <p className={`text-xs ${textColor}`}>
+                        {isAdminMode ? 'Insira os placares reais da Copa. Isso definirá o Ranking.' : 'Faça seus palpites antes do início de cada partida.'}
+                    </p>
                 </div>
 
-            </div>
+                {/* ----------------- SUB-TELA 1: JOGOS ----------------- */}
+                {bolaoView === 'jogos' && (
+                    <>
+                        {/* LISTA DE JOGOS */}
+                <div className="space-y-4">
+                  {MATCHES.map(match => {
+                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
+                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                     
+                     // A MÁGICA DO BLOQUEIO
+                     const isLocked = !isAdminMode && match.status !== 'pending';
+                     
+                     return (
+                        <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
+                           
+                           {/* Data, Hora e Etiqueta de Status */}
+                           <div className="flex justify-center items-center gap-2 mb-4">
+                               <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-500/10 py-1 px-3 rounded-md">
+                                   {match.date}
+                               </div>
+                               {match.status === 'finished' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-slate-500 text-white shadow-sm">Encerrado</span>}
+                               {match.status === 'live' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-red-500 text-white shadow-sm animate-pulse">Ao Vivo</span>}
+                               {match.status === 'pending' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-emerald-500 text-white shadow-sm">Em Breve</span>}
+                           </div>
+                           
+                           <div className="flex justify-between items-center gap-2">
+                              {/* Equipa A */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tA?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tA.flagUrlApple : tA.flagUrlAndroid} alt={tA.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tA?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tA?.title}</span>
+                              </div>
 
+                              {/* Caixas de Palpite / Resultado Oficial */}
+                              <div className="flex items-center gap-3 justify-center w-[40%]">
+                                 <input 
+                                   type="number" 
+                                   disabled={isLocked}
+                                   value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
+                                   onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                 />
+                                 <span className="text-slate-300 font-black text-sm">X</span>
+                                 <input 
+                                   type="number" 
+                                   disabled={isLocked}
+                                   value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
+                                   onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
+                                   placeholder="-"
+                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                 />
+                              </div>
+
+                              {/* Equipa B */}
+                              <div className="flex flex-col items-center w-[30%]">
+                                 {tB?.flagUrlApple ? (
+                                    <img src={isAppleDevice ? tB.flagUrlApple : tB.flagUrlAndroid} alt={tB.title} className="w-8 h-8 object-contain drop-shadow-md"/>
+                                 ) : (
+                                    <span className="text-3xl drop-shadow-md">{tB?.flag}</span>
+                                 )}
+                                 <span className={`text-[10px] font-bold mt-2 text-center ${titleColor}`}>{tB?.title}</span>
+                              </div>
+                           </div>
+
+                           {/* ========================================== */}
+                           {/* NOVA ÁREA: VER PALPITES DA GALERA (Fase 8) */}
+                           {/* ========================================== */}
+                           {match.status !== 'pending' && Object.keys(allPlayersData).length > 0 && (
+                               <div className="mt-4 border-t border-slate-200/20 pt-3">
+                                   <button 
+                                      onClick={() => setExpandedMatch(expandedMatch === match.id ? null : match.id)}
+                                      className="w-full py-2 text-[10px] font-bold text-slate-400 hover:text-emerald-500 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"
+                                   >
+                                       {expandedMatch === match.id ? 'Ocultar Palpites' : '👁️ Ver Palpites da Galera'}
+                                   </button>
+                                   
+                                   {expandedMatch === match.id && (
+                                       <div className="mt-3 space-y-2">
+                                           {Object.entries(allPlayersData).map(([playerId, playerData]) => {
+                                               // Ignora o documento oficial do gabarito, mostrando apenas os jogadores
+                                               if (playerId === 'bolao_official') return null;
+                                               
+                                               const pGuess = playerData.guesses?.[match.id];
+                                               
+                                               return (
+                                                   <div key={playerId} className="flex items-center justify-between bg-black/5 dark:bg-black/20 p-2 rounded-lg">
+                                                       <div className="flex items-center gap-2">
+                                                           <img src={playerData.photoURL || `https://ui-avatars.com/api/?name=${playerData.displayName || 'J'}&background=10b981&color=fff`} referrerPolicy="no-referrer" className="w-6 h-6 rounded-full shadow-sm" alt="avatar" />
+                                                           <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                                               {playerData.displayName?.split(' ')[0] || 'Jogador'}
+                                                           </span>
+                                                       </div>
+                                                       <div className="flex items-center gap-2 font-black text-sm">
+                                                           {pGuess ? (
+                                                               <>
+                                                                   <span className="text-slate-700 dark:text-slate-200">{pGuess.a}</span>
+                                                                   <span className="text-[10px] text-slate-400 font-normal">X</span>
+                                                                   <span className="text-slate-700 dark:text-slate-200">{pGuess.b}</span>
+                                                               </>
+                                                           ) : (
+                                                               <span className="text-[10px] text-slate-400 font-normal uppercase">Sem palpite</span>
+                                                           )}
+                                                       </div>
+                                                   </div>
+                                               );
+                                           })}
+                                       </div>
+                                   )}
+                               </div>
+                           )}
+                           {/* ========================================== */}
+                        </div>
+                     );
+                  })}
+                </div>
+
+                        {/* BOTÃO AUXILIAR: SINCRONIZAR VIA API (Apenas no Modo Admin) */}
+                        {isAdminMode && (
+                            <button
+                              type="button"
+                              disabled={isSyncingAPI}
+                              onClick={async () => {
+                                 setIsSyncingAPI(true);
+                                 setToast("Buscando dados na API Esportiva... 📡");
+                                 try {
+                                     // Aciona o simulador da API de Futebol (Substituirá pelo fetch real na Copa)
+                                     const data = await fetchApiScores();
+                                     
+                                     if (data.success && data.scores) {
+                                         // Injeta os placares retornados pela API direto na memória do Gabarito
+                                         setOfficialScores(prev => ({
+                                             ...prev,
+                                             ...data.scores
+                                         }));
+                                         setToast("Placares importados! Revise e clique em Salvar. ⚽");
+                                     } else {
+                                         setToast("Nenhum placar novo encontrado na API.");
+                                     }
+                                 } catch (error) {
+                                     setToast("Erro de conexão com o servidor da API.");
+                                 } finally {
+                                     setIsSyncingAPI(false);
+                                     setTimeout(() => setToast(''), 3000);
+                                 }
+                              }}
+                              className={`w-full mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-wider ${isSyncingAPI ? 'opacity-50 cursor-not-allowed animate-pulse' : ''}`}
+                            >
+                              {isSyncingAPI ? 'Sincronizando...' : '🔄 Puxar Resultados da API'}
+                            </button>
+                        )}
+						{/* BOTÃO DE SALVAR */}
+                        <button 
+                          onClick={async () => {
+                             setToast(isAdminMode ? "Salvando placares oficiais..." : "Salvando palpites...");
+                             try {
+                                 if (isAdminMode) {
+                                     // Salva no GABARITO MUNDIAL para todas as ligas lerem
+                                     await setDoc(doc(db, 'global_data', 'Gabarito_Mundial'), {
+                                         scores: officialScores,
+                                         updatedBy: user.email || 'Admin',
+                                         lastUpdate: new Date().toISOString()
+                                     }, { merge: true });
+                                     setToast("Gabarito Mundial atualizado! 🌍");
+                                 } else {
+                                     await updateDoc(doc(db, 'family_albums', activeFamilyId), {
+                                         [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+                                         [`bolao.${user.uid}.photo`]: user.photoURL || '',
+                                         [`bolao.${user.uid}.guesses`]: guesses
+                                     });
+                                     setToast("Palpites salvos com sucesso! 🏆");
+                                 }
+                                 setTimeout(() => setToast(''), 3000);
+                             } catch (error) {
+                                 setToast("Erro ao salvar. Verifique a internet.");
+                                 setTimeout(() => setToast(''), 3000);
+                             }
+                          }}
+                          className={`w-full text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2 shrink-0 ${isAdminMode ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
+                        >
+                          {isAdminMode ? 'Salvar Resultados Oficiais' : 'Salvar Meus Palpites'}
+                        </button>
+                    </>
+                )}
+
+                {/* ----------------- SUB-TELA 2: RANKING ----------------- */}
+                {bolaoView === 'ranking' && (
+                    <div className="space-y-3 mt-2">
+                        {rankingList.length === 0 ? (
+                            <p className="text-center text-xs text-slate-400 py-6">Nenhum palpite ou resultado oficial registrado ainda.</p>
+                        ) : (
+                            rankingList.map((player, index) => (
+                                <div key={player.uid} className={`${cardBg} p-3 rounded-xl shadow-sm border flex items-center gap-3`}>
+                                    
+                                    {/* Medalhas (Ouro, Prata, Bronze) */}
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${index === 0 ? 'bg-yellow-500 text-white shadow-md' : index === 1 ? 'bg-slate-300 text-slate-800 shadow-sm' : index === 2 ? 'bg-amber-700 text-white shadow-sm' : 'bg-slate-500/10 text-slate-400'}`}>
+                                        {index + 1}
+                                    </div>
+                                    
+                                    {/* Foto do Perfil Google */}
+                                    {player.photo ? (
+                                        <img src={player.photo} alt="avatar" className="w-10 h-10 rounded-full border-2 border-emerald-500/20" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-slate-500/20 flex items-center justify-center">
+                                            <User size={18} className="text-slate-400"/>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Nome e Desempate */}
+                                    <div className="flex-1">
+                                        <h3 className={`font-bold text-sm ${titleColor}`}>{player.name}</h3>
+                                        <p className="text-[10px] text-slate-400">{player.exactMatches} placares exatos (cravadas)</p>
+                                    </div>
+                                    
+                                    {/* Pontuação Final */}
+                                    <div className="text-right">
+                                        <span className="font-black text-emerald-500 text-2xl leading-none">{player.points}</span>
+                                        <span className="text-[9px] text-slate-400 block mt-1 uppercase tracking-widest">pontos</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </div>
         )}
 
 
 
 {/* ========================================================== */}
-{/* NOVA ABA 5: TROCAS JUSTAS (MATCH) */}
+{/* ABA: TROCAS E CENTRAL DE MATCH (Unificada)                 */}
 {/* ========================================================== */}
-        {activeTab === 'trocas' && (
-            <div className="w-full flex flex-col gap-3 max-w-md mx-auto h-[calc(100dvh-170px)] justify-between overflow-y-auto hide-scrollbar">
-              <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
+{activeTab === 'trocas' && (
+    <div className="w-full flex flex-col gap-6 max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar pb-8 pt-2">
+        
+        {/* 1. BUSCA MANUAL (Trocas Justas) */}
+        <div className="flex flex-col gap-3 shrink-0">
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
                 <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
                 <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
                 <div className="flex gap-2">
-                  <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
-                  <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
-                    {isLoadingCompare ? '...' : 'Analisar'}
-                  </button>
+                    <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
+                    <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
+                        {isLoadingCompare ? '...' : 'Analisar'}
+                    </button>
                 </div>
-              </div>
-
-              {friendData && (
-                <div className="flex-1 flex flex-col gap-4">
-                  {/* Bloco: Você Recebe */}
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-emerald-500/30 flex-1`}>
-                    <h3 className="font-bold text-emerald-500 text-sm mb-3">Você Recebe ({tradeStats.receive.length})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tradeStats.receive.length === 0 ? <p className="text-xs opacity-50">Ele não tem figurinhas repetidas que você precise.</p> : 
-                      tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
-                    </div>
-                  </div>
-                  {/* Bloco: Você Entrega */}
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30 flex-1`}>
-                    <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tradeStats.send.length === 0 ? <p className="text-xs opacity-50">Você não tem figurinhas repetidas que ele precise.</p> : 
-                      tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
-                    </div>
-                  </div>
-				  
-				  {/* NOVO BOTÃO DE LIMPEZA */}
-                  <button onClick={handleClearCompare} className={`w-full mt-2 py-3 rounded-xl font-bold text-xs transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
-                     Limpar e fazer nova consulta?
-                  </button>
-				  
-                </div>
-              )}
             </div>
-        )}
-		
+
+            {friendData && (
+                <div className="flex flex-col gap-3 animate-fade-in">
+                    {/* Bloco: Você Recebe */}
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-emerald-500/30`}>
+                        <h3 className="font-bold text-emerald-500 text-sm mb-3">Você Recebe ({tradeStats.receive.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {tradeStats.receive.length === 0 ? <p className="text-xs opacity-50">Ele não tem figurinhas repetidas que você precise.</p> : 
+                            tradeStats.receive.map(k => <span key={k} className="bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md text-[10px] font-bold border border-emerald-500/20">{k}</span>)}
+                        </div>
+                    </div>
+                    
+                    {/* Bloco: Você Entrega */}
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border border-purple-500/30`}>
+                        <h3 className="font-bold text-purple-500 text-sm mb-3">Você Dá ({tradeStats.send.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {tradeStats.send.length === 0 ? <p className="text-xs opacity-50">Você não tem figurinhas repetidas que ele precise.</p> : 
+                            tradeStats.send.map(k => <span key={k} className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded-md text-[10px] font-bold border border-purple-500/20">{k}</span>)}
+                        </div>
+                    </div>
+                    
+                    {/* BOTÃO DE LIMPEZA */}
+                    <button onClick={handleClearCompare} className={`w-full mt-1 py-3 rounded-xl font-bold text-xs transition-colors border ${isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
+                        Limpar e fazer nova consulta?
+                    </button>
+                </div>
+            )}
+        </div>
+
+        {/* DIVISOR VISUAL */}
+        <div className="w-full h-px bg-slate-500/20 shrink-0"></div>
+
+        {/* 2. AUTOMÁTICO (Central de Trocas da Liga) */}
+        <div className="shrink-0 animate-fade-in">
+            <div className="mb-5">
+                <h2 className={`text-xl font-black ${titleColor} flex items-center gap-2`}>
+                    <ArrowRightLeft className="text-emerald-500" />
+                    Central de Trocas
+                </h2>
+                <p className={`text-xs ${textColor} mt-1`}>
+                    O sistema cruza as suas figurinhas com as de todos da liga. Veja quem tem o que você precisa!
+                </p>
+            </div>
+
+            <div className="space-y-4">
+                {Object.entries(allPlayersData)
+                    .filter(([id]) => id !== user.uid && id !== 'bolao_official')
+                    .map(([id, data]) => {
+                        // Puxa os seus dados (Usuário Logado)
+                        const myData = allPlayersData[user.uid] || {};
+                        const myAlbum = myData.album || [];
+                        const myDuplicates = myData.duplicates || [];
+                        
+                        // Puxa os dados do amigo/adversário
+                        const otherAlbum = data.album || [];
+                        const otherDuplicates = data.duplicates || [];
+
+                        // LÓGICA DE MATCH (Teoria dos Conjuntos)
+                        const iCanGive = myDuplicates.filter(sticker => !otherAlbum.includes(sticker));
+                        const heCanGive = otherDuplicates.filter(sticker => !myAlbum.includes(sticker));
+
+                        // Oculta o cartão se não houver possibilidade de troca com esta pessoa
+                        if (iCanGive.length === 0 && heCanGive.length === 0) return null;
+
+                        return (
+                            <div key={id} className={`${cardBg} p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50`}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <img 
+                                        src={data.photoURL || `https://ui-avatars.com/api/?name=${data.displayName || 'J'}&background=10b981&color=fff`} 
+                                        referrerPolicy="no-referrer"
+                                        className="w-10 h-10 rounded-full shadow-sm border-2 border-white dark:border-slate-800" 
+                                        alt="avatar" 
+                                    />
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                                            {data.displayName?.split(' ')[0] || 'Jogador'}
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 font-medium">Trocas compatíveis encontradas</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {heCanGive.length > 0 && (
+                                        <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                <Download size={12} /> Você pode receber ({heCanGive.length}):
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {heCanGive.map(sticker => (
+                                                    <span key={sticker} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                        {sticker}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {iCanGive.length > 0 && (
+                                        <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                            <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                <Share2 size={12} /> Você pode enviar ({iCanGive.length}):
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                                {iCanGive.map(sticker => (
+                                                    <span key={sticker} className="bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                                                        {sticker}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
+                }
+                
+                {/* MENSAGEM: Quando não há matches na liga */}
+                {Object.entries(allPlayersData).filter(([id, data]) => {
+                    if (id === user.uid || id === 'bolao_official') return false;
+                    const myData = allPlayersData[user.uid] || {};
+                    const iCanGive = (myData.duplicates || []).filter(s => !(data.album || []).includes(s));
+                    const heCanGive = (data.duplicates || []).filter(s => !(myData.album || []).includes(s));
+                    return iCanGive.length > 0 || heCanGive.length > 0;
+                }).length === 0 && (
+                    <div className="text-center py-12 opacity-50">
+                        <ArrowRightLeft size={48} className="mx-auto mb-3 text-slate-400" />
+                        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhuma troca compatível</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-[250px] mx-auto">Continue adicionando suas repetidas ou convide mais colecionadores para a liga!</p>
+                    </div>
+                )}
+            </div>
+        </div>
+
+    </div>
+)}		
 		
 		
 {/* // ============================================================================ */}
@@ -1106,6 +1585,75 @@ export default function App() {
                     </div>
 
                 )}
+				
+				{/* ÁREA DE CÓDIGOS (VIP OU LIGAS) */}
+                <div className={`${cardBg} p-4 rounded-2xl shadow-sm border flex flex-col gap-3 relative overflow-hidden`}>
+                  <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}>
+                    <Trophy size={16} className="text-yellow-500"/>
+                    Comunidade e Códigos
+                  </h3>
+                  <p className={`text-[11px] leading-tight ${textColor}`}>Tem um código promocional ou convite de liga? Insira abaixo para desbloquear acessos.</p>
+                  
+                  <div className="flex gap-2 mt-1">
+                    <input 
+                      type="text" 
+                      placeholder="Digite seu código..." 
+                      value={magicCode}
+                      onChange={(e) => setMagicCode(e.target.value)}
+                      className={`flex-1 px-3 py-2 rounded-xl border text-sm uppercase ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-emerald-500 transition-colors`}
+                    />
+                    <button 
+                      onClick={async () => {
+                        const code = magicCode.trim().toUpperCase();
+                        
+                        if (code === 'NOSVICOPA2026') {
+                           // 1. Lógica antiga: Ativa o Modo Pro
+                           setIsPro(true);
+                           setMagicCode('');
+                           setToast("Modo Pro Ativado com Sucesso!");
+                           setTimeout(() => setToast(''), 3000);
+                           
+                        } else if (code.startsWith('LIGA-')) {
+                           // 2. NOVA LÓGICA: Entrar ou Criar uma Liga
+                           setToast("Conectando à Liga...");
+                           try {
+                               // Cria ou entra na liga
+                               await setDoc(doc(db, 'family_albums', code), {
+                                   isLeague: true,
+                                   createdAt: new Date().toISOString()
+                               }, { merge: true });
+                               
+                               setActiveFamilyId(code);
+                               localStorage.setItem('@AlbumCopa_FamilyId', code);
+                               
+                               // INSERÇÃO: Salva a liga no histórico do celular como atalho para o cabeçalho
+                               setSavedLeagues(prev => {
+                                   if (!prev.includes(code)) {
+                                       const newList = [...prev, code];
+                                       localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newList));
+                                       return newList;
+                                   }
+                                   return prev;
+                               });
+                               
+                               setMagicCode('');
+                               setToast(`Você entrou na ${code}! 🏆`);
+                               setTimeout(() => setToast(''), 4000);
+                           } catch (error) {
+                               setToast("Erro ao entrar na liga.");
+                               setTimeout(() => setToast(''), 3000);
+                           }
+                        } else {
+                           setToast("Código inválido ou expirado.");
+                           setTimeout(() => setToast(''), 3000);
+                        }
+                      }}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm"
+                    >
+                      Ativar
+                    </button>
+                  </div>
+                </div>
 
 
 
