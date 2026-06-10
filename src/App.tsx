@@ -104,50 +104,52 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 // ============================================================================
 // CONTROLE DE VISIBILIDADE DO TORNEIO
 // ============================================================================
-// Mude para "true" quando quiser que as oitavas, quartas e finais apareçam no app
-const LIBERAR_MATA_MATA = false; 
+const LIBERAR_MATA_MATA = false; // Mude para true após o fim da primeira fase
 
 // ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026
 // ============================================================================
 const MATCHES = [
   // ---------------------------------------------------
-  // FASE DE GRUPOS
+  // QUINTA-FEIRA - 11/06/2026 (Fase de Grupos)
   // ---------------------------------------------------
-  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'A2', stage: 'group', status: 'pending' }, 
-  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', stage: 'group', status: 'pending' }, 
-  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', stage: 'group', status: 'pending' }, 
-  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', stage: 'group', status: 'pending' }, 
-  
-  // (Cole os demais jogos da fase de grupos aqui seguindo esse mesmo padrão com stage: 'group')
+  { id: 'wc-1', date: '11/06 - 16:00', teamA: 'MEX', teamB: 'RSA', stage: 'group', status: 'pending' }, // México x África do Sul
+  { id: 'wc-2', date: '11/06 - 23:00', teamA: 'KOR', teamB: 'CZE', stage: 'group', status: 'pending' }, // Rep. Coreia x Tchéquia
 
   // ---------------------------------------------------
-  // FASE ELIMINATÓRIA (Mata-Mata)
+  // SEXTA-FEIRA - 12/06/2026 (Fase de Grupos)
   // ---------------------------------------------------
-  // 16-avos de final
+  { id: 'wc-3', date: '12/06 - 16:00', teamA: 'CAN', teamB: 'BIH', stage: 'group', status: 'pending' }, // Canadá x Bósnia
+  { id: 'wc-4', date: '12/06 - 22:00', teamA: 'USA', teamB: 'PAR', stage: 'group', status: 'pending' }, // EUA x Paraguai
+
+  // ---------------------------------------------------
+  // SÁBADO - 13/06/2026 (Fase de Grupos)
+  // ---------------------------------------------------
+  { id: 'wc-5', date: '13/06 - 16:00', teamA: 'QAT', teamB: 'SUI', stage: 'group', status: 'pending' }, // Catar x Suíça
+  { id: 'wc-6', date: '13/06 - 19:00', teamA: 'BRA', teamB: 'HAI', stage: 'group', status: 'pending' }, // Brasil x Haiti
+  { id: 'wc-7', date: '13/06 - 22:00', teamA: 'MAR', teamB: 'SCO', stage: 'group', status: 'pending' }, // Marrocos x Escócia
+
+  // ---------------------------------------------------
+  // DOMINGO - 14/06/2026 (Fase de Grupos)
+  // ---------------------------------------------------
+  { id: 'wc-8', date: '14/06 - 01:00', teamA: 'AUS', teamB: 'TUR', stage: 'group', status: 'pending' }, // Austrália x Turquia
+
+
+  // ---------------------------------------------------
+  // FASE ELIMINATÓRIA (Pré-Estruturada - Oculta Automaticamente)
+  // ---------------------------------------------------
+  // Dezesseis-avos de Final
   { id: 'wc-73', date: '28/06 - 16:00', teamA: '2A', teamB: '2B', stage: 'knockout', status: 'pending' },
-  { id: 'wc-74', date: '28/06 - 20:00', teamA: '1A', teamB: '3CDE', stage: 'knockout', status: 'pending' },
-  // ... (continue os 16-avos) ...
+  { id: 'wc-74', date: '29/06 - 17:30', teamA: '1A', teamB: '3CDEFHI', stage: 'knockout', status: 'pending' },
+  { id: 'wc-75', date: '29/06 - 22:00', teamA: '1B', teamB: '3CEFHI', stage: 'knockout', status: 'pending' },
+  
+  // Oitavas de Final
+  { id: 'wc-89', date: '04/07 - 14:00', teamA: 'VENG.73', teamB: 'VEN.75', stage: 'knockout', status: 'pending' },
+  { id: 'wc-90', date: '04/07 - 18:00', teamA: 'VEL.74', teamB: 'VEM.77', stage: 'knockout', status: 'pending' },
 
-  // Oitavas de final
-  { id: 'wc-89', date: '04/07 - 16:00', teamA: 'V73', teamB: 'V75', stage: 'knockout', status: 'pending' },
-  { id: 'wc-90', date: '04/07 - 20:00', teamA: 'V74', teamB: 'V76', stage: 'knockout', status: 'pending' },
-  // ... (continue as oitavas) ...
-
-  // Quartas de final
-  { id: 'wc-97', date: '09/07 - 16:00', teamA: 'V89', teamB: 'V90', stage: 'knockout', status: 'pending' },
-  { id: 'wc-98', date: '09/07 - 20:00', teamA: 'V91', teamB: 'V92', stage: 'knockout', status: 'pending' },
-  // ... (continue as quartas) ...
-
-  // Semifinais
-  { id: 'wc-101', date: '14/07 - 20:00', teamA: 'V97', teamB: 'V98', stage: 'knockout', status: 'pending' },
-  { id: 'wc-102', date: '15/07 - 20:00', teamA: 'V99', teamB: 'V100', stage: 'knockout', status: 'pending' },
-
-  // Disputa do 3º Lugar
-  { id: 'wc-103', date: '18/07 - 20:00', teamA: 'P101', teamB: 'P102', stage: 'knockout', status: 'pending' },
-
-  // Grande Final
-  { id: 'wc-104', date: '19/07 - 16:00', teamA: 'V101', teamB: 'V102', stage: 'knockout', status: 'pending' }
+  // Final / 3º Lugar
+  { id: 'wc-103', date: '18/07 - 16:00', teamA: 'PERD.101', teamB: 'PERD.102', stage: 'knockout', status: 'pending' },
+  { id: 'wc-104', date: '19/07 - 16:00', teamA: 'VENC.101', teamB: 'VENC.102', stage: 'knockout', status: 'pending' }
 ];
 
 // ============================================================================
