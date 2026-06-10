@@ -102,17 +102,52 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 // ============================================================================
+// CONTROLE DE VISIBILIDADE DO TORNEIO
+// ============================================================================
+// Mude para "true" quando quiser que as oitavas, quartas e finais apareçam no app
+const LIBERAR_MATA_MATA = false; 
+
+// ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026
 // ============================================================================
 const MATCHES = [
-  // Rodada 1 - Fase de Grupos
-  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'GER', status: 'pending' }, // Jogo 1 (Abertura)
-  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', status: 'pending' }, // Jogo 2
-  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', status: 'pending' }, // Jogo 3
-  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', status: 'pending' }, // Jogo 4
+  // ---------------------------------------------------
+  // FASE DE GRUPOS
+  // ---------------------------------------------------
+  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'A2', stage: 'group', status: 'pending' }, 
+  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', stage: 'group', status: 'pending' }, 
+  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', stage: 'group', status: 'pending' }, 
+  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', stage: 'group', status: 'pending' }, 
   
-  // Nota: Você pode duplicar essas linhas e adicionar os 104 jogos da Copa aqui.
-  // Basta alterar as siglas (teamA / teamB) quando a FIFA fizer o sorteio oficial dos grupos!
+  // (Cole os demais jogos da fase de grupos aqui seguindo esse mesmo padrão com stage: 'group')
+
+  // ---------------------------------------------------
+  // FASE ELIMINATÓRIA (Mata-Mata)
+  // ---------------------------------------------------
+  // 16-avos de final
+  { id: 'wc-73', date: '28/06 - 16:00', teamA: '2A', teamB: '2B', stage: 'knockout', status: 'pending' },
+  { id: 'wc-74', date: '28/06 - 20:00', teamA: '1A', teamB: '3CDE', stage: 'knockout', status: 'pending' },
+  // ... (continue os 16-avos) ...
+
+  // Oitavas de final
+  { id: 'wc-89', date: '04/07 - 16:00', teamA: 'V73', teamB: 'V75', stage: 'knockout', status: 'pending' },
+  { id: 'wc-90', date: '04/07 - 20:00', teamA: 'V74', teamB: 'V76', stage: 'knockout', status: 'pending' },
+  // ... (continue as oitavas) ...
+
+  // Quartas de final
+  { id: 'wc-97', date: '09/07 - 16:00', teamA: 'V89', teamB: 'V90', stage: 'knockout', status: 'pending' },
+  { id: 'wc-98', date: '09/07 - 20:00', teamA: 'V91', teamB: 'V92', stage: 'knockout', status: 'pending' },
+  // ... (continue as quartas) ...
+
+  // Semifinais
+  { id: 'wc-101', date: '14/07 - 20:00', teamA: 'V97', teamB: 'V98', stage: 'knockout', status: 'pending' },
+  { id: 'wc-102', date: '15/07 - 20:00', teamA: 'V99', teamB: 'V100', stage: 'knockout', status: 'pending' },
+
+  // Disputa do 3º Lugar
+  { id: 'wc-103', date: '18/07 - 20:00', teamA: 'P101', teamB: 'P102', stage: 'knockout', status: 'pending' },
+
+  // Grande Final
+  { id: 'wc-104', date: '19/07 - 16:00', teamA: 'V101', teamB: 'V102', stage: 'knockout', status: 'pending' }
 ];
 
 // ============================================================================
@@ -1041,9 +1076,12 @@ export default function App() {
                     <>
                         {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
-                  {MATCHES.map(match => {
-                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
-                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                  {/* Oculta os jogos de knockout enquanto a Chave Mestra estiver falsa */}
+                  {MATCHES.filter(match => match.stage === 'group' || LIBERAR_MATA_MATA).map(match => {
+                     
+                     // Se o time for "1A", "V73" ou "A2" (país indefinido), cria um card com ponto de interrogação
+                     const tA = SECTIONS.find(s => s.prefix === match.teamA) || { title: match.teamA, flag: '❔' };
+                     const tB = SECTIONS.find(s => s.prefix === match.teamB) || { title: match.teamB, flag: '❔' };
                      
                      // A MÁGICA DO BLOQUEIO
                      const isLocked = !isAdminMode && match.status !== 'pending';
