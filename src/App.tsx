@@ -102,17 +102,114 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 // ============================================================================
-// ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026
+// CONTROLE DE VISIBILIDADE DO TORNEIO
+// ============================================================================
+// Mude para "true" quando a fase de grupos terminar para exibir o mata-mata
+const LIBERAR_MATA_MATA = false; 
+
+// ============================================================================
+// ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026 (ATUALIZADO VIA FIFA)
 // ============================================================================
 const MATCHES = [
-  // Rodada 1 - Fase de Grupos
-  { id: 'wc-1', date: '11/06 - 15:00', teamA: 'MEX', teamB: 'GER', status: 'pending' }, // Jogo 1 (Abertura)
-  { id: 'wc-2', date: '11/06 - 19:00', teamA: 'CAN', teamB: 'ENG', status: 'pending' }, // Jogo 2
-  { id: 'wc-3', date: '12/06 - 15:00', teamA: 'USA', teamB: 'FRA', status: 'pending' }, // Jogo 3
-  { id: 'wc-4', date: '12/06 - 18:00', teamA: 'BRA', teamB: 'SUI', status: 'pending' }, // Jogo 4
+  // ---------------------------------------------------
+  // RODADA 1 (Fase de Grupos)
+  // ---------------------------------------------------
+  { id: 'wc-1', date: '11/06 - 16:00', teamA: 'MEX', teamB: 'RSA', stage: 'group', status: 'pending' },
+  { id: 'wc-2', date: '11/06 - 23:00', teamA: 'KOR', teamB: 'CZE', stage: 'group', status: 'pending' },
+  { id: 'wc-3', date: '12/06 - 16:00', teamA: 'CAN', teamB: 'BIH', stage: 'group', status: 'pending' },
+  { id: 'wc-4', date: '12/06 - 22:00', teamA: 'USA', teamB: 'PAR', stage: 'group', status: 'pending' },
+  { id: 'wc-5', date: '13/06 - 16:00', teamA: 'QAT', teamB: 'SUI', stage: 'group', status: 'pending' },
+  { id: 'wc-6', date: '13/06 - 19:00', teamA: 'BRA', teamB: 'MAR', stage: 'group', status: 'pending' },
+  { id: 'wc-7', date: '13/06 - 22:00', teamA: 'HAI', teamB: 'SCO', stage: 'group', status: 'pending' },
+  { id: 'wc-8', date: '14/06 - 01:00', teamA: 'AUS', teamB: 'TUR', stage: 'group', status: 'pending' },
+  { id: 'wc-9', date: '14/06 - 14:00', teamA: 'GER', teamB: 'CUW', stage: 'group', status: 'pending' },
+  { id: 'wc-10', date: '14/06 - 17:00', teamA: 'NED', teamB: 'JPN', stage: 'group', status: 'pending' },
+  { id: 'wc-11', date: '14/06 - 20:00', teamA: 'CIV', teamB: 'ECU', stage: 'group', status: 'pending' },
+  { id: 'wc-12', date: '14/06 - 23:00', teamA: 'SWE', teamB: 'TUN', stage: 'group', status: 'pending' },
+  { id: 'wc-13', date: '15/06 - 13:00', teamA: 'ESP', teamB: 'CPV', stage: 'group', status: 'pending' },
+  { id: 'wc-14', date: '15/06 - 16:00', teamA: 'BEL', teamB: 'EGY', stage: 'group', status: 'pending' },
+  { id: 'wc-15', date: '15/06 - 19:00', teamA: 'KSA', teamB: 'URU', stage: 'group', status: 'pending' },
+  { id: 'wc-16', date: '15/06 - 22:00', teamA: 'IRN', teamB: 'NZL', stage: 'group', status: 'pending' },
+  { id: 'wc-17', date: '16/06 - 16:00', teamA: 'FRA', teamB: 'SEN', stage: 'group', status: 'pending' },
+  { id: 'wc-18', date: '16/06 - 19:00', teamA: 'IRQ', teamB: 'NOR', stage: 'group', status: 'pending' },
+  { id: 'wc-19', date: '16/06 - 22:00', teamA: 'ARG', teamB: 'ALG', stage: 'group', status: 'pending' },
+  { id: 'wc-20', date: '17/06 - 01:00', teamA: 'AUT', teamB: 'JOR', stage: 'group', status: 'pending' },
+  { id: 'wc-21', date: '17/06 - 14:00', teamA: 'POR', teamB: 'COD', stage: 'group', status: 'pending' },
+  { id: 'wc-22', date: '17/06 - 15:00', teamA: 'ENG', teamB: 'CRO', stage: 'group', status: 'pending' },
+  { id: 'wc-23', date: '17/06 - 20:00', teamA: 'GHA', teamB: 'PAN', stage: 'group', status: 'pending' },  
+  { id: 'wc-24', date: '17/06 - 23:00', teamA: 'UZB', teamB: 'COL', stage: 'group', status: 'pending' },
   
-  // Nota: Você pode duplicar essas linhas e adicionar os 104 jogos da Copa aqui.
-  // Basta alterar as siglas (teamA / teamB) quando a FIFA fizer o sorteio oficial dos grupos!
+  // ---------------------------------------------------
+  // RODADA 2 (Fase de Grupos)
+  // ---------------------------------------------------  
+  { id: 'wc-25', date: '18/06 - 13:00', teamA: 'CZE', teamB: 'RSA', stage: 'group', status: 'pending' },  
+  { id: 'wc-26', date: '18/06 - 16:00', teamA: 'SUI', teamB: 'BIH', stage: 'group', status: 'pending' },  
+  { id: 'wc-27', date: '18/06 - 19:00', teamA: 'CAN', teamB: 'QAT', stage: 'group', status: 'pending' },  
+  { id: 'wc-28', date: '18/06 - 22:00', teamA: 'MEX', teamB: 'KOR', stage: 'group', status: 'pending' },    
+  { id: 'wc-29', date: '19/06 - 16:00', teamA: 'USA', teamB: 'AUS', stage: 'group', status: 'pending' },
+  { id: 'wc-30', date: '19/06 - 19:00', teamA: 'SCO', teamB: 'MAR', stage: 'group', status: 'pending' },
+  { id: 'wc-31', date: '19/06 - 21:30', teamA: 'BRA', teamB: 'HAI', stage: 'group', status: 'pending' },
+  { id: 'wc-32', date: '20/06 - 00:00', teamA: 'TUR', teamB: 'PAR', stage: 'group', status: 'pending' },
+  { id: 'wc-33', date: '20/06 - 14:00', teamA: 'NED', teamB: 'SWE', stage: 'group', status: 'pending' },
+  { id: 'wc-34', date: '20/06 - 17:00', teamA: 'GER', teamB: 'CIV', stage: 'group', status: 'pending' },
+  { id: 'wc-35', date: '20/06 - 21:00', teamA: 'ECU', teamB: 'CUW', stage: 'group', status: 'pending' },
+  { id: 'wc-36', date: '21/06 - 01:00', teamA: 'TUN', teamB: 'JPN', stage: 'group', status: 'pending' },
+  { id: 'wc-37', date: '21/06 - 13:00', teamA: 'ESP', teamB: 'KSA', stage: 'group', status: 'pending' },
+  { id: 'wc-38', date: '21/06 - 16:00', teamA: 'BEL', teamB: 'IRN', stage: 'group', status: 'pending' },
+  { id: 'wc-39', date: '21/06 - 19:00', teamA: 'URU', teamB: 'CPV', stage: 'group', status: 'pending' },
+  { id: 'wc-40', date: '21/06 - 22:00', teamA: 'NZL', teamB: 'EGY', stage: 'group', status: 'pending' },
+  { id: 'wc-41', date: '22/06 - 14:00', teamA: 'ARG', teamB: 'AUT', stage: 'group', status: 'pending' },
+  { id: 'wc-42', date: '22/06 - 18:00', teamA: 'FRA', teamB: 'IRQ', stage: 'group', status: 'pending' },
+  { id: 'wc-43', date: '22/06 - 21:00', teamA: 'NOR', teamB: 'SEN', stage: 'group', status: 'pending' },
+  { id: 'wc-44', date: '23/06 - 00:00', teamA: 'JOR', teamB: 'ALG', stage: 'group', status: 'pending' },
+  { id: 'wc-45', date: '23/06 - 14:00', teamA: 'POR', teamB: 'UZB', stage: 'group', status: 'pending' },
+  { id: 'wc-46', date: '23/06 - 17:00', teamA: 'ENG', teamB: 'GHA', stage: 'group', status: 'pending' },
+  { id: 'wc-47', date: '23/06 - 20:00', teamA: 'PAN', teamB: 'CRO', stage: 'group', status: 'pending' },
+  { id: 'wc-48', date: '23/06 - 23:00', teamA: 'COL', teamB: 'COD', stage: 'group', status: 'pending' },
+  
+  // ---------------------------------------------------
+  // RODADA 3 (Fase de Grupos)
+  // ---------------------------------------------------  
+  { id: 'wc-49', date: '24/06 - 16:00', teamA: 'SUI', teamB: 'CAN', stage: 'group', status: 'pending' },
+  { id: 'wc-50', date: '24/06 - 16:00', teamA: 'BIH', teamB: 'QAT', stage: 'group', status: 'pending' },
+  { id: 'wc-51', date: '24/06 - 19:00', teamA: 'MAR', teamB: 'HAI', stage: 'group', status: 'pending' },
+  { id: 'wc-52', date: '24/06 - 19:00', teamA: 'SCO', teamB: 'BRA', stage: 'group', status: 'pending' },
+  { id: 'wc-53', date: '24/06 - 22:00', teamA: 'RSA', teamB: 'KOR', stage: 'group', status: 'pending' },
+  { id: 'wc-54', date: '24/06 - 22:00', teamA: 'CZE', teamB: 'MEX', stage: 'group', status: 'pending' },
+  { id: 'wc-55', date: '25/06 - 17:00', teamA: 'CUW', teamB: 'CIV', stage: 'group', status: 'pending' },
+  { id: 'wc-56', date: '25/06 - 17:00', teamA: 'ECU', teamB: 'GER', stage: 'group', status: 'pending' },
+  { id: 'wc-57', date: '25/06 - 20:00', teamA: 'TUN', teamB: 'NED', stage: 'group', status: 'pending' },
+  { id: 'wc-58', date: '25/06 - 20:00', teamA: 'JPN', teamB: 'SWE', stage: 'group', status: 'pending' },
+  { id: 'wc-59', date: '25/06 - 23:00', teamA: 'TUR', teamB: 'USA', stage: 'group', status: 'pending' },
+  { id: 'wc-60', date: '25/06 - 23:00', teamA: 'PAR', teamB: 'AUS', stage: 'group', status: 'pending' },
+  { id: 'wc-61', date: '26/06 - 16:00', teamA: 'NOR', teamB: 'FRA', stage: 'group', status: 'pending' },
+  { id: 'wc-62', date: '26/06 - 16:00', teamA: 'SEN', teamB: 'IRQ', stage: 'group', status: 'pending' },
+  { id: 'wc-63', date: '26/06 - 21:00', teamA: 'CPV', teamB: 'KSA', stage: 'group', status: 'pending' },
+  { id: 'wc-64', date: '26/06 - 21:00', teamA: 'URU', teamB: 'ESP', stage: 'group', status: 'pending' },
+  { id: 'wc-65', date: '27/06 - 00:00', teamA: 'NZL', teamB: 'BEL', stage: 'group', status: 'pending' },
+  { id: 'wc-66', date: '27/06 - 00:00', teamA: 'EGY', teamB: 'IRN', stage: 'group', status: 'pending' },
+  { id: 'wc-67', date: '27/06 - 18:00', teamA: 'PAN', teamB: 'ENG', stage: 'group', status: 'pending' },
+  { id: 'wc-68', date: '27/06 - 18:00', teamA: 'CRO', teamB: 'GHA', stage: 'group', status: 'pending' },
+  { id: 'wc-69', date: '27/06 - 20:30', teamA: 'COL', teamB: 'POR', stage: 'group', status: 'pending' },
+  { id: 'wc-70', date: '27/06 - 20:30', teamA: 'COD', teamB: 'UZB', stage: 'group', status: 'pending' },
+  { id: 'wc-71', date: '27/06 - 23:00', teamA: 'ALG', teamB: 'AUT', stage: 'group', status: 'pending' },
+  { id: 'wc-72', date: '27/06 - 23:00', teamA: 'JOR', teamB: 'ARG', stage: 'group', status: 'pending' },  
+  
+  // ---------------------------------------------------
+  // FASE ELIMINATÓRIA (Pré-Estruturada - Oculta Automaticamente)
+  // ---------------------------------------------------
+  // Dezesseis-avos de Final
+  { id: 'wc-73', date: '28/06 - 16:00', teamA: '2A', teamB: '2B', stage: 'knockout', status: 'pending' },
+  { id: 'wc-74', date: '29/06 - 17:30', teamA: '1A', teamB: '3CDEFHI', stage: 'knockout', status: 'pending' },
+  { id: 'wc-75', date: '29/06 - 22:00', teamA: '1B', teamB: '3CEFHI', stage: 'knockout', status: 'pending' },
+  
+  // Oitavas de Final
+  { id: 'wc-89', date: '04/07 - 14:00', teamA: 'VENC.73', teamB: 'VENC.75', stage: 'knockout', status: 'pending' },
+  { id: 'wc-90', date: '04/07 - 18:00', teamA: 'VENC.74', teamB: 'VENC.77', stage: 'knockout', status: 'pending' },
+
+  // Final / 3º Lugar
+  { id: 'wc-103', date: '18/07 - 16:00', teamA: 'PERD.101', teamB: 'PERD.102', stage: 'knockout', status: 'pending' },
+  { id: 'wc-104', date: '19/07 - 16:00', teamA: 'VENC.101', teamB: 'VENC.102', stage: 'knockout', status: 'pending' }
 ];
 
 // ============================================================================
@@ -1041,9 +1138,12 @@ export default function App() {
                     <>
                         {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
-                  {MATCHES.map(match => {
-                     const tA = SECTIONS.find(s => s.prefix === match.teamA);
-                     const tB = SECTIONS.find(s => s.prefix === match.teamB);
+                  {/* Oculta os jogos de knockout enquanto a Chave Mestra estiver falsa */}
+                  {MATCHES.filter(match => match.stage === 'group' || LIBERAR_MATA_MATA).map(match => {
+                     
+                     // Se o time for "1A", "V73" ou "A2" (país indefinido), cria um card com ponto de interrogação
+                     const tA = SECTIONS.find(s => s.prefix === match.teamA) || { title: match.teamA, flag: '❔' };
+                     const tB = SECTIONS.find(s => s.prefix === match.teamB) || { title: match.teamB, flag: '❔' };
                      
                      // A MÁGICA DO BLOQUEIO
                      const isLocked = !isAdminMode && match.status !== 'pending';
