@@ -1410,8 +1410,25 @@ export default function App() {
         {/* 1. BUSCA MANUAL (Trocas Justas) */}
         <div className="flex flex-col gap-3 shrink-0">
             <div className={`${cardBg} p-5 rounded-2xl shadow-sm border`}>
-                <h2 className={`font-black ${titleColor} text-lg mb-2 flex items-center gap-2`}><ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas</h2>
-                <p className={`text-xs ${textColor} mb-4`}>Digite o código da família de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
+                
+                <div className="flex justify-between items-start mb-2">
+                    <h2 className={`font-black ${titleColor} text-lg flex items-center gap-2`}>
+                        <ArrowRightLeft size={20} className="text-emerald-500"/> Trocas Justas
+                    </h2>
+                    
+                    {/* NOVO BOTÃO DE COMPARTILHAMENTO RÁPIDO VIA WHATSAPP */}
+                    <button 
+                        onClick={() => {
+                            const msg = `Ei! Quer trocar figurinhas da Copa? O meu código no app Família Copa é: *${activeFamilyId}*\n\nCola lá na aba 'Trocas Justas' para cruzarmos nossos álbuns!`;
+                            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                        }}
+                        className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 p-2 rounded-lg transition-colors flex items-center gap-2 text-[10px] font-bold"
+                    >
+                        <Share2 size={14} /> Enviar meu código
+                    </button>
+                </div>
+                
+                <p className={`text-xs ${textColor} mb-4`}>Digite o código de um amigo para descobrir quais figurinhas vocês podem trocar.</p>
                 <div className="flex gap-2">
                     <input type="text" placeholder="Código do Amigo..." value={compareId} onChange={(e) => setCompareId(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-3 text-xs border outline-none focus:border-emerald-500 uppercase`}/>
                     <button onClick={handleCompareAlbums} disabled={isLoadingCompare} className="bg-emerald-600 text-white px-5 rounded-xl font-bold text-xs shrink-0 shadow-md disabled:opacity-50">
