@@ -298,6 +298,7 @@ export default function App() {
   
   
   const [magicCode, setMagicCode] = useState('');
+  const [isPublicLeague, setIsPublicLeague] = useState(false); // Controle da caixa de consentimento Público
   
   
   
@@ -1728,72 +1729,104 @@ export default function App() {
 
                 )}
 				
-				{/* ÁREA DE CÓDIGOS (VIP OU LIGAS) */}
+				{/* ÁREA DE CÓDIGOS E LIGAS (COM CONSENTIMENTO LGPD) */}
                 <div className={`${cardBg} p-4 rounded-2xl shadow-sm border flex flex-col gap-3 relative overflow-hidden`}>
                   <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}>
                     <Trophy size={16} className="text-yellow-500"/>
-                    Comunidade e Códigos
+                    Criar ou Entrar em Ligas
                   </h3>
-                  <p className={`text-[11px] leading-tight ${textColor}`}>Tem um código promocional ou convite de liga? Insira abaixo para desbloquear acessos.</p>
+                  <p className={`text-[11px] leading-tight ${textColor}`}>Digite o nome da liga que deseja criar ou o código de convite para entrar.</p>
                   
-                  <div className="flex gap-2 mt-1">
-                    <input 
-                      type="text" 
-                      placeholder="Digite seu código..." 
-                      value={magicCode}
-                      onChange={(e) => setMagicCode(e.target.value)}
-                      className={`flex-1 px-3 py-2 rounded-xl border text-sm uppercase ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-emerald-500 transition-colors`}
-                    />
-                    <button 
-                      onClick={async () => {
-                        const code = magicCode.trim().toUpperCase();
-                        
-                        if (code === 'NOSVICOPA2026') {
-                           // 1. Lógica antiga: Ativa o Modo Pro
-                           setIsPro(true);
-                           setMagicCode('');
-                           setToast("Modo Pro Ativado com Sucesso!");
-                           setTimeout(() => setToast(''), 3000);
-                           
-                        } else if (code.startsWith('LIGA-')) {
-                           // 2. NOVA LÓGICA: Entrar ou Criar uma Liga
-                           setToast("Conectando à Liga...");
-                           try {
-                               // Cria ou entra na liga
-                               await setDoc(doc(db, 'family_albums', code), {
-                                   isLeague: true,
-                                   createdAt: new Date().toISOString()
-                               }, { merge: true });
-                               
-                               setActiveFamilyId(code);
-                               localStorage.setItem('@AlbumCopa_FamilyId', code);
-                               
-                               // INSERÇÃO: Salva a liga no histórico do celular como atalho para o cabeçalho
-                               setSavedLeagues(prev => {
-                                   if (!prev.includes(code)) {
-                                       const newList = [...prev, code];
-                                       localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newList));
-                                       return newList;
-                                   }
-                                   return prev;
-                               });
-                               
+                  <div className="flex flex-col gap-3 mt-1">
+                    <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="Nome da liga ou código..." 
+                          value={magicCode}
+                          onChange={(e) => setMagicCode(e.target.value)}
+                          className={`flex-1 px-3 py-2 rounded-xl border text-sm uppercase ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-emerald-500 transition-colors`}
+                        />
+                        <button 
+                          onClick={async () => {
+                            let code = magicCode.trim().toUpperCase();
+                            if (!code) return;
+
+                            // Formatação Inteligente: Insere o prefixo automaticamente se o usuário não o digitou
+                            if (code !== 'NOSVICOPA2026' && !code.startsWith('LIGA-') && !code.startsWith('LIGAPUB-')) {
+                                code = isPublicLeague ? `LIGAPUB-${code}` : `LIGA-${code}`;
+                            }
+                            
+                            if (code === 'NOSVICOPA2026') {
+                               setIsPro(true);
                                setMagicCode('');
-                               setToast(`Você entrou na ${code}! 🏆`);
-                               setTimeout(() => setToast(''), 4000);
-                           } catch (error) {
-                               setToast("Erro ao entrar na liga.");
+                               setToast("Modo Pro Ativado com Sucesso!");
                                setTimeout(() => setToast(''), 3000);
-                           }
-                        } else {
-                           setToast("Código inválido ou expirado.");
-                           setTimeout(() => setToast(''), 3000);
-                        }
-                      }}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm"
-                    >
-                      Ativar
-                    </button>
+                            } else if (code.startsWith('LIGA-') || code.startsWith('LIGAPUB-')) {
+                               setToast("Conectando à Liga...");
+                               try {
+                                   const isPublic = code.startsWith('LIGAPUB-');
+                                   
+                                   // Salva no banco de dados com a flag de público/privado
+                                   await setDoc(doc(db, 'family_albums', code), {
+                                       isLeague: true,
+                                       isPublic: isPublic,
+                                       createdAt: new Date().toISOString()
+                                   }, { merge: true });
+                                   
+                                   setActiveFamilyId(code);
+                                   localStorage.setItem('@AlbumCopa_FamilyId', code);
+                                   
+                                   setSavedLeagues(prev => {
+                                       if (!prev.includes(code)) {
+                                           const newList = [...prev, code];
+                                           localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newList));
+                                           return newList;
+                                       }
+                                       return prev;
+                                   });
+                                   
+                                   setMagicCode('');
+                                   setIsPublicLeague(false); // Reseta a caixinha
+                                   setToast(`Você entrou na ${code}! 🏆`);
+                                   setTimeout(() => setToast(''), 4000);
+                               } catch (error) {
+                                   setToast("Erro ao entrar na liga.");
+                                   setTimeout(() => setToast(''), 3000);
+                               }
+                            } else {
+                               setToast("Código inválido.");
+                               setTimeout(() => setToast(''), 3000);
+                            }
+                          }}
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm"
+                        >
+                          Acessar
+                        </button>
+                    </div>
+
+                    {/* CAIXA DINÂMICA DE CONSENTIMENTO E OPÇÃO PÚBLICA */}
+                    {magicCode.trim() !== '' && magicCode.trim().toUpperCase() !== 'NOSVICOPA2026' && (
+                        <div className={`p-3 rounded-xl border ${isPublicLeague ? 'bg-emerald-500/10 border-emerald-500/30' : (isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-100 border-slate-200')} transition-colors animate-fade-in`}>
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isPublicLeague}
+                                    onChange={(e) => setIsPublicLeague(e.target.checked)}
+                                    className="mt-1 w-4 h-4 rounded border-slate-300 text-emerald-500 cursor-pointer"
+                                />
+                                <div className="flex flex-col">
+                                    <span className={`text-xs font-bold ${isPublicLeague ? 'text-emerald-500' : titleColor}`}>
+                                        Tornar esta liga Pública (Mural Global)
+                                    </span>
+                                    <span className={`text-[10px] mt-1 ${textColor}`}>
+                                        {isPublicLeague 
+                                            ? "⚠️ Atenção: Ao marcar, esta liga aparecerá no mural 'Descobrir'. O seu nome e as suas figurinhas ficarão visíveis para facilitar trocas globais." 
+                                            : "Liga Privada. Apenas pessoas com o código exato poderão entrar e ver os membros."}
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+                    )}
                   </div>
                 </div>
 
