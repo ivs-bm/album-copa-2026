@@ -1136,29 +1136,54 @@ export default function App() {
                 {/* ----------------- SUB-TELA 1: JOGOS ----------------- */}
                 {bolaoView === 'jogos' && (
                     <>
-                        {/* LISTA DE JOGOS */}
+                {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
                   {/* Oculta os jogos de knockout enquanto a Chave Mestra estiver falsa */}
                   {MATCHES.filter(match => match.stage === 'group' || LIBERAR_MATA_MATA).map(match => {
                      
-                     // Se o time for "1A", "V73" ou "A2" (país indefinido), cria um card com ponto de interrogação
+                     // Se o time for "1A", "V73" ou "A2", cria um card com ponto de interrogação
                      const tA = SECTIONS.find(s => s.prefix === match.teamA) || { title: match.teamA, flag: '❔' };
                      const tB = SECTIONS.find(s => s.prefix === match.teamB) || { title: match.teamB, flag: '❔' };
                      
-                     // A MÁGICA DO BLOQUEIO
-                     const isLocked = !isAdminMode && match.status !== 'pending';
+                     // ==========================================
+                     // NOVA MÁQUINA DO TEMPO (Cálculo Automático)
+                     // ==========================================
+                     const getDynamicStatus = (dateStr) => {
+                         if (!dateStr) return 'pending';
+                         try {
+                             const [datePart, timePart] = dateStr.split(' - ');
+                             const [day, month] = datePart.split('/');
+                             const [hour, minute] = timePart.split(':');
+                             
+                             // Ano 2026 fixo. O mês em JavaScript começa no 0 (0 = Janeiro, 5 = Junho)
+                             const matchDate = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+                             const now = new Date();
+                             const diffHours = (now - matchDate) / (1000 * 60 * 60);
+                             
+                             if (diffHours < 0) return 'pending'; // Futuro
+                             if (diffHours >= 0 && diffHours <= 2.5) return 'live'; // Bola rolando (2h30min de margem)
+                             return 'finished'; // Passado
+                         } catch(e) {
+                             return 'pending'; // Mantém seguro caso a data esteja mal formatada
+                         }
+                     };
+                     
+                     const realStatus = getDynamicStatus(match.date);
+                     
+                     // A MÁGICA DO BLOQUEIO (Agora usa o relógio real e não o texto fixo)
+                     const isLocked = !isAdminMode && realStatus !== 'pending';
                      
                      return (
                         <div key={match.id} className={`${cardBg} p-4 rounded-2xl shadow-sm border ${isAdminMode ? 'border-red-500/20' : ''}`}>
                            
-                           {/* Data, Hora e Etiqueta de Status */}
+                           {/* Data, Hora e Etiqueta de Status Dinâmica */}
                            <div className="flex justify-center items-center gap-2 mb-4">
                                <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-500/10 py-1 px-3 rounded-md">
                                    {match.date}
                                </div>
-                               {match.status === 'finished' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-slate-500 text-white shadow-sm">Encerrado</span>}
-                               {match.status === 'live' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-red-500 text-white shadow-sm animate-pulse">Ao Vivo</span>}
-                               {match.status === 'pending' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-emerald-500 text-white shadow-sm">Em Breve</span>}
+                               {realStatus === 'finished' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-slate-500 text-white shadow-sm">Encerrado</span>}
+                               {realStatus === 'live' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-red-500 text-white shadow-sm animate-pulse">Ao Vivo</span>}
+                               {realStatus === 'pending' && <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-emerald-500 text-white shadow-sm">Em Breve</span>}
                            </div>
                            
                            <div className="flex justify-between items-center gap-2">
@@ -1215,7 +1240,7 @@ export default function App() {
                            {/* ========================================== */}
                            {/* NOVA ÁREA: VER PALPITES DA GALERA (Fase 8) */}
                            {/* ========================================== */}
-                           {match.status !== 'pending' && Object.keys(allPlayersData).length > 0 && (
+                           {realStatus !== 'pending' && Object.keys(allPlayersData).length > 0 && (
                                <div className="mt-4 border-t border-slate-200/20 pt-3">
                                    <button 
                                       onClick={() => setExpandedMatch(expandedMatch === match.id ? null : match.id)}
