@@ -1301,7 +1301,8 @@ export default function App() {
                                      // Aciona o simulador da API de Futebol (Substituirá pelo fetch real na Copa)
                                      const data = await fetchApiScores();
                                      
-                                     if (data.success && data.scores) {
+                                     // NOVA VERIFICAÇÃO: Checa se além de sucesso, a API enviou alguma pontuação
+                                     if (data.success && data.scores && Object.keys(data.scores).length > 0) {
                                          // Injeta os placares retornados pela API direto na memória do Gabarito
                                          setOfficialScores(prev => ({
                                              ...prev,
@@ -1309,7 +1310,8 @@ export default function App() {
                                          }));
                                          setToast("Placares importados! Revise e clique em Salvar. ⚽");
                                      } else {
-                                         setToast("Nenhum placar novo encontrado na API.");
+                                         // Caso a conexão funcione, mas os jogos reais ainda não tenham acontecido
+                                         setToast("Nenhum placar oficial novo encontrado na API.");
                                      }
                                  } catch (error) {
                                      setToast("Erro de conexão com o servidor da API.");
