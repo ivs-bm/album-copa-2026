@@ -14,22 +14,22 @@ export default async function handler(req, res) {
                 {
                     fixture: { id: 1045982, status: { short: 'FT' } },
                     teams: { home: { name: 'Mexico' }, away: { name: 'South Africa' } },
-                    goals: { home: 2, away: 1 }
+                    goals: { home: 2, away: 0 }
                 },
                 {
                     fixture: { id: 1045983, status: { short: 'FT' } },
                     teams: { home: { name: 'South Korea' }, away: { name: 'Czech Republic' } },
-                    goals: { home: 0, away: 0 }
+                    goals: { home: 2, away: 1 }
                 },
                 {
                     fixture: { id: 1045984, status: { short: 'FT' } },
                     teams: { home: { name: 'Canada' }, away: { name: 'Bosnia' } },
-                    goals: { home: 3, away: 0 }
+                    goals: { home: 1, away: 1 }
                 },
                 {
                     fixture: { id: 1045985, status: { short: 'FT' } },
                     teams: { home: { name: 'USA' }, away: { name: 'Paraguay' } },
-                    goals: { home: 2, away: 2 }
+                    goals: { home: 4, away: 1 }
                 }
             ]
         };
