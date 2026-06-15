@@ -553,21 +553,15 @@ export default function App() {
 
 
 
-  // Efeito 2: Verifica o login do usuário quando o App carrega
-  useEffect(() => { 
-    const unsubscribe = onAuthStateChanged(auth, async (u) => { 
-      setUser(u); 
-      if (u) {
-        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
-        setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
-        
-        // ==========================================
+  // ==========================================
         // NOVO: BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
         // ==========================================
         const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
         if (!savedBase) {
-            // Se for a primeira vez rodando esse código, assume que a liga atual é o álbum oficial dele
-            const initialBase = savedFamilyId ? savedFamilyId : u.uid;
+            // PROTEÇÃO: Se o ID salvo começar com LIGA- ou LIGAPUB-, ele ignora e usa o UID oficial do usuário
+            const isLeague = savedFamilyId && (savedFamilyId.startsWith('LIGA-') || savedFamilyId.startsWith('LIGAPUB-'));
+            const initialBase = (savedFamilyId && !isLeague) ? savedFamilyId : u.uid;
+            
             localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
             setBaseAlbumId(initialBase);
         } else {
@@ -2031,14 +2025,16 @@ export default function App() {
                 )}
 
                 <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
-
-                   <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
-
-                       <LogOut size={18}/> Sair da Conta
-
-                   </button>
-
-                </div>
+                  <button onClick={() => { 
+                      // NOVO: Limpa todas as memórias locais (Cache) para evitar conflitos ao logar novamente
+                      signOut(auth); 
+                      localStorage.removeItem('@AlbumCopa_FamilyId'); 
+                      localStorage.removeItem('@AlbumCopa_BaseAlbum');
+                      localStorage.removeItem('@AlbumCopa_Leagues');
+                  }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
+                      <LogOut size={18}/> Sair da Conta
+                  </button>
+               </div>
 
 
 
