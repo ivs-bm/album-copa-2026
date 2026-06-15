@@ -559,7 +559,6 @@ export default function App() {
       setUser(u); 
       if (u) {
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
-        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
         
         // ==========================================
