@@ -247,7 +247,9 @@ export default function App() {
 
   const [isAuthLoading, setIsAuthLoading] = useState(true); // Controle da tela de carregamento inicial
 
-  const [activeFamilyId, setActiveFamilyId] = useState(''); // ID da família do usuário
+  const [activeFamilyId, setActiveFamilyId] = useState(''); // ID da Liga/Bolão que está aberta na tela
+  
+  const [baseAlbumId, setBaseAlbumId] = useState(''); // NOVO: ID do seu Álbum Pessoal (Intocável)
 
   const [joinCode, setJoinCode] = useState(''); // Código digitado no input de convite
 
@@ -559,6 +561,19 @@ export default function App() {
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
         
+        // ==========================================
+        // NOVO: BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
+        // ==========================================
+        const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
+        if (!savedBase) {
+            // Se for a primeira vez rodando esse código, assume que a liga atual é o álbum oficial dele
+            const initialBase = savedFamilyId ? savedFamilyId : u.uid;
+            localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
+            setBaseAlbumId(initialBase);
+        } else {
+            setBaseAlbumId(savedBase);
+        }
+        
         // NOVO CÓDIGO: Registra o usuário no banco imediatamente no login
         // Ele usa o merge: true para nunca apagar as figurinhas se o usuário já existir
         try {
@@ -581,34 +596,53 @@ export default function App() {
 
 
 
-  // Efeito 3: Busca as figurinhas e os dados do Bolão em tempo real no banco
+  // EFEITO 3A: Busca as SUAS figurinhas (Lê apenas do seu Álbum Base intocável)
+  useEffect(() => {
+    if (!baseAlbumId) return;
+    return onSnapshot(doc(db, 'family_albums', baseAlbumId), (d) => {
+      if (d.exists()) { 
+          setStickers(d.data().stickers || {}); 
+          setIsPro(!!d.data().isPro); 
+      } else {
+          setStickers({});
+      }
+    });
+  }, [baseAlbumId]);
+
+  // EFEITO 3B: Busca os dados da Liga Atual (Bolão, Ranking e Outros Jogadores)
   useEffect(() => {
     if (!activeFamilyId) return;
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
       if (d.exists()) { 
           const data = d.data();
-          setStickers(data.stickers || {}); 
-          setIsPro(!!data.isPro); 
-          
-          // Carrega os palpites salvos deste usuário específico (CORREÇÃO DE VAZAMENTO)
           if (user && data.bolao && data.bolao[user.uid]) {
               setGuesses(data.bolao[user.uid].guesses || {});
           } else {
-              // Se o usuário não tem palpites nesta liga, ZERA as caixinhas obrigatoriamente
               setGuesses({}); 
           }
-                    
-		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
           setAllPlayersData(data.bolao || {});
       } else {
-          // Se o documento inteiro ainda não existir, zera tudo por segurança
-          setStickers({});
           setGuesses({});
-          setOfficialScores({});
           setAllPlayersData({});
       }
     });
   }, [activeFamilyId, user]);
+
+  // EFEITO 3C (O MOTOR DE SINCRONIZAÇÃO DA CENTRAL DE TROCAS)
+  useEffect(() => {
+      // Sempre que abrir uma liga ou atualizar o álbum, envia suas repetidas para a comunidade atual
+      if (activeFamilyId && user && Object.keys(stickers).length > 0) {
+          const album = Object.keys(stickers).filter(k => stickers[k] >= 1);
+          const duplicates = Object.keys(stickers).filter(k => stickers[k] === 2);
+          
+          updateDoc(doc(db, 'family_albums', activeFamilyId), {
+              [`bolao.${user.uid}.album`]: album,
+              [`bolao.${user.uid}.duplicates`]: duplicates,
+              [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+              [`bolao.${user.uid}.photo`]: user.photoURL || ''
+          }).catch(() => {});
+      }
+  }, [stickers, activeFamilyId, user]);
   
   
   
@@ -642,14 +676,12 @@ export default function App() {
   };
   
   // Função: Quando clica na figurinha para colar/repetir
-    const toggleSticker = async (key) => {
-
+  const toggleSticker = async (key) => {
     const newStatus = ((stickers[key] || 0) + 1) % 3;
-
     setStickers({...stickers, [key]: newStatus});
 
-    await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
-
+    // MUDANÇA: Agora o aplicativo salva a figurinha sempre no seu Álbum Base (e não na liga que está aberta)
+    await updateDoc(doc(db, 'family_albums', baseAlbumId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
   
   
