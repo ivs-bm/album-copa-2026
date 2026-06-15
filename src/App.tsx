@@ -1973,7 +1973,62 @@ export default function App() {
                   </div>
                 </div>
 
+				{/* ========================================================== */}
+                {/* NOVO: GERENCIAR COMUNIDADE ATUAL (Compartilhar / Sair) */}
+                {/* ========================================================== */}
+                {activeFamilyId !== user.uid && (
+                    <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-3 flex-1 animate-fade-in`}>
+                        <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2 mb-1`}>
+                            <Globe size={16} className="text-blue-500"/>
+                            Gerenciar Comunidade Atual
+                        </h3>
+                        <p className={`text-[11px] leading-tight ${textColor} mb-3`}>
+                            Você está conectado na liga: <strong className={`${titleColor} uppercase`}>{activeFamilyId.replace('LIGAPUB-', '').replace('LIGA-', '')}</strong>
+                        </p>
 
+                        <div className="flex gap-2">
+                            {/* BOTÃO WHATSAPP (Abre o link direto) */}
+                            <button onClick={() => {
+                                const nomeLiga = activeFamilyId.replace('LIGAPUB-', '').replace('LIGA-', '');
+                                const msg = `Fala pessoal! Venham participar da liga *${nomeLiga}* no Família Copa 🏆\n\nCódigo de convite: *${activeFamilyId}*\n\nBasta acessar o app, ir na aba Perfil e colar este código para entrarem no Bolão e na nossa Central de Trocas!`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                            }} className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-sm">
+                                <Share2 size={14}/> WhatsApp
+                            </button>
+
+                            {/* BOTÃO DISCORD (Copia para a área de transferência com Markdown correto) */}
+                            <button onClick={() => {
+                                const nomeLiga = activeFamilyId.replace('LIGAPUB-', '').replace('LIGA-', '');
+                                const msg = `Fala pessoal! Venham participar da liga **${nomeLiga}** no Família Copa 🏆\n\nCódigo de convite: **${activeFamilyId}**\n\nBasta acessar o app, ir na aba Perfil e colar este código para entrarem no Bolão e na nossa Central de Trocas!`;
+                                copyToClipboard(msg, "Convite copiado! Cole no seu Discord.");
+                            }} className="flex-1 bg-[#5865F2] hover:bg-[#4752C4] text-white py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors shadow-sm">
+                                <Copy size={14}/> Discord
+                            </button>
+                        </div>
+
+                        {/* BOTÃO SAIR DA LIGA */}
+                        <button onClick={() => {
+                            const nomeLiga = activeFamilyId.replace('LIGAPUB-', '').replace('LIGA-', '');
+                            if (window.confirm(`Tem certeza que deseja sair da liga ${nomeLiga}? Você deixará de ver os palpites e as trocas desta comunidade.`)) {
+                                
+                                // 1. Remove a liga da memória
+                                const newLeagues = savedLeagues.filter(code => code !== activeFamilyId);
+                                setSavedLeagues(newLeagues);
+                                localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newLeagues));
+
+                                // 2. Devolve o usuário para a sua "Casa" (Álbum Base)
+                                setActiveFamilyId(baseAlbumId || user.uid);
+                                localStorage.setItem('@AlbumCopa_FamilyId', baseAlbumId || user.uid);
+
+                                setToast("Você saiu da comunidade.");
+                                setTimeout(() => setToast(''), 3000);
+                                window.scrollTo(0,0);
+                            }
+                        }} className={`w-full mt-2 py-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-2 transition-colors border ${isDarkMode ? 'bg-slate-800 text-red-400 border-red-500/30 hover:bg-slate-700' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}>
+                            <LogOut size={14}/> Deixar de participar
+                        </button>
+                    </div>
+                )}
 
                 <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
 
