@@ -553,7 +553,9 @@ export default function App() {
 
 
 
-  // Efeito 2: Verifica o login do usuário quando o App carrega
+  // ============================================================================
+  // Efeito 2: Verifica o login do usuário quando o App carrega e Blinda o Álbum
+  // ============================================================================
   useEffect(() => { 
     const unsubscribe = onAuthStateChanged(auth, async (u) => { 
       setUser(u); 
@@ -562,24 +564,24 @@ export default function App() {
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
         
         // ==========================================
-        // NOVO: BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
+        // BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
         // ==========================================
         const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
         if (!savedBase) {
-            // Se for a primeira vez rodando esse código, assume que a liga atual é o álbum oficial dele
-            const initialBase = savedFamilyId ? savedFamilyId : u.uid;
+            // PROTEÇÃO: Se o ID salvo começar com LIGA- ou LIGAPUB-, ignora e usa o UID oficial
+            const isLeague = savedFamilyId && (savedFamilyId.startsWith('LIGA-') || savedFamilyId.startsWith('LIGAPUB-'));
+            const initialBase = (savedFamilyId && !isLeague) ? savedFamilyId : u.uid;
+            
             localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
             setBaseAlbumId(initialBase);
         } else {
             setBaseAlbumId(savedBase);
         }
         
-        // NOVO CÓDIGO: Registra o usuário no banco imediatamente no login
-        // Ele usa o merge: true para nunca apagar as figurinhas se o usuário já existir
+        // Registra o usuário no banco imediatamente no login
         try {
           await setDoc(doc(db, 'family_albums', u.uid), {
             adminEmail: u.email,
-            // Apenas marca false se o campo não existir (não tira o Pro de quem já pagou)
           }, { merge: true });
         } catch (error) {
           console.error("Erro ao registrar usuário no banco:", error);
@@ -2031,14 +2033,16 @@ export default function App() {
                 )}
 
                 <div className={`${cardBg} p-4 rounded-2xl shadow-sm border`}>
-
-                   <button onClick={() => { signOut(auth); localStorage.removeItem('@AlbumCopa_FamilyId'); }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
-
-                       <LogOut size={18}/> Sair da Conta
-
-                   </button>
-
-                </div>
+                  <button onClick={() => { 
+                      // NOVO: Limpa todas as memórias locais (Cache) para evitar conflitos ao logar novamente
+                      signOut(auth); 
+                      localStorage.removeItem('@AlbumCopa_FamilyId'); 
+                      localStorage.removeItem('@AlbumCopa_BaseAlbum');
+                      localStorage.removeItem('@AlbumCopa_Leagues');
+                  }} className="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-colors">
+                      <LogOut size={18}/> Sair da Conta
+                  </button>
+               </div>
 
 
 
