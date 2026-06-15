@@ -553,12 +553,22 @@ export default function App() {
 
 
 
-  // ==========================================
-        // NOVO: BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
+  // ============================================================================
+  // Efeito 2: Verifica o login do usuário quando o App carrega e Blinda o Álbum
+  // ============================================================================
+  useEffect(() => { 
+    const unsubscribe = onAuthStateChanged(auth, async (u) => { 
+      setUser(u); 
+      if (u) {
+        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
+        setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
+        
+        // ==========================================
+        // BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
         // ==========================================
         const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
         if (!savedBase) {
-            // PROTEÇÃO: Se o ID salvo começar com LIGA- ou LIGAPUB-, ele ignora e usa o UID oficial do usuário
+            // PROTEÇÃO: Se o ID salvo começar com LIGA- ou LIGAPUB-, ignora e usa o UID oficial
             const isLeague = savedFamilyId && (savedFamilyId.startsWith('LIGA-') || savedFamilyId.startsWith('LIGAPUB-'));
             const initialBase = (savedFamilyId && !isLeague) ? savedFamilyId : u.uid;
             
@@ -568,12 +578,10 @@ export default function App() {
             setBaseAlbumId(savedBase);
         }
         
-        // NOVO CÓDIGO: Registra o usuário no banco imediatamente no login
-        // Ele usa o merge: true para nunca apagar as figurinhas se o usuário já existir
+        // Registra o usuário no banco imediatamente no login
         try {
           await setDoc(doc(db, 'family_albums', u.uid), {
             adminEmail: u.email,
-            // Apenas marca false se o campo não existir (não tira o Pro de quem já pagou)
           }, { merge: true });
         } catch (error) {
           console.error("Erro ao registrar usuário no banco:", error);
