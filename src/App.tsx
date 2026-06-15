@@ -10,13 +10,13 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Importação dos ícones visuais usados nos botões e menus do aplicativo
 
-import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, ArrowRightLeft } from 'lucide-react';
+import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, ArrowRightLeft, Globe } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 
-import { getFirestore, doc, updateDoc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, onSnapshot, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 
 
@@ -247,7 +247,9 @@ export default function App() {
 
   const [isAuthLoading, setIsAuthLoading] = useState(true); // Controle da tela de carregamento inicial
 
-  const [activeFamilyId, setActiveFamilyId] = useState(''); // ID da família do usuário
+  const [activeFamilyId, setActiveFamilyId] = useState(''); // ID da Liga/Bolão que está aberta na tela
+  
+  const [baseAlbumId, setBaseAlbumId] = useState(''); // NOVO: ID do seu Álbum Pessoal (Intocável)
 
   const [joinCode, setJoinCode] = useState(''); // Código digitado no input de convite
 
@@ -299,6 +301,66 @@ export default function App() {
   
   const [magicCode, setMagicCode] = useState('');
   const [isPublicLeague, setIsPublicLeague] = useState(false); // Controle da caixa de consentimento Público
+  
+  // ==========================================================
+  // NOVOS ESTADOS: Mural de Comunidades Públicas
+  // ==========================================================
+  const [publicLeagues, setPublicLeagues] = useState([]);
+  const [isLoadingPublic, setIsLoadingPublic] = useState(false);
+  const [showPublicLeagues, setShowPublicLeagues] = useState(false);
+
+  // Consulta otimizada no Firebase (Custo quase Zero)
+  const fetchPublicLeagues = async () => {
+      setIsLoadingPublic(true);
+      try {
+          const q = query(collection(db, 'family_albums'), where('isLeague', '==', true), where('isPublic', '==', true));
+          const querySnapshot = await getDocs(q);
+          const leagues = [];
+          querySnapshot.forEach((document) => {
+              const data = document.data();
+              // Conta quantos membros já deram palpites nesta liga para mostrar no cartão
+              const membersCount = data.bolao ? Object.keys(data.bolao).length : 1;
+              leagues.push({ id: document.id, members: membersCount });
+          });
+          setPublicLeagues(leagues);
+      } catch (error) {
+          console.error(error);
+          setToast("Erro ao carregar o mural.");
+          setTimeout(() => setToast(''), 3000);
+      }
+      setIsLoadingPublic(false);
+      setShowPublicLeagues(true);
+  };
+
+  // O "Duplo Consentimento" (Adesão do Visitante)
+  const handleJoinPublicLeague = async (leagueId) => {
+      const cleanName = leagueId.replace('LIGAPUB-', '');
+      if (window.confirm(`⚠️ AVISO DE PRIVACIDADE\n\nAo entrar na liga ${cleanName}, o seu nome, foto e inventário de figurinhas ficarão visíveis para os membros dessa comunidade.\n\nDeseja prosseguir?`)) {
+          setToast("Entrando na Liga...");
+          try {
+             await setDoc(doc(db, 'family_albums', leagueId), {}, { merge: true });
+             setActiveFamilyId(leagueId);
+             localStorage.setItem('@AlbumCopa_FamilyId', leagueId);
+             
+             setSavedLeagues(prev => {
+                 if (!prev.includes(leagueId)) {
+                     const newList = [...prev, leagueId];
+                     localStorage.setItem('@AlbumCopa_Leagues', JSON.stringify(newList));
+                     return newList;
+                 }
+                 return prev;
+             });
+             
+             setToast(`Bem-vindo à ${cleanName}! 🏆`);
+             setTimeout(() => setToast(''), 4000);
+             window.scrollTo(0,0);
+             setActiveTab('album'); // Joga o usuário direto para o álbum da nova liga
+          } catch (error) {
+             setToast("Erro ao entrar na liga.");
+             setTimeout(() => setToast(''), 3000);
+          }
+      }
+  };
   
   
   
@@ -497,7 +559,21 @@ export default function App() {
       setUser(u); 
       if (u) {
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
+        const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
+        
+        // ==========================================
+        // NOVO: BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
+        // ==========================================
+        const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
+        if (!savedBase) {
+            // Se for a primeira vez rodando esse código, assume que a liga atual é o álbum oficial dele
+            const initialBase = savedFamilyId ? savedFamilyId : u.uid;
+            localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
+            setBaseAlbumId(initialBase);
+        } else {
+            setBaseAlbumId(savedBase);
+        }
         
         // NOVO CÓDIGO: Registra o usuário no banco imediatamente no login
         // Ele usa o merge: true para nunca apagar as figurinhas se o usuário já existir
@@ -521,34 +597,53 @@ export default function App() {
 
 
 
-  // Efeito 3: Busca as figurinhas e os dados do Bolão em tempo real no banco
+  // EFEITO 3A: Busca as SUAS figurinhas (Lê apenas do seu Álbum Base intocável)
+  useEffect(() => {
+    if (!baseAlbumId) return;
+    return onSnapshot(doc(db, 'family_albums', baseAlbumId), (d) => {
+      if (d.exists()) { 
+          setStickers(d.data().stickers || {}); 
+          setIsPro(!!d.data().isPro); 
+      } else {
+          setStickers({});
+      }
+    });
+  }, [baseAlbumId]);
+
+  // EFEITO 3B: Busca os dados da Liga Atual (Bolão, Ranking e Outros Jogadores)
   useEffect(() => {
     if (!activeFamilyId) return;
     return onSnapshot(doc(db, 'family_albums', activeFamilyId), (d) => {
       if (d.exists()) { 
           const data = d.data();
-          setStickers(data.stickers || {}); 
-          setIsPro(!!data.isPro); 
-          
-          // Carrega os palpites salvos deste usuário específico (CORREÇÃO DE VAZAMENTO)
           if (user && data.bolao && data.bolao[user.uid]) {
               setGuesses(data.bolao[user.uid].guesses || {});
           } else {
-              // Se o usuário não tem palpites nesta liga, ZERA as caixinhas obrigatoriamente
               setGuesses({}); 
           }
-                    
-		  // Carrega os dados de todos os jogadores para o processamento matemático do Ranking
           setAllPlayersData(data.bolao || {});
       } else {
-          // Se o documento inteiro ainda não existir, zera tudo por segurança
-          setStickers({});
           setGuesses({});
-          setOfficialScores({});
           setAllPlayersData({});
       }
     });
   }, [activeFamilyId, user]);
+
+  // EFEITO 3C (O MOTOR DE SINCRONIZAÇÃO DA CENTRAL DE TROCAS)
+  useEffect(() => {
+      // Sempre que abrir uma liga ou atualizar o álbum, envia suas repetidas para a comunidade atual
+      if (activeFamilyId && user && Object.keys(stickers).length > 0) {
+          const album = Object.keys(stickers).filter(k => stickers[k] >= 1);
+          const duplicates = Object.keys(stickers).filter(k => stickers[k] === 2);
+          
+          updateDoc(doc(db, 'family_albums', activeFamilyId), {
+              [`bolao.${user.uid}.album`]: album,
+              [`bolao.${user.uid}.duplicates`]: duplicates,
+              [`bolao.${user.uid}.name`]: user.displayName || 'Jogador',
+              [`bolao.${user.uid}.photo`]: user.photoURL || ''
+          }).catch(() => {});
+      }
+  }, [stickers, activeFamilyId, user]);
   
   
   
@@ -582,14 +677,12 @@ export default function App() {
   };
   
   // Função: Quando clica na figurinha para colar/repetir
-    const toggleSticker = async (key) => {
-
+  const toggleSticker = async (key) => {
     const newStatus = ((stickers[key] || 0) + 1) % 3;
-
     setStickers({...stickers, [key]: newStatus});
 
-    await updateDoc(doc(db, 'family_albums', activeFamilyId), { [`stickers.${key}`]: newStatus }).catch(() => {});
-
+    // MUDANÇA: Agora o aplicativo salva a figurinha sempre no seu Álbum Base (e não na liga que está aberta)
+    await updateDoc(doc(db, 'family_albums', baseAlbumId), { [`stickers.${key}`]: newStatus }).catch(() => {});
   };
   
   
@@ -1437,6 +1530,57 @@ export default function App() {
                     </button>
                 </div>
             </div>
+			
+			
+		{/* ======================================================= */}
+        {/* MURAL DE DESCOBERTA (Ligas Públicas) */}
+        {/* ======================================================= */}
+        <div className="flex flex-col gap-3 shrink-0 mt-1 mb-2">
+            <div className={`${cardBg} p-5 rounded-2xl shadow-sm border border-blue-500/20`}>
+                <h2 className={`font-black ${titleColor} text-lg flex items-center gap-2 mb-2`}>
+                    <Globe size={20} className="text-blue-500"/> Explorar Comunidades
+                </h2>
+                <p className={`text-xs ${textColor} mb-4`}>Descubra ligas públicas criadas por outros colecionadores e aumente as suas chances de trocar as repetidas.</p>
+                
+                {!showPublicLeagues ? (
+                    <button 
+                        onClick={fetchPublicLeagues} 
+                        disabled={isLoadingPublic}
+                        className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 py-3 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                    >
+                        {isLoadingPublic ? 'Buscando no servidor...' : '🔍 Ver Ligas Disponíveis'}
+                    </button>
+                ) : (
+                    <div className="space-y-3 animate-fade-in">
+                        <div className="flex justify-between items-center mb-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Resultados da Busca</span>
+                            <button onClick={() => setShowPublicLeagues(false)} className="text-[10px] font-bold text-blue-500 uppercase">
+                                Ocultar
+                            </button>
+                        </div>
+                        
+                        {publicLeagues.length === 0 ? (
+                            <p className="text-xs text-center text-slate-400 py-4">Nenhuma comunidade pública ativa no momento.</p>
+                        ) : (
+                            publicLeagues.map(league => (
+                                <div key={league.id} className={`p-3 rounded-xl border flex justify-between items-center ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                    <div>
+                                        <h4 className={`font-bold text-sm ${titleColor}`}>{league.id.replace('LIGAPUB-', '')}</h4>
+                                        <p className="text-[10px] text-slate-400 font-medium">{league.members} membro(s) nesta liga</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleJoinPublicLeague(league.id)}
+                                        className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-transform active:scale-95"
+                                    >
+                                        Entrar
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
 
             {friendData && (
                 <div className="flex flex-col gap-3 animate-fade-in">
