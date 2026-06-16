@@ -1293,32 +1293,41 @@ export default function App() {
                               </div>
 
                               {/* Caixas de Palpite / Resultado Oficial */}
-                              <div className="flex items-center gap-3 justify-center w-[40%]">
-                                 <input 
-                                   type="number" 
-                                   disabled={isLocked}
-                                   value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
-                                   onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
-                                   placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
-                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
-                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
-                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
-                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
-                                 />
-                                 <span className="text-slate-300 font-black text-sm">X</span>
-                                 <input 
-                                   type="number" 
-                                   disabled={isLocked}
-                                   value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
-                                   onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
-                                   placeholder="-"
-                                   className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
-                                     ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
-                                     (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
-                                     ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
-                                     ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
-                                 />
+                              <div className="flex flex-col items-center justify-center w-[40%] gap-2">
+                                 <div className="flex items-center gap-3">
+                                     <input 
+                                       type="number" 
+                                       disabled={isLocked}
+                                       value={isAdminMode ? (officialScores[match.id]?.a ?? '') : (guesses[match.id]?.a ?? '')} 
+                                       onChange={(e) => handleGuess(match.id, 'a', e.target.value)} 
+                                       placeholder="-"
+                                       className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                         ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                         (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                         ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                         ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                     />
+                                     <span className="text-slate-300 font-black text-sm">X</span>
+                                     <input 
+                                       type="number" 
+                                       disabled={isLocked}
+                                       value={isAdminMode ? (officialScores[match.id]?.b ?? '') : (guesses[match.id]?.b ?? '')} 
+                                       onChange={(e) => handleGuess(match.id, 'b', e.target.value)} 
+                                       placeholder="-"
+                                       className={`w-12 h-12 text-center rounded-xl font-black text-xl border shadow-inner transition-colors outline-none 
+                                         ${isLocked ? 'opacity-50 cursor-not-allowed bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 border-transparent' : 
+                                         (isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-800' : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white')} 
+                                         ${!isLocked && isAdminMode ? 'focus:border-red-500' : ''} 
+                                         ${!isLocked && !isAdminMode ? 'focus:border-emerald-500' : ''}`} 
+                                     />
+                                 </div>
+                                 
+                                 {/* NOVO: PLACAR OFICIAL (Aparece apenas quando encerrado e com resultado cadastrado) */}
+                                 {realStatus === 'finished' && !isAdminMode && officialScores[match.id] && officialScores[match.id].a !== '' && (
+                                     <div className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap animate-fade-in">
+                                         Real: {officialScores[match.id].a} x {officialScores[match.id].b}
+                                     </div>
+                                 )}
                               </div>
 
                               {/* Equipa B */}
