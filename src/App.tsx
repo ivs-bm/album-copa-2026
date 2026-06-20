@@ -608,8 +608,15 @@ export default function App() {
     if (!baseAlbumId) return;
     return onSnapshot(doc(db, 'family_albums', baseAlbumId), (d) => {
       if (d.exists()) { 
-          setStickers(d.data().stickers || {}); 
-          setIsPro(!!d.data().isPro); 
+          const data = d.data();
+          
+          // RETROCOMPATIBILIDADE: Lê o banco de dados antigo ('adesivos') e funde com o novo ('stickers')
+          const legacyAdesivos = data.adesivos || {};
+          const currentStickers = data.stickers || {};
+          setStickers({ ...legacyAdesivos, ...currentStickers }); 
+          
+          // Mantém o modo Pro funcionando independentemente do padrão salvo
+          setIsPro(!!(data.isPro || data['éPro'])); 
       } else {
           setStickers({});
       }
