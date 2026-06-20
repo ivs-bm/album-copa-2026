@@ -819,8 +819,7 @@ export default function App() {
       setTimeout(() => {
           const element = sectionsRef.current[id];
           if (element) {
-              // Desconto unificado de 150px para o novo bloco Sticky inteligente
-              const topPos = element.getBoundingClientRect().top + window.scrollY - 150; 
+              const topPos = element.getBoundingClientRect().top + window.scrollY - (savedLeagues.length > 0 ? 225 : 190); 
               window.scrollTo({ top: topPos, behavior: 'smooth' });
           }
       }, 100);
@@ -928,22 +927,32 @@ export default function App() {
   
    return (
 
-    // DIV PRINCIPAL: Refatorado para Flexbox de Altura Fixa
-    <div className={`h-[100dvh] w-full flex flex-col ${themeBg} overflow-hidden transition-colors duration-300`}>
+    // DIV PRINCIPAL: Mantido exatamente como no primeiro print (max-w-[100vw] overflow-x-hidden)
+
+    <div className={`w-full min-w-[100vw] max-w-[100vw] min-h-screen flex flex-col ${themeBg} relative overflow-x-hidden pb-20 transition-colors duration-300`}>
 
       <style>{`
+
         * { box-sizing: border-box !important; }
-        html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden !important; overscroll-behavior-y: none; }
+
+        html, body { width: 100%; margin: 0; padding: 0; overflow-x: hidden !important; overscroll-behavior-x: none; }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+
       `}</style>
 
+      
+
       {/* TOAST NOTIFICATION: Balão de aviso flutuante */}
-      {toast && <div style={{ top: savedLeagues.length > 0 ? '140px' : '90px' }} className="fixed z-[60] left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold transition-all">{toast}</div>}
+      
+	  {toast && <div style={{ top: savedLeagues.length > 0 ? '140px' : '90px' }} className="fixed z-[60] left-1/2 -translate-x-1/2 w-max max-w-[90%] bg-emerald-600 text-white px-4 py-2 rounded-full text-xs shadow-xl text-center font-bold transition-all">{toast}</div>}
+
+      
 
       {/* ======================================================================= */}
-      {/* CABEÇALHO (HEADER) NATIVO */}
+      {/* CABEÇALHO (HEADER) FIXO E DINÂMICO */}
       {/* ======================================================================= */}
-      <header className={`w-full shrink-0 min-h-[76px] h-auto ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 relative z-50 shadow-md transition-all`}>
+      <header className={`w-full min-h-[76px] h-auto ${isDarkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-800 to-teal-700'} text-white px-4 py-3 fixed top-0 left-0 z-50 shadow-md transition-all`}>
         <div className="flex justify-between items-center mb-2">
            <div className="flex items-center gap-3">
              <img src={user.photoURL} className="w-9 h-9 rounded-full border-2 border-emerald-400" alt="User" />
@@ -1031,15 +1040,22 @@ export default function App() {
 
 
       {/* ======================================================================= */}
-      {/* CONTEÚDO PRINCIPAL (Main Central Scrollável com Flexbox) */}
+      {/* CONTEÚDO PRINCIPAL (MAIN): Container base */}
       {/* ======================================================================= */}
-      <main className={`w-full flex-1 flex flex-col px-3 pb-6 pt-0 min-h-0 max-w-3xl mx-auto overflow-y-auto overflow-x-hidden relative transition-all`}>
+      <main 
+        style={{ 
+            paddingTop: activeTab === 'album' 
+                ? ((savedLeagues.length > 0 || (user && activeFamilyId !== user.uid)) ? '235px' : '190px') 
+                : ((savedLeagues.length > 0 || (user && activeFamilyId !== user.uid)) ? '150px' : '95px') 
+        }} 
+        className={`w-full flex-1 flex flex-col px-3 pb-4 gap-4 min-h-0 max-w-3xl mx-auto transition-all`}
+      >
         
         {/* ABA 1: ÁLBUM */}
         {activeTab === 'album' && (
-            <div className="flex-1 w-full flex flex-col">
-              {/* MENU DE GRUPOS STICKY (O Segredo do alinhamento perfeito) */}
-              <div className={`sticky top-0 -mx-3 px-3 pt-3 pb-2 z-40 shadow-sm transition-all ${isDarkMode ? 'bg-slate-950/95 backdrop-blur-md' : 'bg-slate-50/95 backdrop-blur-md'}`}>
+            <div className="flex-1 w-full">
+              {/* NOVO MENU DE GRUPOS FIXO NO TOPO */}
+              <div style={{ top: (savedLeagues.length > 0 || (user && activeFamilyId !== user.uid)) ? '130px' : '80px' }} className={`fixed left-0 w-full z-40 px-3 pt-2 pb-2 transition-all ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 {/* MUDANÇA: gap-6 reduzido para gap-3 para equilibrar o visual dos cartões */}
                 <div className={`${cardBg} px-3 py-2 rounded-2xl shadow-sm border flex gap-3 overflow-x-auto hide-scrollbar max-w-3xl mx-auto`}>
                   {uniqueGroups.map(groupName => {
@@ -1070,7 +1086,7 @@ export default function App() {
 
 
               {/* LISTA DE SEÇÕES DE PAÍSES E BOTÕES DE FIGURINHAS */}
-              <div className="space-y-4 pt-4">
+              <div className="space-y-4">
                   {SECTIONS.map((sec) => (
                     <div key={sec.id} ref={el => sectionsRef.current[sec.id] = el} className={`${cardBg} p-3 sm:p-4 rounded-2xl shadow-sm border`}>
                        {/* MUDANÇA AQUI: Inserido o sec.prefix com cor mais clara entre a bandeira e o nome */}
@@ -1139,7 +1155,7 @@ export default function App() {
 {/* // ABA 2: ESTATÍSTICAS (RESUMO) */}
 {/* // ============================================================================ */}
 {activeTab === 'stats' && (
-  <div className="w-full flex flex-col max-w-md mx-auto pt-4 h-full pb-6">
+  <div className="w-full flex flex-col max-w-md mx-auto h-[calc(100dvh-170px)]">
     {/* MUDANÇA: Adicionado overflow-y-auto para permitir rolagem interna caso a lista de bandeiras fique grande */}
     <div className={`${cardBg} p-4 rounded-2xl shadow-sm border text-center flex flex-col w-full h-full overflow-y-auto hide-scrollbar gap-4`}>
       
@@ -1756,7 +1772,35 @@ export default function App() {
 {activeTab === 'perfil' && (
   <div className="w-full flex flex-col gap-3 justify-between max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar">
 
-    
+    {/* PAINEL DE DIAGNÓSTICO (OBSERVABILIDADE) */}
+    <div className="p-4 bg-orange-100 text-orange-900 rounded-2xl shadow-sm border border-orange-300 flex flex-col gap-2 text-[11px] font-mono break-all animate-fade-in mt-1 mb-2">
+       <strong className="text-orange-700 uppercase tracking-widest text-[10px]">Diagnóstico de Sistema</strong>
+       <p>🔹 UID do Usuário: <span className="font-bold">{user?.uid || 'Desconectado'}</span></p>
+       <p>🔹 ID Álbum Base: <span className="font-bold">{baseAlbumId || 'Nenhum'}</span></p>
+       <p>🔹 Figurinhas na Memória (ETL): <span className="font-bold text-lg">{Object.keys(stickers).length}</span></p>
+       
+       <button 
+          onClick={async () => {
+             try {
+                const docSnap = await getDoc(doc(db, 'family_albums', baseAlbumId));
+                if (docSnap.exists()) {
+                    const bd = docSnap.data();
+                    const hasAdesivos = bd.adesivos ? Object.keys(bd.adesivos).length : 0;
+                    const hasStickers = bd.stickers ? Object.keys(bd.stickers).length : 0;
+                    alert(`RESPOSTA DO BANCO DE DADOS:\n\n- Gaveta Lida: ${baseAlbumId}\n- Itens em 'adesivos': ${hasAdesivos}\n- Itens em 'stickers': ${hasStickers}`);
+                } else {
+                    alert('RESPOSTA DO BANCO DE DADOS:\n\nGaveta NÃO encontrada no Firebase!');
+                }
+             } catch (err) {
+                alert('ERRO DE CONEXÃO:\n\n' + err.message);
+             }
+          }}
+          className="mt-2 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-bold text-[10px] transition-colors shadow-md"
+       >
+          Auditar Banco de Dados Agora
+       </button>
+    </div>
+
     {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível da tela, sem alterar nenhuma informação exibida. */}
 
     {/* BOTÃO INSTALAR APLICATIVO (PWA) */}
@@ -2087,9 +2131,12 @@ export default function App() {
 
 
       {/* ======================================================================= */}
+
       {/* MENU INFERIOR (BOTTOM NAVIGATION) */}
+
       {/* ======================================================================= */}
-      <nav className={`shrink-0 relative w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
+
+      <nav className={`fixed bottom-0 left-0 w-full ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border-t pb-safe pt-2 px-6 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]`}>
 
           <div className="flex justify-between items-center pb-2 max-w-md mx-auto">
 
