@@ -856,13 +856,19 @@ export default function App() {
 
 
   if (!user) return (
-
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
-
-      <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider())} className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-xl">Entrar com Google</button>
-
+      <button 
+        onClick={() => {
+          const provider = new GoogleAuthProvider();
+          // CONFIGURAÇÃO SEGUDE: Força o Google a sempre exibir a tela de seleção de conta
+          provider.setCustomParameters({ prompt: 'select_account' });
+          signInWithPopup(auth, provider);
+        }} 
+        className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-xl"
+      >
+        Entrar com Google
+      </button>
     </div>
-
   );
 
 
@@ -1768,33 +1774,25 @@ export default function App() {
 
                      <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
 
-                     {activeFamilyId !== user.uid ? (
-
-                        <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">Você faz parte de uma família ativada!</div>
-
-                     ) : (
-
-                       <div className="flex gap-2">
-                         <input type="text" placeholder="Código da Família..." onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}/>
-                         <button onClick={() => {
-                           const code = joinCode.trim();
-                           if (code) {
-                             // 1. Reconecta a Liga da Família
-                             setActiveFamilyId(code);
-                             localStorage.setItem('@AlbumCopa_FamilyId', code);
-                             
-                             // 2. CORREÇÃO: Reconecta o Álbum Base (Traz as figurinhas de volta!)
-                             setBaseAlbumId(code);
-                             localStorage.setItem('@AlbumCopa_BaseAlbum', code);
-                             
-                             setJoinCode('');
-                             setToast("Álbum da Família Reconectado!");
-                             setTimeout(() => setToast(''), 4000);
-                           }
-                         }} className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shrink-0 shadow-md">Entrar</button>
-                       </div>
-
-                     )}
+                     <div className="flex gap-2">
+                           <input type="text" placeholder="Código da Família..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}/>
+                           <button onClick={() => {
+                             const code = joinCode.trim();
+                             if (code) {
+                               // 1. Vincula a liga do Bolão ao código antigo
+                               setActiveFamilyId(code);
+                               localStorage.setItem('@AlbumCopa_FamilyId', code);
+                               
+                               // 2. Vincula a leitura do Álbum ao código antigo (Traz as figurinhas de volta)
+                               setBaseAlbumId(code);
+                               localStorage.setItem('@AlbumCopa_BaseAlbum', code);
+                               
+                               setJoinCode('');
+                               setToast("Álbum da Família Reconectado! 🏆");
+                               setTimeout(() => setToast(''), 4000);
+                             }
+                           }} className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shrink-0 shadow-md">Entrar</button>
+                         </div>
 
                      
 
