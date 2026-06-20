@@ -13,7 +13,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, ArrowRightLeft, Globe } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-
+{/* PAINEL DE DIAGNÓSTICO (OBSERVABILIDADE) */}
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 
 import { getFirestore, doc, updateDoc, onSnapshot, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -1771,35 +1771,6 @@ export default function App() {
 {/* // ============================================================================ */}
 {activeTab === 'perfil' && (
   <div className="w-full flex flex-col gap-3 justify-between max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar">
-
-    {/* PAINEL DE DIAGNÓSTICO (OBSERVABILIDADE) */}
-    <div className="p-4 bg-orange-100 text-orange-900 rounded-2xl shadow-sm border border-orange-300 flex flex-col gap-2 text-[11px] font-mono break-all animate-fade-in mt-1 mb-2">
-       <strong className="text-orange-700 uppercase tracking-widest text-[10px]">Diagnóstico de Sistema</strong>
-       <p>🔹 UID do Usuário: <span className="font-bold">{user?.uid || 'Desconectado'}</span></p>
-       <p>🔹 ID Álbum Base: <span className="font-bold">{baseAlbumId || 'Nenhum'}</span></p>
-       <p>🔹 Figurinhas na Memória (ETL): <span className="font-bold text-lg">{Object.keys(stickers).length}</span></p>
-       
-       <button 
-          onClick={async () => {
-             try {
-                const docSnap = await getDoc(doc(db, 'family_albums', baseAlbumId));
-                if (docSnap.exists()) {
-                    const bd = docSnap.data();
-                    const hasAdesivos = bd.adesivos ? Object.keys(bd.adesivos).length : 0;
-                    const hasStickers = bd.stickers ? Object.keys(bd.stickers).length : 0;
-                    alert(`RESPOSTA DO BANCO DE DADOS:\n\n- Gaveta Lida: ${baseAlbumId}\n- Itens em 'adesivos': ${hasAdesivos}\n- Itens em 'stickers': ${hasStickers}`);
-                } else {
-                    alert('RESPOSTA DO BANCO DE DADOS:\n\nGaveta NÃO encontrada no Firebase!');
-                }
-             } catch (err) {
-                alert('ERRO DE CONEXÃO:\n\n' + err.message);
-             }
-          }}
-          className="mt-2 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-bold text-[10px] transition-colors shadow-md"
-       >
-          Auditar Banco de Dados Agora
-       </button>
-    </div>
 
     {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível da tela, sem alterar nenhuma informação exibida. */}
 
