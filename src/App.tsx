@@ -563,22 +563,25 @@ export default function App() {
         const savedFamilyId = localStorage.getItem('@AlbumCopa_FamilyId');
         setActiveFamilyId(savedFamilyId ? savedFamilyId : u.uid);
         
-        // ==========================================
-        // BLINDA O ÁLBUM PRINCIPAL DO USUÁRIO
-        // ==========================================
-        const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
-        if (!savedBase) {
-            // PROTEÇÃO: Se o ID salvo começar com LIGA- ou LIGAPUB-, ignora e usa o UID oficial
-            const isLeague = savedFamilyId && (savedFamilyId.startsWith('LIGA-') || savedFamilyId.startsWith('LIGAPUB-'));
-            const initialBase = (savedFamilyId && !isLeague) ? savedFamilyId : u.uid;
-            
-            localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
-            setBaseAlbumId(initialBase);
+        // ============================================================================
+        // AUTO-CORREÇÃO DE ALINHAMENTO: Garante sincronia do Álbum de Família
+        // ============================================================================
+        const isLeagueActive = savedFamilyId && (savedFamilyId.startsWith('LIGA-') || savedFamilyId.startsWith('LIGAPUB-'));
+        
+        if (savedFamilyId && !isLeagueActive && savedFamilyId !== u.uid) {
+            localStorage.setItem('@AlbumCopa_BaseAlbum', savedFamilyId);
+            setBaseAlbumId(savedFamilyId);
         } else {
-            setBaseAlbumId(savedBase);
+            const savedBase = localStorage.getItem('@AlbumCopa_BaseAlbum');
+            if (!savedBase) {
+                const initialBase = (savedFamilyId && !isLeagueActive) ? savedFamilyId : u.uid;
+                localStorage.setItem('@AlbumCopa_BaseAlbum', initialBase);
+                setBaseAlbumId(initialBase);
+            } else {
+                setBaseAlbumId(savedBase);
+            }
         }
         
-        // Registra o usuário no banco imediatamente no login
         try {
           await setDoc(doc(db, 'family_albums', u.uid), {
             adminEmail: u.email,
@@ -589,7 +592,9 @@ export default function App() {
 
       } else {
         localStorage.removeItem('@AlbumCopa_FamilyId');
+        localStorage.removeItem('@AlbumCopa_BaseAlbum');
         setActiveFamilyId('');
+        setBaseAlbumId('');
       }
       setIsAuthLoading(false);
     }); 
@@ -603,8 +608,33 @@ export default function App() {
     if (!baseAlbumId) return;
     return onSnapshot(doc(db, 'family_albums', baseAlbumId), (d) => {
       if (d.exists()) { 
-          setStickers(d.data().stickers || {}); 
-          setIsPro(!!d.data().isPro); 
+          const data = d.data();
+          
+          let normalized = {};
+          
+          // MOTOR BLINDADO DE RETROCOMPATIBILIDADE E NORMALIZAÇÃO DE DADOS (ETL)
+          // Sugadores de dados que lidam com qualquer formato antigo do Firebase (Arrays, Strings, minúsculas, etc.)
+          const processData = (source) => {
+              if (Array.isArray(source)) {
+                  source.forEach(item => {
+                      if (typeof item === 'string') normalized[item.toUpperCase()] = 1;
+                  });
+              } else if (typeof source === 'object' && source !== null) {
+                  Object.keys(source).forEach(k => {
+                      const val = source[k];
+                      normalized[k.toUpperCase()] = typeof val === 'boolean' && val ? 1 : Number(val);
+                  });
+              } else if (typeof source === 'string') {
+                  try { processData(JSON.parse(source)); } catch(e) {}
+              }
+          };
+
+          // Extrai, Limpa e Carrega os dados antigos e os novos
+          processData(data.adesivos || {});
+          processData(data.stickers || {});
+          
+          setStickers(normalized); 
+          setIsPro(!!(data.isPro || data['éPro'])); 
       } else {
           setStickers({});
       }
@@ -1769,65 +1799,80 @@ export default function App() {
 
 
                 {!isPro && (
+                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border flex flex-col gap-3`}>
+                      <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><KeyRound size={16} className="text-emerald-500"/> Área Premium</h3>
 
-                  <div className={`${cardBg} p-4 rounded-2xl shadow-sm border space-y-4 flex-1 flex flex-col`}>
-
-                     <h3 className={`font-black ${titleColor} text-sm flex items-center gap-2`}><Star size={16} className="text-yellow-500"/> Área Premium</h3>
-
-                     <div className="flex gap-2">
-                           <input type="text" placeholder="Código da Família..." value={joinCode} onChange={(e) => setJoinCode(e.target.value)} className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}/>
-                           <button onClick={() => {
-                             const code = joinCode.trim();
-                             if (code) {
-                               // 1. Vincula a liga do Bolão ao código antigo
-                               setActiveFamilyId(code);
-                               localStorage.setItem('@AlbumCopa_FamilyId', code);
-                               
-                               // 2. Vincula a leitura do Álbum ao código antigo (Traz as figurinhas de volta)
-                               setBaseAlbumId(code);
-                               localStorage.setItem('@AlbumCopa_BaseAlbum', code);
-                               
-                               setJoinCode('');
-                               setToast("Álbum da Família Reconectado! 🏆");
-                               setTimeout(() => setToast(''), 4000);
-                             }
-                           }} className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shrink-0 shadow-md">Entrar</button>
+                      {baseAlbumId && baseAlbumId !== user.uid ? (
+                         <div className="flex flex-col gap-2">
+                            <div className="text-center font-bold text-xs p-3 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20 animate-fade-in">
+                               Álbum de Família Ativo! 🏆
+                            </div>
+                            <button 
+                               onClick={() => {
+                                  if (window.confirm("Deseja desconectar deste álbum compartilhado e voltar para a sua conta individual?")) {
+                                     setBaseAlbumId(user.uid);
+                                     setActiveFamilyId(user.uid);
+                                     localStorage.setItem('@AlbumCopa_BaseAlbum', user.uid);
+                                     localStorage.setItem('@AlbumCopa_FamilyId', user.uid);
+                                     setToast("Retornou ao álbum individual.");
+                                     setTimeout(() => setToast(''), 3000);
+                                  }
+                               }}
+                               className="text-[10px] text-red-500 hover:underline text-center font-bold mt-1"
+                            >
+                               Desconectar do Álbum Compartilhado
+                            </button>
                          </div>
-
-                     
+                      ) : (
+                        <div className="flex flex-col gap-2 animate-fade-in">
+                            <p className={`text-[11px] leading-tight ${textColor} mb-1`}>Insira o código de ativação ou o convite da sua família para sincronizar o álbum.</p>
+                            <div className="flex gap-2">
+                               <input 
+                                  type="text" 
+                                  placeholder="Código da Família..." 
+                                  value={joinCode} 
+                                  onChange={(e) => setJoinCode(e.target.value)} 
+                                  className={`flex-1 w-full ${isDarkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200'} rounded-xl px-3 py-2 text-xs border outline-none focus:border-emerald-500`}
+                               />
+                               <button 
+                                  onClick={() => {
+                                    const code = joinCode.trim();
+                                    if (code) {
+                                      setActiveFamilyId(code);
+                                      localStorage.setItem('@AlbumCopa_FamilyId', code);
+                                      
+                                      setBaseAlbumId(code);
+                                      localStorage.setItem('@AlbumCopa_BaseAlbum', code);
+                                      
+                                      setJoinCode('');
+                                      setToast("Álbum da Família Conectado!");
+                                      setTimeout(() => setToast(''), 4000);
+                                    }
+                                  }} 
+                                  className="bg-emerald-600 text-white px-4 rounded-xl font-bold text-xs shrink-0 shadow-md"
+                               >
+                                  Entrar
+                               </button>
+                            </div>
+                         </div>
+                      )}
 
                      {pixCode ? (
-
                         <div className="space-y-2 mt-auto">
-
                            <input readOnly value={pixCode} className={`w-full ${isDarkMode ? 'bg-slate-900 text-slate-400 border-slate-700' : 'bg-slate-50 text-slate-500 border-slate-200'} text-[10px] p-2 rounded-xl border outline-none text-center`}/>
-
                            <button onClick={() => copyToClipboard(pixCode, "Pix copiado!")} className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-md"><Copy size={16}/> Copiar Chave PIX</button>
-
                         </div>
-
                      ) : (
-
                        <div className="grid grid-cols-2 gap-2 mt-auto pt-4">
-
                           <a href="https://youtube.com/shorts/R0sVz5BjRFU?feature=share" target="_blank" rel="noreferrer" className="text-center bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><PlayCircle size={18} className="mb-1"/> Ver Vídeo</a>
-
                           {activeFamilyId !== user.uid ? (
-
                             <button className={`bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs opacity-50 cursor-not-allowed flex flex-col items-center justify-center`}><Star size={18} className="mb-1"/> Pro Ativado</button>
-
                           ) : (
-
                             <button onClick={handleBuyPro} className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md transition-colors"><KeyRound size={18} className="mb-1"/> Tornar-se Pro</button>
-
                           )}
-
                        </div>
-
                      )}
-
                   </div>
-
                 )}
 
 
