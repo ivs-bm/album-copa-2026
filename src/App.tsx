@@ -610,12 +610,30 @@ export default function App() {
       if (d.exists()) { 
           const data = d.data();
           
-          // RETROCOMPATIBILIDADE: Lê o banco de dados antigo ('adesivos') e funde com o novo ('stickers')
-          const legacyAdesivos = data.adesivos || {};
-          const currentStickers = data.stickers || {};
-          setStickers({ ...legacyAdesivos, ...currentStickers }); 
+          let normalized = {};
           
-          // Mantém o modo Pro funcionando independentemente do padrão salvo
+          // MOTOR BLINDADO DE RETROCOMPATIBILIDADE E NORMALIZAÇÃO DE DADOS (ETL)
+          // Sugadores de dados que lidam com qualquer formato antigo do Firebase (Arrays, Strings, minúsculas, etc.)
+          const processData = (source) => {
+              if (Array.isArray(source)) {
+                  source.forEach(item => {
+                      if (typeof item === 'string') normalized[item.toUpperCase()] = 1;
+                  });
+              } else if (typeof source === 'object' && source !== null) {
+                  Object.keys(source).forEach(k => {
+                      const val = source[k];
+                      normalized[k.toUpperCase()] = typeof val === 'boolean' && val ? 1 : Number(val);
+                  });
+              } else if (typeof source === 'string') {
+                  try { processData(JSON.parse(source)); } catch(e) {}
+              }
+          };
+
+          // Extrai, Limpa e Carrega os dados antigos e os novos
+          processData(data.adesivos || {});
+          processData(data.stickers || {});
+          
+          setStickers(normalized); 
           setIsPro(!!(data.isPro || data['éPro'])); 
       } else {
           setStickers({});
