@@ -13,7 +13,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LogOut, Info, Share2, KeyRound, Copy, Moon, Sun, Book, PieChart, Trophy, User, Download, Star, PlayCircle, ArrowRightLeft, Globe } from 'lucide-react';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-
+{/* PAINEL DE DIAGNÓSTICO (OBSERVABILIDADE) */}
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 
 import { getFirestore, doc, updateDoc, onSnapshot, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -1767,20 +1767,12 @@ export default function App() {
 		
 		
 {/* // ============================================================================ */}
-
 {/* // ABA 4: PERFIL E CONFIGURAÇÕES */}
-
 {/* // ============================================================================ */}
-
 {activeTab === 'perfil' && (
-
   <div className="w-full flex flex-col gap-3 justify-between max-w-md mx-auto h-[calc(100dvh-170px)] overflow-y-auto hide-scrollbar">
 
-    {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível
-
-        da tela, sem alterar nenhuma informação exibida. */}
-
-
+    {/* AJUSTE DE LAYOUT: o Perfil também passa a ocupar a altura disponível da tela, sem alterar nenhuma informação exibida. */}
 
     {/* BOTÃO INSTALAR APLICATIVO (PWA) */}
 
