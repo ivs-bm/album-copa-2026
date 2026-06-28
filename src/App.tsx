@@ -105,7 +105,7 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 // CONTROLE DE VISIBILIDADE DO TORNEIO
 // ============================================================================
 // Mude para "true" quando a fase de grupos terminar para exibir o mata-mata
-const LIBERAR_MATA_MATA = false; 
+const LIBERAR_MATA_MATA = true; 
 
 // ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026 (ATUALIZADO VIA FIFA)
@@ -199,9 +199,22 @@ const MATCHES = [
   // FASE ELIMINATÓRIA (Pré-Estruturada - Oculta Automaticamente)
   // ---------------------------------------------------
   // Dezesseis-avos de Final
-  { id: 'wc-73', date: '28/06 - 16:00', teamA: '2A', teamB: '2B', stage: 'knockout', status: 'pending' },
-  { id: 'wc-74', date: '29/06 - 17:30', teamA: '1A', teamB: '3CDEFHI', stage: 'knockout', status: 'pending' },
-  { id: 'wc-75', date: '29/06 - 22:00', teamA: '1B', teamB: '3CEFHI', stage: 'knockout', status: 'pending' },
+  { id: 'wc-73', date: '28/06 - 16:00', teamA: 'RSA', teamB: 'CAN', stage: 'knockout', status: 'pending' },
+  { id: 'wc-74', date: '29/06 - 14:00', teamA: 'BRA', teamB: 'JPN', stage: 'knockout', status: 'pending' },
+  { id: 'wc-75', date: '29/06 - 17:30', teamA: 'GER', teamB: 'PAR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-76', date: '29/06 - 22:00', teamA: 'NED', teamB: 'MAR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-77', date: '30/06 - 14:00', teamA: 'CIV', teamB: 'NOR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-78', date: '30/06 - 18:00', teamA: 'FRA', teamB: 'SWE', stage: 'knockout', status: 'pending' },
+  { id: 'wc-79', date: '30/06 - 22:00', teamA: 'MEX', teamB: 'ECU', stage: 'knockout', status: 'pending' },
+  { id: 'wc-80', date: '01/07 - 13:00', teamA: 'ENG', teamB: 'COD', stage: 'knockout', status: 'pending' },
+  { id: 'wc-81', date: '01/07 - 17:00', teamA: 'BEL', teamB: 'SEN', stage: 'knockout', status: 'pending' },
+  { id: 'wc-82', date: '01/07 - 21:00', teamA: 'USA', teamB: 'BIH', stage: 'knockout', status: 'pending' },
+  { id: 'wc-83', date: '02/07 - 16:00', teamA: 'ESP', teamB: 'AUT', stage: 'knockout', status: 'pending' },
+  { id: 'wc-84', date: '02/07 - 20:00', teamA: 'POR', teamB: 'CRO', stage: 'knockout', status: 'pending' },
+  { id: 'wc-85', date: '03/07 - 00:00', teamA: 'SUI', teamB: 'ALG', stage: 'knockout', status: 'pending' },
+  { id: 'wc-86', date: '03/07 - 15:00', teamA: 'AUS', teamB: 'EGY', stage: 'knockout', status: 'pending' },
+  { id: 'wc-87', date: '03/07 - 19:00', teamA: 'ARG', teamB: 'CPV', stage: 'knockout', status: 'pending' },
+  { id: 'wc-88', date: '03/07 - 22:30', teamA: 'COL', teamB: 'GHA', stage: 'knockout', status: 'pending' },
   
   // Oitavas de Final
   { id: 'wc-89', date: '04/07 - 14:00', teamA: 'VENC.73', teamB: 'VENC.75', stage: 'knockout', status: 'pending' },
@@ -1270,8 +1283,9 @@ export default function App() {
                     <>
                 {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
-                  {/* Oculta os jogos de knockout enquanto a Chave Mestra estiver falsa */}
-                  {MATCHES.filter(match => match.stage === 'group' || LIBERAR_MATA_MATA).map(match => {
+                  {/* Exibe a Fase de Grupos OU o Mata-mata com base na Chave Mestra */}
+                  {MATCHES.filter(match => LIBERAR_MATA_MATA ? match.stage === 'knockout' : match.stage === 'group').map(match => 
+                     {
                      
                      // Se o time for "1A", "V73" ou "A2", cria um card com ponto de interrogação
                      const tA = SECTIONS.find(s => s.prefix === match.teamA) || { title: match.teamA, flag: '❔' };
