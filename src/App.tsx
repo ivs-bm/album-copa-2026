@@ -1283,8 +1283,14 @@ export default function App() {
                     <>
                 {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
-                  {/* Exibe a Fase de Grupos OU o Mata-mata com base na Chave Mestra */}
-                  {MATCHES.filter(match => LIBERAR_MATA_MATA ? match.stage === 'knockout' : match.stage === 'group').map(match => 
+                  {/* NOVO FILTRO INTELIGENTE: Exibe apenas jogos onde os DOIS times já foram definidos (existem na SECTIONS) */}
+                  {MATCHES.filter(match => {
+                      const isCorrectStage = LIBERAR_MATA_MATA ? match.stage === 'knockout' : match.stage === 'group';
+                      const isTeamADefined = SECTIONS.some(s => s.prefix === match.teamA);
+                      const isTeamBDefined = SECTIONS.some(s => s.prefix === match.teamB);
+                      
+                      return isCorrectStage && isTeamADefined && isTeamBDefined;
+                  }).map(match => 
                      {
                      
                      // Se o time for "1A", "V73" ou "A2", cria um card com ponto de interrogação
