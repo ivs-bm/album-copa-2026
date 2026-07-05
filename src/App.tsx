@@ -102,10 +102,11 @@ const getSectionKeys = (sec) => sec.count ? Array.from({ length: sec.count }, (_
 const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.items.length), 0);
 
 // ============================================================================
-// CONTROLE DE VISIBILIDADE DO TORNEIO
+// CONTROLE DE VISIBILIDADE DO TORNEIO (Fase por Fase)
 // ============================================================================
-// Mude para "true" quando a fase de grupos terminar para exibir o mata-mata
-const LIBERAR_MATA_MATA = true; 
+// Altere aqui para liberar a fase desejada:
+// 'group' (Fase de Grupos) | 'oitavas' (Oitavas de Final) | 'quartas' | 'semi' | 'final'
+const FASE_ATIVA = 'oitavas'; 
 
 // ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026 (ATUALIZADO VIA FIFA)
@@ -217,11 +218,29 @@ const MATCHES = [
   { id: 'wc-88', date: '03/07 - 22:30', teamA: 'COL', teamB: 'GHA', stage: 'knockout', status: 'pending' },
   
   // Oitavas de Final
-  { id: 'wc-89', date: '04/07 - 14:00', teamA: 'VENC.73', teamB: 'VENC.75', stage: 'knockout', status: 'pending' },
-  { id: 'wc-90', date: '04/07 - 18:00', teamA: 'VENC.74', teamB: 'VENC.77', stage: 'knockout', status: 'pending' },
+  { id: 'wc-89', date: '04/07 - 14:00', teamA: 'CAN', teamB: 'MAR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-90', date: '04/07 - 18:00', teamA: 'PAR', teamB: 'FRA', stage: 'knockout', status: 'pending' },
+  { id: 'wc-91', date: '05/07 - 17:00', teamA: 'BRA', teamB: 'NOR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-92', date: '05/07 - 21:00', teamA: 'MEX', teamB: 'ENG', stage: 'knockout', status: 'pending' },
+  { id: 'wc-93', date: '06/07 - 16:00', teamA: 'POR', teamB: 'ESP', stage: 'knockout', status: 'pending' },
+  { id: 'wc-94', date: '06/07 - 21:00', teamA: 'USA', teamB: 'BEL', stage: 'knockout', status: 'pending' },
+  { id: 'wc-95', date: '07/07 - 13:00', teamA: 'ARG', teamB: 'EGY', stage: 'knockout', status: 'pending' },
+  { id: 'wc-96', date: '07/07 - 17:00', teamA: 'SUI', teamB: 'COL', stage: 'knockout', status: 'pending' },
+  
+  // Quartas de Final
+  { id: 'wc-97', date: '09/07 - 17:00', teamA: 'FRA', teamB: 'MAR', stage: 'knockout', status: 'pending' },
+  { id: 'wc-98', date: '10/07 - 16:00', teamA: 'VENC.', teamB: 'VENC.', stage: 'knockout', status: 'pending' },
+  { id: 'wc-99', date: '11/07 - 18:00', teamA: 'VENC.', teamB: 'VENC.', stage: 'knockout', status: 'pending' },
+  { id: 'wc-100', date: '11/07 - 22:00', teamA: 'VENC.', teamB: 'VENC.', stage: 'knockout', status: 'pending' },
 
-  // Final / 3º Lugar
-  { id: 'wc-103', date: '18/07 - 16:00', teamA: 'PERD.101', teamB: 'PERD.102', stage: 'knockout', status: 'pending' },
+  // Semi-Final
+  { id: 'wc-101', date: '14/07 - 16:00', teamA: 'VENC.', teamB: 'VENC.', stage: 'knockout', status: 'pending' },
+  { id: 'wc-102', date: '15/07 - 16:00', teamA: 'VENC.', teamB: 'VENC.', stage: 'knockout', status: 'pending' },
+
+  // 3º Lugar
+  { id: 'wc-103', date: '18/07 - 18:00', teamA: 'PERD.101', teamB: 'PERD.102', stage: 'knockout', status: 'pending' },
+  
+  // Final
   { id: 'wc-104', date: '19/07 - 16:00', teamA: 'VENC.101', teamB: 'VENC.102', stage: 'knockout', status: 'pending' }
 ];
 
@@ -1283,13 +1302,19 @@ export default function App() {
                     <>
                 {/* LISTA DE JOGOS */}
                 <div className="space-y-4">
-                  {/* NOVO FILTRO INTELIGENTE: Exibe apenas jogos onde os DOIS times já foram definidos (existem na SECTIONS) */}
+                  {/* Filtro Dinâmico: Libera os confrontos de forma limpa com base na constante FASE_ATIVA */}
                   {MATCHES.filter(match => {
-                      const isCorrectStage = LIBERAR_MATA_MATA ? match.stage === 'knockout' : match.stage === 'group';
-                      const isTeamADefined = SECTIONS.some(s => s.prefix === match.teamA);
-                      const isTeamBDefined = SECTIONS.some(s => s.prefix === match.teamB);
+                      if (FASE_ATIVA === 'group') return match.stage === 'group';
                       
-                      return isCorrectStage && isTeamADefined && isTeamBDefined;
+                      // Extrai o número do ID do jogo (ex: wc-89 vira 89) para isolar a fase atual
+                      const idNum = parseInt(match.id.replace('wc-', ''), 10);
+                      
+                      // Retorna APENAS os jogos que pertencem à fase configurada no topo do arquivo
+                      if (FASE_ATIVA === 'oitavas') return idNum >= 89 && idNum <= 96;
+                      if (FASE_ATIVA === 'quartas') return idNum >= 97 && idNum <= 100;
+                      if (FASE_ATIVA === 'semi') return idNum >= 101 && idNum <= 102;
+                      if (FASE_ATIVA === 'final') return idNum >= 103 && idNum <= 104;
+                      return false;
                   }).map(match => 
                      {
                      
