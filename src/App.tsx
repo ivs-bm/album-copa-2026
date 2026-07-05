@@ -106,7 +106,7 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 // ============================================================================
 // Altere aqui para liberar a fase desejada:
 // 'group' (Fase de Grupos) | 'oitavas' (Oitavas de Final) | 'quartas' | 'semi' | 'final'
-const FASE_ATIVA = 'quartas'; 
+const FASE_ATIVA = 'oitavas'; 
 
 // ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026 (ATUALIZADO VIA FIFA)
