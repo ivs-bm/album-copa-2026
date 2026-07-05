@@ -199,7 +199,6 @@ const MATCHES = [
   // FASE ELIMINATÓRIA (Pré-Estruturada - Oculta Automaticamente)
   // ---------------------------------------------------
   // Dezesseis-avos de Final
-const LIBERAR_MATA_MATA = false; 
   { id: 'wc-73', date: '28/06 - 16:00', teamA: 'RSA', teamB: 'CAN', stage: 'knockout', status: 'pending' },
   { id: 'wc-74', date: '29/06 - 14:00', teamA: 'BRA', teamB: 'JPN', stage: 'knockout', status: 'pending' },
   { id: 'wc-75', date: '29/06 - 17:30', teamA: 'GER', teamB: 'PAR', stage: 'knockout', status: 'pending' },
@@ -218,7 +217,6 @@ const LIBERAR_MATA_MATA = false;
   { id: 'wc-88', date: '03/07 - 22:30', teamA: 'COL', teamB: 'GHA', stage: 'knockout', status: 'pending' },
   
   // Oitavas de Final
-const LIBERAR_MATA_MATA = true; 
   { id: 'wc-89', date: '04/07 - 14:00', teamA: 'CAN', teamB: 'MAR', stage: 'knockout', status: 'pending' },
   { id: 'wc-90', date: '04/07 - 18:00', teamA: 'PAR', teamB: 'FRA', stage: 'knockout', status: 'pending' },
   { id: 'wc-91', date: '05/07 - 17:00', teamA: 'BRA', teamB: 'NOR', stage: 'knockout', status: 'pending' },
