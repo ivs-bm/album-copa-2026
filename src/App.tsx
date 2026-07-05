@@ -223,7 +223,7 @@ const MATCHES = [
   { id: 'wc-91', date: '05/07 - 17:00', teamA: 'BRA', teamB: 'NOR', stage: 'knockout', status: 'pending' },
   { id: 'wc-92', date: '05/07 - 21:00', teamA: 'MEX', teamB: 'ENG', stage: 'knockout', status: 'pending' },
   { id: 'wc-93', date: '06/07 - 16:00', teamA: 'POR', teamB: 'ESP', stage: 'knockout', status: 'pending' },
-  { id: 'wc-94', date: '06/07 - 21:00', teamA: 'EUA', teamB: 'BEL', stage: 'knockout', status: 'pending' },
+  { id: 'wc-94', date: '06/07 - 21:00', teamA: 'USA', teamB: 'BEL', stage: 'knockout', status: 'pending' },
   { id: 'wc-95', date: '07/07 - 13:00', teamA: 'ARG', teamB: 'EGY', stage: 'knockout', status: 'pending' },
   { id: 'wc-96', date: '07/07 - 17:00', teamA: 'SUI', teamB: 'COL', stage: 'knockout', status: 'pending' },
   
