@@ -106,7 +106,7 @@ const TOTAL_STICKERS = SECTIONS.reduce((acc, sec) => acc + (sec.count || sec.ite
 // ============================================================================
 // Altere aqui para liberar a fase desejada:
 // 'group' (Fase de Grupos) | 'oitavas' (Oitavas de Final) | 'quartas' | 'semi' | 'final'
-const FASE_ATIVA = 'oitavas'; 
+const FASE_ATIVA = 'quartas'; 
 
 // ============================================================================
 // ESTRUTURA OFICIAL: JOGOS DA COPA DO MUNDO 2026 (ATUALIZADO VIA FIFA)
@@ -229,9 +229,9 @@ const MATCHES = [
   
   // Quartas de Final
   { id: 'wc-97', date: '09/07 - 17:00', teamA: 'FRA', teamB: 'MAR', stage: 'knockout', status: 'pending' },
-  { id: 'wc-98', date: '10/07 - 16:00', teamA: 'VENC.93', teamB: 'VENC.94', stage: 'knockout', status: 'pending' },
-  { id: 'wc-99', date: '11/07 - 18:00', teamA: 'VENC.91', teamB: 'VENC.92', stage: 'knockout', status: 'pending' },
-  { id: 'wc-100', date: '11/07 - 22:00', teamA: 'VENC.95', teamB: 'VENC.96', stage: 'knockout', status: 'pending' },
+  { id: 'wc-98', date: '10/07 - 16:00', teamA: 'ESP', teamB: 'BEL', stage: 'knockout', status: 'pending' },
+  { id: 'wc-99', date: '11/07 - 18:00', teamA: 'NOR', teamB: 'ENG', stage: 'knockout', status: 'pending' },
+  { id: 'wc-100', date: '11/07 - 22:00', teamA: 'ARG', teamB: 'SUI', stage: 'knockout', status: 'pending' },
 
   // Semi-Final
   { id: 'wc-101', date: '14/07 - 16:00', teamA: 'VENC.97', teamB: 'VENC.98', stage: 'knockout', status: 'pending' },
