@@ -234,8 +234,8 @@ const MATCHES = [
   { id: 'wc-100', date: '11/07 - 22:00', teamA: 'ARG', teamB: 'SUI', stage: 'knockout', status: 'pending' },
 
   // Semi-Final
-  { id: 'wc-101', date: '14/07 - 16:00', teamA: 'VENC.97', teamB: 'VENC.98', stage: 'knockout', status: 'pending' },
-  { id: 'wc-102', date: '15/07 - 16:00', teamA: 'VENC.99', teamB: 'VENC.100', stage: 'knockout', status: 'pending' },
+  { id: 'wc-101', date: '14/07 - 16:00', teamA: 'FRA', teamB: 'ESP', stage: 'knockout', status: 'pending' },
+  { id: 'wc-102', date: '15/07 - 16:00', teamA: 'ENG', teamB: 'ARG', stage: 'knockout', status: 'pending' },
 
   // 3º Lugar
   { id: 'wc-103', date: '18/07 - 18:00', teamA: 'PERD.101', teamB: 'PERD.102', stage: 'knockout', status: 'pending' },
